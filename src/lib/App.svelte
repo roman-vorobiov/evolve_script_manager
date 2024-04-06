@@ -5,8 +5,8 @@
     let config: any | null = null;
 </script>
 
-{#if config === null}
-    <ConfigLoader bind:config={config}/>
-{:else}
+<ConfigLoader bind:config={config}/>
+
+{#if config !== null}
     <ConfigDisplay {config}/>
 {/if}

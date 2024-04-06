@@ -1,6 +1,6 @@
 <script lang="ts">
+    import * as Dialog from "$lib/components/ui/alert-dialog";
     import { Button } from "$lib/components/ui/button";
-    import * as Dialog from "$lib/components/ui/dialog";
     import { Textarea } from "$lib/components/ui/textarea";
 
     export let config;
@@ -23,17 +23,17 @@
     <Dialog.Trigger>
         <Button variant="outline" class="text-button">Import</Button>
     </Dialog.Trigger>
-    <Dialog.Content variant="bare">
+    <Dialog.Content>
         <Dialog.Header>
-            <Dialog.Title>
-                Import from a string
-            </Dialog.Title>
+            <Dialog.Title>Import from a string</Dialog.Title>
         </Dialog.Header>
 
         <Textarea class="resize-none" bind:value={text} placeholder="Paste your config here"/>
 
         <Dialog.Footer>
-            <Button variant="outline" class="text-button" on:click={parseConfig}>Import</Button>
+            <Dialog.Action asChild let:builder>
+                <Button builders={[builder]} variant="outline" class="text-button" on:click={parseConfig}>Import</Button>
+            </Dialog.Action>
         </Dialog.Footer>
     </Dialog.Content>
 </Dialog.Root>
