@@ -1,9 +1,14 @@
 <script lang="ts">
     import * as Card from "$lib/components/ui/card";
+    
+    import * as Utils from "$lib/core/utils";
+    import defaultConfig from "$lib/assets/default.json";
 
     export let config: any;
 
-    $: view = JSON.stringify(config, null, 4);
+    $: diff = Utils.lDifference(config, defaultConfig);
+
+    $: view = JSON.stringify(diff, null, 4);
 </script>
 
 <Card.Root>

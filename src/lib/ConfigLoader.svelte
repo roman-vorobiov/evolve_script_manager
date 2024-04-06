@@ -10,7 +10,7 @@
     function parseConfig() {
         try {
             let value = JSON.parse(text);
-            if (value instanceof Object) {
+            if (value instanceof Object && !Array.isArray(value)) {
                 config = value;
             }
         }
