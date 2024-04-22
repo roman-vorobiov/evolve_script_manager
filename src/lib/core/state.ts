@@ -1,7 +1,7 @@
 export type State = {
-    config: Object | null
+    config: string
 };
 
 export const initialState = {
-    config: null
+    config: ""
 };

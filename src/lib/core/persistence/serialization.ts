@@ -3,7 +3,7 @@ import * as Storage from "./storage";
 
 const currentVersion = 1;
 
-type Versioned = { version: Number, state: Object };
+type Versioned = { version: Number, state: any };
 
 function serialize(state: State): Versioned {
     return { version: currentVersion, state };
