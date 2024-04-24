@@ -25,7 +25,7 @@
             automaticLayout: true
         });
 
-        const model = monaco.editor.createModel(state.config, "vollch");
+        const model = monaco.editor.createModel(state.config, "DSL");
         editor.setModel(model);
 
         model.onDidChangeContent(debounce(readCurrentValue, 500));

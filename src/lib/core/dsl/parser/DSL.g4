@@ -1,4 +1,4 @@
-grammar Vollch;
+grammar DSL;
 
 root
     : statement* EOF

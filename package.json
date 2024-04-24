@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "vite dev",
         "build": "vite build",
-        "generate": "antlr4ng -Dlanguage=TypeScript ./src/lib/core/dsl/parser/Vollch.g4 -Xexact-output-dir -o ./src/lib/core/dsl/parser/.antlr -no-listener -visitor",
+        "generate": "antlr4ng -Dlanguage=TypeScript ./src/lib/core/dsl/parser/DSL.g4 -Xexact-output-dir -o ./src/lib/core/dsl/parser/.antlr -no-listener -visitor",
         "preview": "vite preview",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

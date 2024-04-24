@@ -1,13 +1,13 @@
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 export function initializeSyntax(monaco: typeof Monaco) {
-    monaco.languages.register({ id: "vollch" });
+    monaco.languages.register({ id: "DSL" });
 
-    monaco.languages.setLanguageConfiguration("vollch", {
+    monaco.languages.setLanguageConfiguration("DSL", {
         wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
     });
 
-    monaco.languages.setMonarchTokensProvider("vollch", {
+    monaco.languages.setMonarchTokensProvider("DSL", {
         defaultToken: "invalid",
 
         brackets: [

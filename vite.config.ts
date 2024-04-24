@@ -8,7 +8,7 @@ export default defineConfig({
         {
             name: "Parser auto-generation",
             async handleHotUpdate(ctx) {
-                if (ctx.file.endsWith(".g4")) {
+                if (ctx.file.endsWith("DSL.g4")) {
                     const grammarRoot = ctx.file.slice(0, ctx.file.lastIndexOf("/"));
                     const getModule = (filename: string) => {
                         return ctx.server.moduleGraph.getModuleById(`${grammarRoot}/.antlr/${filename}`)!;
@@ -18,9 +18,9 @@ export default defineConfig({
                     execSync("npm run generate");
 
                     return [
-                        getModule("VollchLexer.ts"),
-                        getModule("VollchParser.ts"),
-                        getModule("VollchVisitor.ts"),
+                        getModule("DSLLexer.ts"),
+                        getModule("DSLParser.ts"),
+                        getModule("DSLVisitor.ts"),
                     ];
                 }
             }

@@ -1,12 +1,12 @@
 import { CharStream, CommonTokenStream } from "antlr4ng";
 import { ErrorStrategy, ErrorListener, type ParseError } from "./errors";
 import { contextLocation } from "./utils";
-import { VollchLexer } from "./.antlr/VollchLexer";
-import { VollchParser } from "./.antlr/VollchParser";
-import { VollchVisitor } from "./.antlr/VollchVisitor";
-import type * as Context from "./.antlr/VollchParser";
+import { DSLLexer } from "./.antlr/DSLLexer";
+import { DSLParser } from "./.antlr/DSLParser";
+import { DSLVisitor } from "./.antlr/DSLVisitor";
+import type * as Context from "./.antlr/DSLParser";
 
-class SettingIdGetter extends VollchVisitor<string> {
+class SettingIdGetter extends DSLVisitor<string> {
     private prefix: any = {
         "Log": "log_"
     };
@@ -25,7 +25,7 @@ class SettingIdGetter extends VollchVisitor<string> {
     }
 }
 
-class SettingValueGetter extends VollchVisitor<any> {
+class SettingValueGetter extends DSLVisitor<any> {
     visitBooleanValue = (ctx: Context.BooleanValueContext) => {
         return ctx.getText() === "ON";
     }
@@ -35,7 +35,7 @@ class SettingValueGetter extends VollchVisitor<any> {
     }
 }
 
-class Visitor extends VollchVisitor<any> {
+class Visitor extends DSLVisitor<any> {
     private settingIdGetter = new SettingIdGetter();
     private settingValueGetter = new SettingValueGetter();
 
@@ -75,9 +75,9 @@ export function parse(rawText: string) {
     let errors: ParseError[] = [];
 
     const chars = CharStream.fromString(rawText);
-    const lexer = new VollchLexer(chars);
+    const lexer = new DSLLexer(chars);
     const tokens = new CommonTokenStream(lexer);
-    const parser = new VollchParser(tokens);
+    const parser = new DSLParser(tokens);
 
     const errorStrategy = new ErrorStrategy();
     const errorListener = new ErrorListener(errors);
