@@ -1,15 +1,11 @@
 <script lang="ts">
     import { saveState, loadState } from "$lib/core/persistence";
-    import { parse } from "$lib/core/dsl/parser";
     import { type State } from "$lib/core/state";
 
     import ConfigLoader from "$lib/ConfigLoader.svelte";
-    import Editor from "$lib/Editor.svelte";
+    import Workspace from "$lib/Workspace.svelte";
 
     let state: State = loadState();
-
-    $: config = parse(state.config);
-    $: view = JSON.stringify(config, null, 4);
 
     $: {
         saveState(state);
@@ -23,12 +19,5 @@
         </div>
     </div>
 
-    <div class="flex flex-row h-full">
-        <div class="w-3/5 h-full">
-            <Editor bind:state={state}></Editor>
-        </div>
-        <div class="grow h-full">
-            <p class="font-mono whitespace-pre-wrap p-6">{view}</p>
-        </div>
-    </div>
+    <Workspace bind:state={state}></Workspace>
 </div>

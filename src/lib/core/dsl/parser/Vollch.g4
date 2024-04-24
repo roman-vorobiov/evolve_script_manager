@@ -17,20 +17,34 @@ settingAssignment
     ;
 
 setting
-    : '{' Identifier '}'
+    : '{' settingId '}'
     ;
 
 settingId
+    : simpleSettingId
+    | compoundSettingId
+    ;
+
+simpleSettingId
     : Identifier
+    ;
+
+compoundSettingId
+    : Identifier ':' Identifier
     ;
 
 value
     : booleanValue
+    | stringValue
     ;
 
 booleanValue
     : 'ON'
     | 'OFF'
+    ;
+
+stringValue
+    : Identifier
     ;
 
 Brace

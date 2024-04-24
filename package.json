@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "vite dev",
         "build": "vite build",
-        "generate": "antlr4ng -Dlanguage=TypeScript ./src/lib/core/dsl/grammar/Vollch.g4 -Xexact-output-dir -o ./src/lib/core/dsl/grammar/.antlr -no-listener -visitor",
+        "generate": "antlr4ng -Dlanguage=TypeScript ./src/lib/core/dsl/parser/Vollch.g4 -Xexact-output-dir -o ./src/lib/core/dsl/parser/.antlr -no-listener -visitor",
         "preview": "vite preview",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -17,6 +17,7 @@
         "@sveltejs/kit": "^2.0.0",
         "@sveltejs/vite-plugin-svelte": "^3.0.0",
         "@types/lodash": "^4.17.0",
+        "@types/node": "^20.12.7",
         "antlr4ng-cli": "^2.0.0",
         "autoprefixer": "^10.4.16",
         "postcss": "^8.4.32",
@@ -27,7 +28,6 @@
         "tslib": "^2.4.1",
         "typescript": "^5.0.0",
         "vite": "^5.0.3",
-        "vite-plugin-run": "^0.5.1",
         "vitest": "^1.2.0"
     },
     "type": "module",
