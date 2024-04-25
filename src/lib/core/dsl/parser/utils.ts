@@ -1,5 +1,19 @@
 import { ParserRuleContext, Token } from "antlr4ng";
 
+type Position = {
+    line: number,
+    column: number
+}
+
+export type SourceLocation = {
+    start: Position,
+    stop: Position
+}
+
+export type ParseError = SourceLocation & {
+    message: string
+}
+
 export function contextLocation(ctx: ParserRuleContext) {
     return {
         start: {

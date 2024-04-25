@@ -1,11 +1,12 @@
 grammar DSL;
 
 root
-    : statement*
+    : statement+
+    | (EOL | Whitespace)* EOF
     ;
 
 statement
-    : expression (EOL | EOF | ';')
+    : expression (EOL+ | EOF | ';')
     ;
 
 expression
@@ -65,5 +66,5 @@ Whitespace
     ;
 
 EOL
-    : '\n'+
+    : '\n'
     ;

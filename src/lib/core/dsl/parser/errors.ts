@@ -6,13 +6,7 @@ import {
     Parser
 } from "antlr4ng";
 
-import { tokenLocation } from "./utils";
-
-export type ParseError = {
-    message: string,
-    start: { line: number, column: number },
-    stop: { line: number, column: number }
-};
+import { tokenLocation, type ParseError } from "./utils";
 
 class InterceptedError {
     constructor(public error: ParseError) {}
@@ -50,10 +44,9 @@ export class ErrorStrategy extends DefaultErrorStrategy {
 
     reportInputMismatch(recognizer: Parser) {
         const token = recognizer.getCurrentToken();
-        const expected = this.getExpectedTokens(recognizer).toStringWithVocabulary(recognizer.vocabulary);
         const received = this.getTokenErrorDisplay(token);
 
-        const message = `Expected ${expected}, received ${received}`;
+        const message = `Unexpected ${received}`;
 
         this.dispatch(recognizer, { message, ...tokenLocation(token) });
     }

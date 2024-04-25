@@ -1,27 +1,44 @@
 import { CharStream, CommonTokenStream } from "antlr4ng";
-import { ErrorStrategy, ErrorListener, type ParseError } from "./errors";
-import { contextLocation } from "./utils";
+import { ErrorStrategy, ErrorListener } from "./errors";
+import { contextLocation, tokenLocation, type ParseError } from "./utils";
 import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
+
+import settingPrefixes from "$lib/core/model/prefixes";
+import { all as logSuffixes } from "$lib/core/model/logSettings";
+
 import type * as Context from "./.antlr/DSLParser";
+import type { Statement } from "$lib/core/dsl/model";
+
+export type ParseResult = {
+    statements: Statement[],
+    errors: ParseError[]
+}
 
 class SettingIdGetter extends DSLVisitor<string> {
-    private prefix: any = {
-        "Log": "log_"
-    };
+    visitSetting = (ctx: Context.SettingContext) => {
+        return this.visit(ctx.settingId())!;
+    }
 
     visitSimpleSettingId = (ctx: Context.SimpleSettingIdContext) => {
         return ctx.Identifier().getText();
     }
 
     visitCompoundSettingId = (ctx: Context.CompoundSettingIdContext) => {
-        const prefix = this.prefix[ctx.Identifier(0)!.getText()];
+        const name = ctx.Identifier(0)!;
+        const argument = ctx.Identifier(1)!;
+
+        const prefix = settingPrefixes[name.getText()];
         if (prefix === undefined) {
-            throw { message: "Unknown prefix", ...contextLocation(ctx) };
+            throw { message: `Unknown setting prefix '${name.getText()}'`, ...tokenLocation(name.symbol) };
         }
-        const suffix = ctx.Identifier(1)!.getText();
-        return `${prefix}${suffix}`;
+
+        if (logSuffixes.indexOf(argument.getText()) === -1) {
+            throw { message: `Unknown setting suffix '${argument.getText()}'`, ...tokenLocation(argument.symbol) };
+        }
+
+        return `${prefix}${argument.getText()}`;
     }
 }
 
@@ -39,17 +56,21 @@ class Visitor extends DSLVisitor<any> {
     private settingIdGetter = new SettingIdGetter();
     private settingValueGetter = new SettingValueGetter();
 
-    private result: any = {};
+    private statements: Statement[] = [];
 
     constructor(private errors: ParseError[]) {
         super();
     }
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
-        const key = this.settingIdGetter.visit(ctx.setting().settingId())!;
-        const value = this.settingValueGetter.visit(ctx.value());
+        const settingName = this.settingIdGetter.visit(ctx.setting())!;
+        const settingValue = this.settingValueGetter.visit(ctx.value());
 
-        this.result[key] = value;
+        this.statements.push({
+            type: "SettingAssignment",
+            setting: settingName,
+            value: settingValue
+        });
     }
 
     visitRoot = (ctx: Context.RootContext) => {
@@ -62,16 +83,14 @@ class Visitor extends DSLVisitor<any> {
             }
         });
 
-        if (this.errors.length === 0) {
-            return this.result;
-        }
-        else {
-            return null;
-        }
+        return {
+            statements: this.statements,
+            errors: this.errors
+        };
     }
 }
 
-export function parse(rawText: string) {
+export function parse(rawText: string): ParseResult {
     let errors: ParseError[] = [];
 
     const chars = CharStream.fromString(rawText);
@@ -89,7 +108,6 @@ export function parse(rawText: string) {
 
     const tree = parser.root();
     const visitor = new Visitor(errors);
-    const config = visitor.visit(tree);
 
-    return { config, errors };
+    return visitor.visit(tree);
 }
