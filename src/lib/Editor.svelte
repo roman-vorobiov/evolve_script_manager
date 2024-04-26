@@ -5,7 +5,7 @@
     import { loadMonaco, type Monaco } from "$lib/editor/monaco";
 
     import { type State } from "$lib/core/state";
-    import { type ParseError } from "$lib/core/dsl/parser";
+    import { type ParseError } from "$lib/core/dsl";
 
     export let state: State;
     export let errors: ParseError[] = [];

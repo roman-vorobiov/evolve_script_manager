@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fromDSL, type ParseError } from "$lib/core/dsl/parser";
+    import { fromSource, type ParseError } from "$lib/core/dsl";
     import { type State } from "$lib/core/state";
 
     import Editor from "$lib/Editor.svelte";
@@ -12,7 +12,7 @@
     $: view = JSON.stringify(config, null, 4);
 
     $: {
-        const result = fromDSL(state.config);
+        const result = fromSource(state.config);
         errors = result.errors;
         if (errors.length === 0) {
             config = result.config;

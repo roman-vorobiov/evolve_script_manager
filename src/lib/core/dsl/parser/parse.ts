@@ -1,54 +1,46 @@
 import { CharStream, CommonTokenStream } from "antlr4ng";
 import { ErrorStrategy, ErrorListener } from "./errors";
-import { contextLocation, tokenLocation, type ParseError } from "./utils";
+import { withLocation } from "./utils";
 import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
 
-import settingPrefixes from "$lib/core/model/prefixes";
-import { all as logSuffixes } from "$lib/core/model/logSettings";
-
+import type { ParseError, ParseResult, Node, Setting, SourceTracked } from "./model";
 import type * as Context from "./.antlr/DSLParser";
-import type { Statement } from "$lib/core/dsl/model";
 
-export type ParseResult = {
-    statements: Statement[],
-    errors: ParseError[]
-}
-
-class SettingIdGetter extends DSLVisitor<string> {
+class SettingIdGetter extends DSLVisitor<Setting> {
     visitSetting = (ctx: Context.SettingContext) => {
         return this.visit(ctx.settingId())!;
     }
 
     visitSimpleSettingId = (ctx: Context.SimpleSettingIdContext) => {
-        return ctx.Identifier().getText();
+        const name = ctx.Identifier();
+
+        return {
+            name: withLocation(name.symbol, name.getText())
+        };
     }
 
     visitCompoundSettingId = (ctx: Context.CompoundSettingIdContext) => {
         const name = ctx.Identifier(0)!;
         const argument = ctx.Identifier(1)!;
 
-        const prefix = settingPrefixes[name.getText()];
-        if (prefix === undefined) {
-            throw { message: `Unknown setting prefix '${name.getText()}'`, ...tokenLocation(name.symbol) };
-        }
-
-        if (logSuffixes.indexOf(argument.getText()) === -1) {
-            throw { message: `Unknown setting suffix '${argument.getText()}'`, ...tokenLocation(argument.symbol) };
-        }
-
-        return `${prefix}${argument.getText()}`;
+        return {
+            expression: {
+                name: withLocation(name.symbol, name.getText()),
+                argument: withLocation(argument.symbol, argument.getText())
+            }
+        };
     }
 }
 
-class SettingValueGetter extends DSLVisitor<any> {
+class SettingValueGetter extends DSLVisitor<SourceTracked<any>> {
     visitBooleanValue = (ctx: Context.BooleanValueContext) => {
-        return ctx.getText() === "ON";
+        return withLocation(ctx, ctx.getText() === "ON");
     }
 
     visitStringValue = (ctx: Context.StringValueContext) => {
-        return ctx.getText();
+        return withLocation(ctx, ctx.getText());
     }
 }
 
@@ -56,7 +48,7 @@ class Visitor extends DSLVisitor<any> {
     private settingIdGetter = new SettingIdGetter();
     private settingValueGetter = new SettingValueGetter();
 
-    private statements: Statement[] = [];
+    private nodes: Node[] = [];
 
     constructor(private errors: ParseError[]) {
         super();
@@ -64,13 +56,13 @@ class Visitor extends DSLVisitor<any> {
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
         const settingName = this.settingIdGetter.visit(ctx.setting())!;
-        const settingValue = this.settingValueGetter.visit(ctx.value());
+        const settingValue = this.settingValueGetter.visit(ctx.value())!;
 
-        this.statements.push({
+        this.nodes.push(withLocation(ctx, {
             type: "SettingAssignment",
             setting: settingName,
             value: settingValue
-        });
+        }));
     }
 
     visitRoot = (ctx: Context.RootContext) => {
@@ -84,7 +76,7 @@ class Visitor extends DSLVisitor<any> {
         });
 
         return {
-            statements: this.statements,
+            nodes: this.nodes,
             errors: this.errors
         };
     }
@@ -107,7 +99,10 @@ export function parse(rawText: string): ParseResult {
     parser.errorHandler = errorStrategy;
 
     const tree = parser.root();
-    const visitor = new Visitor(errors);
+    if (errors.length !== 0) {
+        return { nodes: [], errors };
+    }
 
+    const visitor = new Visitor(errors);
     return visitor.visit(tree);
 }

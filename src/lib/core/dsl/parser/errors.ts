@@ -6,7 +6,8 @@ import {
     Parser
 } from "antlr4ng";
 
-import { tokenLocation, type ParseError } from "./utils";
+import { tokenLocation } from "./utils";
+import type { ParseError } from "./model";
 
 class InterceptedError {
     constructor(public error: ParseError) {}
