@@ -1,4 +1,4 @@
-type Position = {
+export type Position = {
     line: number,
     column: number
 }
@@ -28,8 +28,9 @@ export type SettingAssignment = {
 
 export type Node = SourceTracked<SettingAssignment>;
 
-export type ParseError = SourceLocation & {
-    message: string
+export type ParseError = {
+    message: string,
+    location: SourceLocation
 }
 
 export type ParseResult = {

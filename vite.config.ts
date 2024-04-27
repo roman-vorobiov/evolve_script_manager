@@ -34,6 +34,6 @@ export default defineConfig({
         }
     },
     test: {
-        include: ["src/**/*.{test,spec}.{js,ts}"]
+        include: ["tests/**/*.{test,spec}.{js,ts}"]
     }
 });

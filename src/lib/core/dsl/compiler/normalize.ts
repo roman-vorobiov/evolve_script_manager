@@ -8,7 +8,7 @@ function validateSettingPrefix(settingPrefix: string, location: Parser.SourceLoc
     const prefix = settingPrefixes[settingPrefix];
 
     if (prefix === undefined) {
-        throw { message: `Unknown setting prefix '${settingPrefix}'`, ...location };
+        throw { message: `Unknown setting prefix '${settingPrefix}'`, location };
     }
 
     return prefix;
@@ -16,7 +16,7 @@ function validateSettingPrefix(settingPrefix: string, location: Parser.SourceLoc
 
 function validateSetting(settingName: string, location: Parser.SourceLocation): string {
     if (defaultSettings[settingName as keyof typeof defaultSettings] === undefined) {
-        throw { message: `Unknown setting '${settingName}'`, ...location };
+        throw { message: `Unknown setting '${settingName}'`, location };
     }
 
     return settingName;
@@ -65,6 +65,14 @@ function *normalizeImpl(nodes: Parser.Node[], errors: Parser.ParseError[]): Gene
     }
 }
 
-export function normalize(nodes: Parser.Node[], errors: Parser.ParseError[]): Statement[] {
-    return [...normalizeImpl(nodes, errors)];
+export type NormalizationResult = {
+    statements: Statement[],
+    errors: Parser.ParseError[]
+}
+
+export function normalize(nodes: Parser.Node[]): NormalizationResult {
+    const errors: Parser.ParseError[] = [];
+    const statements = [...normalizeImpl(nodes, errors)];
+
+    return { statements, errors };
 }

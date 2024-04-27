@@ -44,10 +44,10 @@
 
     function makeMarker(e: ParseError) {
         return {
-            startLineNumber: e.start.line,
-            startColumn: e.start.column,
-            endLineNumber: e.stop.line,
-            endColumn: e.stop.column,
+            startLineNumber: e.location.start.line,
+            startColumn: e.location.start.column,
+            endLineNumber: e.location.stop.line,
+            endColumn: e.location.stop.column,
             message: e.message,
             severity: monaco.MarkerSeverity.Error
         };

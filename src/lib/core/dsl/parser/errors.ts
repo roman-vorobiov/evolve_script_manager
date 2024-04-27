@@ -40,7 +40,7 @@ export class ErrorStrategy extends DefaultErrorStrategy {
 
         const message = `Missing ${expected}`;
 
-        this.dispatch(recognizer, { message, ...tokenLocation(token) });
+        this.dispatch(recognizer, { message, location: tokenLocation(token) });
     }
 
     reportInputMismatch(recognizer: Parser) {
@@ -49,7 +49,7 @@ export class ErrorStrategy extends DefaultErrorStrategy {
 
         const message = `Unexpected ${received}`;
 
-        this.dispatch(recognizer, { message, ...tokenLocation(token) });
+        this.dispatch(recognizer, { message, location: tokenLocation(token) });
     }
 }
 
@@ -75,10 +75,10 @@ export class ErrorListener extends BaseErrorListener {
             this.errors.push(e.error);
         }
         else if (e instanceof LexerNoViableAltException) {
-            this.errors.push({ message: "Unexpected symbol", ...defaultPosition });
+            this.errors.push({ message: "Unexpected symbol", location: defaultPosition });
         }
         else {
-            this.errors.push({ message: "Unknown error", ...defaultPosition });
+            this.errors.push({ message: "Unknown error", location: defaultPosition });
             console.error(e);
         }
     }

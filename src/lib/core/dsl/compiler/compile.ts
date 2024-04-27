@@ -10,17 +10,15 @@ function fillConfig(config: any, statement: Statement) {
 }
 
 export function compile(nodes: Parser.Node[]): CompilationResult {
-    const config = {};
-    const errors: Parser.ParseError[] = [];
-
-    const statements = normalize(nodes, errors);
+    const { statements, errors } = normalize(nodes);
     if (errors.length !== 0) {
         return { config: {}, errors };
     }
 
+    const config = {};
     for (let statement of statements) {
         fillConfig(config, statement);
     }
 
-    return { config, errors };
+    return { config, errors: [] };
 }

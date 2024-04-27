@@ -1,6 +1,6 @@
 import { ParserRuleContext, Token } from "antlr4ng";
 
-import type { SourceTracked } from "./model";
+import type { SourceLocation, SourceTracked } from "./model";
 
 export function contextLocation(ctx: ParserRuleContext) {
     return {
@@ -10,7 +10,7 @@ export function contextLocation(ctx: ParserRuleContext) {
         },
         stop: {
             line: ctx.stop!.line,
-            column: ctx.stop!.column
+            column: ctx.stop!.column + (ctx.stop?.stop! - ctx.stop?.start!) + 2
         }
     }
 }
@@ -33,13 +33,16 @@ type SourceTrackedType<T> = SourceTracked<
     T
 >;
 
-export function withLocation<T>(sourceEntity: SourceEntity, value: T): SourceTrackedType<T> {
+export function withLocation<T>(sourceEntity: SourceEntity | SourceLocation, value: T): SourceTrackedType<T> {
     const location = (() => {
         if (sourceEntity instanceof ParserRuleContext) {
             return contextLocation(sourceEntity);
         }
-        else if (sourceEntity.tokenIndex !== undefined) {
-            return tokenLocation(sourceEntity);
+        else if ((sourceEntity as Token).tokenIndex !== undefined) {
+            return tokenLocation(sourceEntity as Token);
+        }
+        else if ((sourceEntity as SourceLocation).start !== undefined) {
+            return sourceEntity as SourceLocation;
         }
         else {
             throw new Error(`Unknown source entity: ${sourceEntity}`);
