@@ -116,6 +116,60 @@ describe("Parser", () => {
         });
     });
 
+    describe("Numeric value", () => {
+        it("should parse a positive integer value", () => {
+            const { nodes, errors, locations } = parse(`
+                {\x01foo\x02} = \x03123\x04
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("SettingAssignment");
+            expect(nodes[0].setting.name).toBeParsed({ into: "foo", from: locations.between(1, 2) });
+            expect(nodes[0].value).toBeParsed({ into: 123, from: locations.between(3, 4) });
+        });
+
+        it("should parse a negative integer value", () => {
+            const { nodes, errors, locations } = parse(`
+                {\x01foo\x02} = \x03-1\x04
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("SettingAssignment");
+            expect(nodes[0].setting.name).toBeParsed({ into: "foo", from: locations.between(1, 2) });
+            expect(nodes[0].value).toBeParsed({ into: -1, from: locations.between(3, 4) });
+        });
+
+        it("should parse a positive float value", () => {
+            const { nodes, errors, locations } = parse(`
+                {\x01foo\x02} = \x031.23\x04
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("SettingAssignment");
+            expect(nodes[0].setting.name).toBeParsed({ into: "foo", from: locations.between(1, 2) });
+            expect(nodes[0].value).toBeParsed({ into: 1.23, from: locations.between(3, 4) });
+        });
+
+        it("should parse a negative float value", () => {
+            const { nodes, errors, locations } = parse(`
+                {\x01foo\x02} = \x03-1.23\x04
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("SettingAssignment");
+            expect(nodes[0].setting.name).toBeParsed({ into: "foo", from: locations.between(1, 2) });
+            expect(nodes[0].value).toBeParsed({ into: -1.23, from: locations.between(3, 4) });
+        });
+    });
+
     describe("Boolean value", () => {
         it("should parse a truthy value", () => {
             const { nodes, errors, locations } = parse(`

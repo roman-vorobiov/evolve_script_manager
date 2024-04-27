@@ -42,6 +42,10 @@ class SettingValueGetter extends DSLVisitor<SourceTracked<any>> {
     visitStringValue = (ctx: Context.StringValueContext) => {
         return withLocation(ctx, ctx.getText());
     }
+
+    visitNumericValue = (ctx: Context.NumericValueContext) => {
+        return withLocation(ctx, new Number(ctx.getText()));
+    }
 }
 
 class Visitor extends DSLVisitor<any> {

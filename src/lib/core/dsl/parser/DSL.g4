@@ -36,6 +36,7 @@ compoundSettingId
 value
     : booleanValue
     | stringValue
+    | numericValue
     ;
 
 booleanValue
@@ -47,23 +48,22 @@ stringValue
     : Identifier
     ;
 
-Brace
-    : '{'
-    | '}'
+numericValue
+    : Number
     ;
 
-Operator
-    : '='
-    ;
+Brace: '{' | '}';
 
-Identifier
-    : [a-zA-Z]+
-    ;
+Operator: '=';
 
-Whitespace
-    : ' '+ -> skip
-    ;
+Identifier: [a-zA-Z]+;
 
-EOL
-    : '\n'
-    ;
+Number: '-'? (Integer | Float);
+
+Float: Integer '.' [0-9]+;
+
+Whitespace: ' '+ -> skip;
+
+EOL: '\n';
+
+fragment Integer: '0' | [1-9] [0-9]*;
