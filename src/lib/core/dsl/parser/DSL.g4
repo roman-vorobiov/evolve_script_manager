@@ -42,8 +42,8 @@ value
     ;
 
 booleanValue
-    : 'ON'
-    | 'OFF'
+    : ON
+    | OFF
     ;
 
 stringValue
@@ -54,20 +54,24 @@ numericValue
     : Number
     ;
 
-Brace: '{' | '}';
+Colon: ':';
+
+OpeningBrace: '{';
+
+ClosingBrace: '}';
 
 Operator: '=';
 
+ON: 'ON';
+
+OFF: 'OFF';
+
 Identifier: [a-zA-Z]+;
 
-Number: '-'? (Integer | Float);
-
-Float: Integer '.' [0-9]+;
+Number: '-'? ('0' | [1-9] [0-9]*) ('.' [0-9]+)?;
 
 Whitespace: ' '+ -> skip;
 
-Comment: '#' ~[\r\n]* -> skip;
+Comment: '#' ~[\r\n]* -> channel(HIDDEN);
 
 EOL: [\r\n];
-
-fragment Integer: '0' | [1-9] [0-9]*;

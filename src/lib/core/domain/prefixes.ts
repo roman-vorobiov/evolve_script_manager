@@ -1,3 +1,4 @@
 export default {
-    Log: "log_"
+    Log: "log_",
+    Challenge: "challenge_",
 } as any;
