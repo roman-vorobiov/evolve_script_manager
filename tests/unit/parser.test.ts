@@ -101,6 +101,30 @@ describe("Parser", () => {
         });
     });
 
+    describe("Comments", () => {
+        it("should ignore lines starting with '#'", () => {
+            const { nodes, errors, locations } = parse(`
+                # {baz} = 123
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(0);
+        });
+
+        it("should ignore anything after '#'", () => {
+            const { nodes, errors, locations } = parse(`
+                {\x01foo\x02} = \x03bar\x04; # {baz} = 123
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("SettingAssignment");
+            expect(nodes[0].setting.name).toBeParsed({ into: "foo", from: locations.between(1, 2) });
+            expect(nodes[0].value).toBeParsed({ into: "bar", from: locations.between(3, 4) });
+        });
+    });
+
     describe("String value", () => {
         it("should parse an unqoted literal", () => {
             const { nodes, errors, locations } = parse(`

@@ -5,7 +5,9 @@ root
     ;
 
 statement
-    : (EOL*) expression (EOL+ | ';')
+    : expression (EOF | EOL | ';') EOL*
+    | ';' EOL*
+    | EOL
     ;
 
 expression
@@ -64,6 +66,8 @@ Float: Integer '.' [0-9]+;
 
 Whitespace: ' '+ -> skip;
 
-EOL: '\n';
+Comment: '#' ~[\r\n]* -> skip;
+
+EOL: [\r\n];
 
 fragment Integer: '0' | [1-9] [0-9]*;
