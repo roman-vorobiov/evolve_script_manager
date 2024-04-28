@@ -1,4 +1,4 @@
-import { CharStream, CommonTokenStream, TerminalNode } from "antlr4ng";
+import { CharStream, CommonTokenStream, TerminalNode, type ParseTree } from "antlr4ng";
 import { ErrorStrategy, ErrorListener } from "./errors";
 import { withLocation } from "./utils";
 import { DSLLexer } from "./.antlr/DSLLexer";
@@ -8,43 +8,39 @@ import { DSLVisitor } from "./.antlr/DSLVisitor";
 import type * as Parser from "./model";
 import type * as Context from "./.antlr/DSLParser";
 
-function getCallExpression<T extends { Identifier(i: number): TerminalNode | null }>(ctx: T): Parser.CallExpression {
-    const name = ctx.Identifier(0)!;
-    const argument = ctx.Identifier(1)!;
-
-    return {
-        name: withLocation(name.symbol, name.getText()),
-        argument: withLocation(argument.symbol, argument.getText())
-    };
-}
-
-class SettingIdGetter extends DSLVisitor<Parser.Setting> {
-    visitSetting = (ctx: Context.SettingContext) => {
-        return this.visit(ctx.settingId())!;
-    }
-
-    visitSimpleSettingId = (ctx: Context.SimpleSettingIdContext) => {
-        const name = ctx.Identifier();
+class CallExpressionGetter extends DSLVisitor<Parser.CallExpression> {
+    visitSettingId = (ctx: Context.SettingIdContext) => {
+        const [name, ...args] = ctx.Identifier();
 
         return {
-            name: withLocation(name.symbol, name.getText())
+            name: withLocation(name.symbol, name.getText()),
+            arguments: args.map(arg => withLocation(arg.symbol, arg.getText()))
         };
     }
 
-    visitCompoundSettingId = (ctx: Context.CompoundSettingIdContext) => {
+    visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext) => {
+        const [t, id] = ctx.Identifier();
+        const count = ctx.Number();
+
+        const args: Parser.SourceTracked<Parser.Value>[] = [withLocation(id.symbol, id.getText())];
+        if (count !== null) {
+            args.push(withLocation(count.symbol, new Number(count.getText())));
+        }
+
         return {
-            expression: getCallExpression(ctx)
+            name: withLocation(t.symbol, t.getText()),
+            arguments: args
         };
     }
 }
 
-class SettingValueGetter extends DSLVisitor<Parser.SourceTracked<any>> {
-    visitBooleanValue = (ctx: Context.BooleanValueContext) => {
-        return withLocation(ctx, ctx.getText() === "ON");
-    }
-
+class ValueGetter extends DSLVisitor<Parser.SourceTracked<String | Boolean | Number>> {
     visitStringValue = (ctx: Context.StringValueContext) => {
         return withLocation(ctx, ctx.getText());
+    }
+
+    visitBooleanValue = (ctx: Context.BooleanValueContext) => {
+        return withLocation(ctx, ctx.getText() === "ON");
     }
 
     visitNumericValue = (ctx: Context.NumericValueContext) => {
@@ -53,8 +49,8 @@ class SettingValueGetter extends DSLVisitor<Parser.SourceTracked<any>> {
 }
 
 class Visitor extends DSLVisitor<any> {
-    private settingIdGetter = new SettingIdGetter();
-    private settingValueGetter = new SettingValueGetter();
+    private valueGetter = new ValueGetter();
+    private callExpressionGetter = new CallExpressionGetter();
 
     private nodes: Parser.Node[] = [];
 
@@ -79,8 +75,8 @@ class Visitor extends DSLVisitor<any> {
     }
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
-        const settingName = this.settingIdGetter.visit(ctx.setting())!;
-        const settingValue = this.settingValueGetter.visit(ctx.value())!;
+        const settingName = this.callExpressionGetter.visit(ctx.settingId())!;
+        const settingValue = this.valueGetter.visit(ctx.value())!;
 
         this.nodes.push(withLocation(ctx, {
             type: "SettingAssignment",
@@ -92,16 +88,16 @@ class Visitor extends DSLVisitor<any> {
     visitTrigger = (ctx: Context.TriggerContext) => {
         this.nodes.push(withLocation(ctx, {
             type: "Trigger",
-            action: getCallExpression(ctx.triggerAction()),
-            condition: getCallExpression(ctx.triggerCondition())
+            action: this.callExpressionGetter.visit(ctx.triggerAction())!,
+            condition: this.callExpressionGetter.visit(ctx.triggerCondition())!
         }));
     }
 
     visitTriggerChain = (ctx: Context.TriggerChainContext) => {
         this.nodes.push(withLocation(ctx, {
             type: "TriggerChain",
-            condition: getCallExpression(ctx.triggerCondition()),
-            actions: ctx.triggerAction().map(getCallExpression)
+            condition: this.callExpressionGetter.visit(ctx.triggerCondition())!,
+            actions: ctx.triggerAction().map(c => this.callExpressionGetter.visit(c)!)
         }));
     }
 }

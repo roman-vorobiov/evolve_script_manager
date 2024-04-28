@@ -9,8 +9,7 @@ const projectIds = Object.keys(projects);
 export const conditions = {
     Unlocked: techIds,
     Researched: techIds,
-    Built: buildingIds,
-    Chain: [""]
+    Built: buildingIds
 }
 
 export const actions = {

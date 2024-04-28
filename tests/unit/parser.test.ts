@@ -242,11 +242,12 @@ describe("Parser", () => {
 
                 expect(nodes[0].type).toBe("SettingAssignment");
                 if (nodes[0].type === "SettingAssignment") {
-                    expect(nodes[0].setting.expression!.name.valueOf()).toBe("foo");
-                    expect(nodes[0].setting.expression!.name.location).toStrictEqual(locations.between(1, 2));
+                    expect(nodes[0].setting.name.valueOf()).toBe("foo");
+                    expect(nodes[0].setting.name.location).toStrictEqual(locations.between(1, 2));
 
-                    expect(nodes[0].setting.expression!.argument.valueOf()).toBe("bar");
-                    expect(nodes[0].setting.expression!.argument.location).toStrictEqual(locations.between(3, 4));
+                    expect(nodes[0].setting.arguments.length).toBe(1);
+                    expect(nodes[0].setting.arguments[0].valueOf()).toBe("bar");
+                    expect(nodes[0].setting.arguments[0].location).toStrictEqual(locations.between(3, 4));
 
                     expect(nodes[0].value.valueOf()).toBe("baz");
                     expect(nodes[0].value.location).toStrictEqual(locations.between(5, 6));
@@ -269,14 +270,45 @@ describe("Parser", () => {
                 expect(nodes[0].action.name.valueOf()).toBe("aaa");
                 expect(nodes[0].action.name.location).toStrictEqual(locations.between(1, 2));
 
-                expect(nodes[0].action.argument.valueOf()).toBe("bbb");
-                expect(nodes[0].action.argument.location).toStrictEqual(locations.between(3, 4));
+                expect(nodes[0].action.arguments.length).toBe(1);
+                expect(nodes[0].action.arguments[0].valueOf()).toBe("bbb");
+                expect(nodes[0].action.arguments[0].location).toStrictEqual(locations.between(3, 4));
 
                 expect(nodes[0].condition.name.valueOf()).toBe("ccc");
                 expect(nodes[0].condition.name.location).toStrictEqual(locations.between(5, 6));
 
-                expect(nodes[0].condition.argument.valueOf()).toBe("ddd");
-                expect(nodes[0].condition.argument.location).toStrictEqual(locations.between(7, 8));
+                expect(nodes[0].condition.arguments.length).toBe(1);
+                expect(nodes[0].condition.arguments[0].valueOf()).toBe("ddd");
+                expect(nodes[0].condition.arguments[0].location).toStrictEqual(locations.between(7, 8));
+            }
+        });
+        it("should parse inline triggers with count", () => {
+            const { nodes, errors, locations } = parse(`
+                {\x01aaa\x02:\x03bbb\x04:\x05123\x06} when {\x07ccc\x08:\x09ddd\x0B:\x0C456\x0D}
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("Trigger");
+            if (nodes[0].type === "Trigger") {
+                expect(nodes[0].action.name.valueOf()).toBe("aaa");
+                expect(nodes[0].action.name.location).toStrictEqual(locations.between(1, 2));
+
+                expect(nodes[0].action.arguments.length).toBe(2);
+                expect(nodes[0].action.arguments[0].valueOf()).toBe("bbb");
+                expect(nodes[0].action.arguments[0].location).toStrictEqual(locations.between(3, 4));
+                expect(nodes[0].action.arguments[1].valueOf()).toBe(123);
+                expect(nodes[0].action.arguments[1].location).toStrictEqual(locations.between(5, 6));
+
+                expect(nodes[0].condition.name.valueOf()).toBe("ccc");
+                expect(nodes[0].condition.name.location).toStrictEqual(locations.between(7, 8));
+
+                expect(nodes[0].condition.arguments.length).toBe(2);
+                expect(nodes[0].condition.arguments[0].valueOf()).toBe("ddd");
+                expect(nodes[0].condition.arguments[0].location).toStrictEqual(locations.between(0x09, 0x0B));
+                expect(nodes[0].condition.arguments[1].valueOf()).toBe(456);
+                expect(nodes[0].condition.arguments[1].location).toStrictEqual(locations.between(0x0C, 0x0D));
             }
         });
 
@@ -296,20 +328,23 @@ describe("Parser", () => {
                 expect(nodes[0].condition.name.valueOf()).toBe("aaa");
                 expect(nodes[0].condition.name.location).toStrictEqual(locations.between(1, 2));
 
-                expect(nodes[0].condition.argument.valueOf()).toBe("bbb");
-                expect(nodes[0].condition.argument.location).toStrictEqual(locations.between(3, 4));
+                expect(nodes[0].condition.arguments.length).toBe(1);
+                expect(nodes[0].condition.arguments[0].valueOf()).toBe("bbb");
+                expect(nodes[0].condition.arguments[0].location).toStrictEqual(locations.between(3, 4));
 
                 expect(nodes[0].actions.length).toBe(2);
 
                 expect(nodes[0].actions[0].name.valueOf()).toBe("ccc")
                 expect(nodes[0].actions[0].name.location).toStrictEqual(locations.between(5, 6));
-                expect(nodes[0].actions[0].argument.valueOf()).toBe("ddd");
-                expect(nodes[0].actions[0].argument.location).toStrictEqual(locations.between(7, 8));
+                expect(nodes[0].actions[0].arguments.length).toBe(1);
+                expect(nodes[0].actions[0].arguments[0].valueOf()).toBe("ddd");
+                expect(nodes[0].actions[0].arguments[0].location).toStrictEqual(locations.between(7, 8));
 
                 expect(nodes[0].actions[1].name.valueOf()).toBe("eee")
                 expect(nodes[0].actions[1].name.location).toStrictEqual(locations.between(0x09, 0x0B));
-                expect(nodes[0].actions[1].argument.valueOf()).toBe("fff");
-                expect(nodes[0].actions[1].argument.location).toStrictEqual(locations.between(0x0C, 0x0D));
+                expect(nodes[0].actions[1].arguments.length).toBe(1);
+                expect(nodes[0].actions[1].arguments[0].valueOf()).toBe("fff");
+                expect(nodes[0].actions[1].arguments[0].location).toStrictEqual(locations.between(0x0C, 0x0D));
             }
         });
     });

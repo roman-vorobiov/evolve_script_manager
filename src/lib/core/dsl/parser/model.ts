@@ -10,20 +10,17 @@ export type SourceLocation = {
 
 export type SourceTracked<T> = T & { location: SourceLocation }
 
+export type Value = String | Number | Boolean;
+
 export type CallExpression = {
     name: SourceTracked<String>,
-    argument: SourceTracked<String>
-}
-
-export type Setting = {
-    name?: SourceTracked<String>,
-    expression?: CallExpression
+    arguments: SourceTracked<Value>[]
 }
 
 export type SettingAssignment = {
     type: "SettingAssignment",
-    setting: Setting,
-    value: SourceTracked<String | Number | Boolean>
+    setting: CallExpression,
+    value: SourceTracked<Value>
 }
 
 export type Trigger = {

@@ -11,11 +11,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withDummyLocation("city-oil_well")
+                    arguments: [withDummyLocation("city-oil_well"), withDummyLocation(123)]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well"), withDummyLocation(456)]
                 }
             };
 
@@ -26,12 +26,42 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
+                expect(statements[0].conditionType).toBe("researched");
+                expect(statements[0].conditionId).toBe("tech-oil_well");
+                expect(statements[0].conditionCount).toBe(456);
                 expect(statements[0].actionType).toBe("build");
                 expect(statements[0].actionId).toBe("city-oil_well");
-                expect(statements[0].actionCount).toBe(1);
+                expect(statements[0].actionCount).toBe(123);
+            }
+        });
+
+        it("should transform valid triggers without count", () => {
+            const node: SourceTracked<Trigger> = {
+                type: "Trigger",
+                location: makeDummyLocation(),
+                action: {
+                    name: withDummyLocation("Build"),
+                    arguments: [withDummyLocation("city-oil_well")]
+                },
+                condition: {
+                    name: withDummyLocation("Researched"),
+                    arguments: [withDummyLocation("tech-oil_well")]
+                }
+            };
+
+            const { statements, errors } = compile([node]);
+
+            expect(errors).toStrictEqual([]);
+            expect(statements.length).toBe(1);
+
+            expect(statements[0].type).toBe("Trigger");
+            if (statements[0].type === "Trigger") {
                 expect(statements[0].conditionType).toBe("researched");
                 expect(statements[0].conditionId).toBe("tech-oil_well");
                 expect(statements[0].conditionCount).toBe(1);
+                expect(statements[0].actionType).toBe("build");
+                expect(statements[0].actionId).toBe("city-oil_well");
+                expect(statements[0].actionCount).toBe(1);
             }
         });
 
@@ -41,16 +71,16 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well"), withDummyLocation(123)]
                 },
                 actions: [
                     {
                         name: withDummyLocation("Build"),
-                        argument: withDummyLocation("city-oil_well")
+                        arguments: [withDummyLocation("city-oil_well"), withDummyLocation(456)]
                     },
                     {
                         name: withDummyLocation("Build"),
-                        argument: withDummyLocation("city-cement_plant")
+                        arguments: [withDummyLocation("city-cement_plant"), withDummyLocation(789)]
                     }
                 ]
             };
@@ -62,22 +92,22 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
-                expect(statements[0].actionType).toBe("build");
-                expect(statements[0].actionId).toBe("city-oil_well");
-                expect(statements[0].actionCount).toBe(1);
                 expect(statements[0].conditionType).toBe("researched");
                 expect(statements[0].conditionId).toBe("tech-oil_well");
-                expect(statements[0].conditionCount).toBe(1);
+                expect(statements[0].conditionCount).toBe(123);
+                expect(statements[0].actionType).toBe("build");
+                expect(statements[0].actionId).toBe("city-oil_well");
+                expect(statements[0].actionCount).toBe(456);
             }
 
             expect(statements[1].type).toBe("Trigger");
             if (statements[1].type === "Trigger") {
-                expect(statements[1].actionType).toBe("build");
-                expect(statements[1].actionId).toBe("city-cement_plant");
-                expect(statements[1].actionCount).toBe(1);
                 expect(statements[1].conditionType).toBe("chain");
                 expect(statements[1].conditionId).toBe("");
-                expect(statements[1].conditionCount).toBe(1);
+                expect(statements[1].conditionCount).toBe(0);
+                expect(statements[1].actionType).toBe("build");
+                expect(statements[1].actionId).toBe("city-cement_plant");
+                expect(statements[1].actionCount).toBe(789);
             }
         });
 
@@ -87,11 +117,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Arpa"),
-                    argument: withDummyLocation("lhc")
+                    arguments: [withDummyLocation("lhc")]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well")]
                 }
             };
 
@@ -102,12 +132,12 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
-                expect(statements[0].actionType).toBe("arpa");
-                expect(statements[0].actionId).toBe("arpalhc");
-                expect(statements[0].actionCount).toBe(1);
                 expect(statements[0].conditionType).toBe("researched");
                 expect(statements[0].conditionId).toBe("tech-oil_well");
                 expect(statements[0].conditionCount).toBe(1);
+                expect(statements[0].actionType).toBe("arpa");
+                expect(statements[0].actionId).toBe("arpalhc");
+                expect(statements[0].actionCount).toBe(1);
             }
         });
 
@@ -119,11 +149,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withDummyLocation("city-oil_well")
+                    arguments: [withDummyLocation("city-oil_well")]
                 },
                 condition: {
                     name: withLocation(location, "Research"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well")]
                 }
             };
 
@@ -144,11 +174,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withDummyLocation("city-oil_well")
+                    arguments: [withDummyLocation("city-oil_well")]
                 },
                 condition: {
                     name: withLocation(location, "Hello"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well")]
                 }
             };
 
@@ -169,11 +199,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withDummyLocation("city-oil_well")
+                    arguments: [withDummyLocation("city-oil_well")]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withLocation(location, "hello")
+                    arguments: [withLocation(location, "hello")]
                 }
             };
 
@@ -186,6 +216,31 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
+        it("should refuse invalid condition count", () => {
+            const location = makeDummyLocation(123);
+
+            const node: SourceTracked<Trigger> = {
+                type: "Trigger",
+                location: makeDummyLocation(),
+                action: {
+                    name: withDummyLocation("Build"),
+                    arguments: [withDummyLocation("city-oil_well")]
+                },
+                condition: {
+                    name: withDummyLocation("Researched"),
+                    arguments: [withDummyLocation("tech-oil_well"), withLocation(location, 1.23)]
+                }
+            };
+
+            const { statements, errors } = compile([node]);
+
+            expect(statements).toStrictEqual([]);
+            expect(errors.length).toBe(1);
+
+            expect(errors[0].message).toBe("Value must be an integer");
+            expect(errors[0].location).toStrictEqual(location);
+        });
+
         it("should refuse mismatched condition type/id", () => {
             const location = makeDummyLocation(123);
 
@@ -194,11 +249,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withDummyLocation("city-oil_well")
+                    arguments: [withDummyLocation("city-oil_well")]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withLocation(location, "city-oil_well")
+                    arguments: [withLocation(location, "city-oil_well")]
                 }
             };
 
@@ -219,11 +274,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withLocation(location, "Hello"),
-                    argument: withDummyLocation("city-oil_well")
+                    arguments: [withDummyLocation("city-oil_well")]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well")]
                 }
             };
 
@@ -244,11 +299,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withLocation(location, "hello")
+                    arguments: [withLocation(location, "hello")]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well")]
                 }
             };
 
@@ -261,6 +316,31 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
+        it("should refuse invalid action count", () => {
+            const location = makeDummyLocation(123);
+
+            const node: SourceTracked<Trigger> = {
+                type: "Trigger",
+                location: makeDummyLocation(),
+                action: {
+                    name: withDummyLocation("Build"),
+                    arguments: [withDummyLocation("city-oil_well"), withLocation(location, 1.23)]
+                },
+                condition: {
+                    name: withDummyLocation("Researched"),
+                    arguments: [withDummyLocation("tech-oil_well")]
+                }
+            };
+
+            const { statements, errors } = compile([node]);
+
+            expect(statements).toStrictEqual([]);
+            expect(errors.length).toBe(1);
+
+            expect(errors[0].message).toBe("Value must be an integer");
+            expect(errors[0].location).toStrictEqual(location);
+        });
+
         it("should refuse mismatched action type/id", () => {
             const location = makeDummyLocation(123);
 
@@ -269,11 +349,11 @@ describe("Compiler", () => {
                 location: makeDummyLocation(),
                 action: {
                     name: withDummyLocation("Build"),
-                    argument: withLocation(location, "tech-oil_well")
+                    arguments: [withLocation(location, "tech-oil_well")]
                 },
                 condition: {
                     name: withDummyLocation("Researched"),
-                    argument: withDummyLocation("tech-oil_well")
+                    arguments: [withDummyLocation("tech-oil_well")]
                 }
             };
 

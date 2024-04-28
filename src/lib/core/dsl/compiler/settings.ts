@@ -25,19 +25,16 @@ function validateSetting(settingName: Parser.SourceTracked<String>): string {
 
 function normalizeCompoundSettingName(node: Parser.CallExpression): string {
     const prefix = validateSettingPrefix(node.name);
-    return `${prefix}${node.argument.valueOf()}`;
+    return `${prefix}${node.arguments[0].valueOf()}`;
 }
 
-function normalizeSettingName(node: Parser.Setting): string {
-    if (node.name !== undefined) {
+function normalizeSettingName(node: Parser.CallExpression): string {
+    if (node.arguments.length === 0) {
         return validateSetting(node.name);
     }
-    else if (node.expression !== undefined) {
-        const setting = normalizeCompoundSettingName(node.expression);
-        return validateSetting(withLocation(node.expression.argument.location, setting));
-    }
     else {
-        throw new Error(`Unknown settingId format: ${node}`);
+        const setting = normalizeCompoundSettingName(node);
+        return validateSetting(withLocation(node.arguments[0].location, setting));
     }
 }
 

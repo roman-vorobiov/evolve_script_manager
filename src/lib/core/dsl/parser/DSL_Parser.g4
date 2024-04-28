@@ -31,24 +31,11 @@ compoundStatement
 // Settings
 
 settingAssignment
-    : setting '=' value
-    ;
-
-setting
-    : '{' settingId '}'
+    : settingId '=' value
     ;
 
 settingId
-    : simpleSettingId
-    | compoundSettingId
-    ;
-
-simpleSettingId
-    : Identifier
-    ;
-
-compoundSettingId
-    : Identifier ':' Identifier
+    : '{' Identifier (':' Identifier)? '}'
     ;
 
 // Triggers
@@ -62,11 +49,15 @@ triggerChain
     ;
 
 triggerAction
-    : '{' Identifier ':' Identifier '}'
+    : triggerActionOrCondition
     ;
 
 triggerCondition
-    : '{' Identifier ':' Identifier '}'
+    : triggerActionOrCondition
+    ;
+
+triggerActionOrCondition
+    : '{' Identifier ':' Identifier (':' Number)? '}'
     ;
 
 // Values

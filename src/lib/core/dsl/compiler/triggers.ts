@@ -3,13 +3,25 @@ import { triggerConditions, triggerActions } from "$lib/core/domain";
 import type * as Parser from "$lib/core/dsl/parser/model";
 import type * as Compiler from "./model";
 
-function normalizeTriggerActionId(t: string, id: string) {
+function normalizeTriggerActionId(t: string, id: string): string {
     if (t === "Arpa") {
         return "arpa" + id;
     }
     else {
         return id;
     }
+}
+
+function validateTriggerCount(value: Parser.SourceTracked<Number> | undefined): number {
+    if (value === undefined) {
+        return 1;
+    }
+
+    if (!Number.isInteger(value.valueOf())) {
+        throw { message: "Value must be an integer", location: value.location };
+    }
+
+    return value.valueOf();
 }
 
 function validateTriggerType(
@@ -60,40 +72,52 @@ function validateTriggerActionId(actionType: string, actionId: Parser.SourceTrac
     return normalizeTriggerActionId(actionType, id);
 }
 
-export function *compileTrigger(node: Parser.Trigger): Generator<Compiler.Trigger> {
-    const conditionType = validateTriggerConditionType(node.condition.name);
-    const conditionId = validateTriggerConditionId(conditionType, node.condition.argument);
-    const actionType = validateTriggerActionType(node.action.name);
-    const actionId = validateTriggerActionId(actionType, node.action.argument);
+function compileCondition(condition: Parser.CallExpression) {
+    const conditionType = validateTriggerConditionType(condition.name);
+    const conditionId = validateTriggerConditionId(conditionType, condition.arguments[0] as Parser.SourceTracked<String>);
+    const conditionCount = validateTriggerCount(condition.arguments[1] as Parser.SourceTracked<Number>);
 
-    yield {
-        type: "Trigger",
-        actionType: actionType.toLowerCase(),
-        actionId,
-        actionCount: 1,
+    return {
         conditionType: conditionType.toLowerCase(),
         conditionId,
-        conditionCount: 1
+        conditionCount
+    }
+}
+
+function compileAction(action: Parser.CallExpression) {
+    const actionType = validateTriggerActionType(action.name);
+    const actionId = validateTriggerActionId(actionType, action.arguments[0] as Parser.SourceTracked<String>);
+    const actionCount = validateTriggerCount(action.arguments[1] as Parser.SourceTracked<Number>);
+
+    return {
+        actionType: actionType.toLowerCase(),
+        actionId,
+        actionCount
+    }
+}
+
+export function *compileTrigger(node: Parser.Trigger): Generator<Compiler.Trigger> {
+    yield {
+        type: "Trigger",
+        ...compileCondition(node.condition),
+        ...compileAction(node.action)
     };
 }
 
 export function *compileTriggerChain(node: Parser.TriggerChain): Generator<Compiler.Trigger> {
-    const conditionType = validateTriggerConditionType(node.condition.name);
-    const conditionId = validateTriggerConditionId(conditionType, node.condition.argument);
+    const condition = compileCondition(node.condition);
+    const chainCondition = {
+        conditionType: "chain",
+        conditionId: "",
+        conditionCount: 0
+    }
 
     let isFirst = true;
     for (let action of node.actions) {
-        const actionType = validateTriggerActionType(action.name);
-        const actionId = validateTriggerActionId(actionType, action.argument);
-
         yield {
             type: "Trigger",
-            actionType: actionType.toLowerCase(),
-            actionId,
-            actionCount: 1,
-            conditionType: isFirst ? conditionType.toLowerCase() : "chain",
-            conditionId: isFirst ? conditionId : "",
-            conditionCount: 1
+            ...(isFirst ? condition : chainCondition),
+            ...compileAction(action)
         };
 
         isFirst = false;

@@ -10,7 +10,8 @@ describe("Compiler", () => {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
                 setting: {
-                    name: withDummyLocation("autoBuild")
+                    name: withDummyLocation("autoBuild"),
+                    arguments: []
                 },
                 value: withDummyLocation(true)
             };
@@ -34,7 +35,8 @@ describe("Compiler", () => {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
                 setting: {
-                    name: withLocation(location, "hello")
+                    name: withLocation(location, "hello"),
+                    arguments: []
                 },
                 value: withDummyLocation(true)
             };
@@ -55,10 +57,8 @@ describe("Compiler", () => {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
                 setting: {
-                    expression: {
-                        name: withDummyLocation("Log"),
-                        argument: withDummyLocation("prestige")
-                    }
+                    name: withDummyLocation("Log"),
+                    arguments: [withDummyLocation("prestige")]
                 },
                 value: withDummyLocation(true)
             };
@@ -82,10 +82,8 @@ describe("Compiler", () => {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
                 setting: {
-                    expression: {
-                        name: withLocation(location, "hello"),
-                        argument: withDummyLocation("prestige")
-                    }
+                    name: withLocation(location, "hello"),
+                    arguments: [withDummyLocation("prestige")]
                 },
                 value: withDummyLocation(true)
             };
@@ -106,10 +104,8 @@ describe("Compiler", () => {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
                 setting: {
-                    expression: {
-                        name: withDummyLocation("Log"),
-                        argument: withLocation(location, "prestigea")
-                    }
+                    name: withDummyLocation("Log"),
+                    arguments: [withLocation(location, "prestigea")]
                 },
                 value: withDummyLocation(true)
             };
