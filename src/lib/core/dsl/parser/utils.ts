@@ -2,7 +2,7 @@ import { ParserRuleContext, Token } from "antlr4ng";
 
 import type { SourceLocation, SourceTracked } from "./model";
 
-export function contextLocation(ctx: ParserRuleContext) {
+function contextLocation(ctx: ParserRuleContext) {
     return {
         start: {
             line: ctx.start!.line,
@@ -15,7 +15,7 @@ export function contextLocation(ctx: ParserRuleContext) {
     }
 }
 
-export function tokenLocation(token: Token) {
+function tokenLocation(token: Token) {
     const length = token.stop - token.start;
 
     return {

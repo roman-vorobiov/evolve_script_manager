@@ -6,7 +6,7 @@ import {
     Parser
 } from "antlr4ng";
 
-import { tokenLocation } from "./utils";
+import { withLocation } from "./utils";
 import type { ParseError } from "./model";
 
 class InterceptedError {
@@ -40,7 +40,7 @@ export class ErrorStrategy extends DefaultErrorStrategy {
 
         const message = `Missing ${expected}`;
 
-        this.dispatch(recognizer, { message, location: tokenLocation(token) });
+        this.dispatch(recognizer, withLocation(token, { message }));
     }
 
     reportInputMismatch(recognizer: Parser) {
@@ -49,7 +49,7 @@ export class ErrorStrategy extends DefaultErrorStrategy {
 
         const message = `Unexpected ${received}`;
 
-        this.dispatch(recognizer, { message, location: tokenLocation(token) });
+        this.dispatch(recognizer, withLocation(token, { message }));
     }
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parse as parseImpl } from "$lib/core/dsl/parser";
+import { parse as parseImpl } from "$lib/core/dsl/parser/parse";
 
 import type { Position, SourceLocation } from "$lib/core/dsl/parser/model";
 

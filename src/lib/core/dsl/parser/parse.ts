@@ -5,10 +5,10 @@ import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
 
-import type { ParseError, ParseResult, Node, Setting, SourceTracked, CallExpression } from "./model";
+import type * as Parser from "./model";
 import type * as Context from "./.antlr/DSLParser";
 
-function getCallExpression<T extends { Identifier(i: number): TerminalNode | null }>(ctx: T): CallExpression {
+function getCallExpression<T extends { Identifier(i: number): TerminalNode | null }>(ctx: T): Parser.CallExpression {
     const name = ctx.Identifier(0)!;
     const argument = ctx.Identifier(1)!;
 
@@ -18,7 +18,7 @@ function getCallExpression<T extends { Identifier(i: number): TerminalNode | nul
     };
 }
 
-class SettingIdGetter extends DSLVisitor<Setting> {
+class SettingIdGetter extends DSLVisitor<Parser.Setting> {
     visitSetting = (ctx: Context.SettingContext) => {
         return this.visit(ctx.settingId())!;
     }
@@ -38,7 +38,7 @@ class SettingIdGetter extends DSLVisitor<Setting> {
     }
 }
 
-class SettingValueGetter extends DSLVisitor<SourceTracked<any>> {
+class SettingValueGetter extends DSLVisitor<Parser.SourceTracked<any>> {
     visitBooleanValue = (ctx: Context.BooleanValueContext) => {
         return withLocation(ctx, ctx.getText() === "ON");
     }
@@ -56,9 +56,9 @@ class Visitor extends DSLVisitor<any> {
     private settingIdGetter = new SettingIdGetter();
     private settingValueGetter = new SettingValueGetter();
 
-    private nodes: Node[] = [];
+    private nodes: Parser.Node[] = [];
 
-    constructor(private errors: ParseError[]) {
+    constructor(private errors: Parser.ParseError[]) {
         super();
     }
 
@@ -68,7 +68,7 @@ class Visitor extends DSLVisitor<any> {
                 this.visit(child);
             }
             catch (e) {
-                this.errors.push(e as ParseError);
+                this.errors.push(e as Parser.ParseError);
             }
         });
 
@@ -98,8 +98,8 @@ class Visitor extends DSLVisitor<any> {
     }
 }
 
-export function parse(rawText: string): ParseResult {
-    let errors: ParseError[] = [];
+export function parse(rawText: string): Parser.ParseResult {
+    let errors: Parser.ParseError[] = [];
 
     const chars = CharStream.fromString(rawText);
     const lexer = new DSLLexer(chars);

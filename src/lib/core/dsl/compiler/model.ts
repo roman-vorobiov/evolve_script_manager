@@ -19,6 +19,6 @@ export type Trigger = {
 export type Statement = SettingAssignment | Trigger;
 
 export type CompilationResult = {
-    config: any,
+    statements: Statement[],
     errors: ParseError[]
 }
