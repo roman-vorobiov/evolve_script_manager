@@ -4,7 +4,7 @@ import { parse as parseImpl } from "$lib/core/dsl/parser/parse";
 import type { Position, SourceLocation } from "$lib/core/dsl/parser/model";
 
 function parse(rawSource: string) {
-    const MAX_POSITION_LITERALS = 9;
+    const MAX_POSITION_LITERALS = 20;
 
     const positions: { [key: number]: Position } = {};
 
@@ -277,6 +277,39 @@ describe("Parser", () => {
 
                 expect(nodes[0].condition.argument.valueOf()).toBe("ddd");
                 expect(nodes[0].condition.argument.location).toStrictEqual(locations.between(7, 8));
+            }
+        });
+
+        it("should parse block triggers", () => {
+            const { nodes, errors, locations } = parse(`
+                when {\x01aaa\x02:\x03bbb\x04} do
+                    {\x05ccc\x06:\x07ddd\x08}
+                    {\x09eee\x0B:\x0Cfff\x0D}
+                end
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            expect(nodes[0].type).toBe("TriggerChain");
+            if (nodes[0].type === "TriggerChain") {
+                expect(nodes[0].condition.name.valueOf()).toBe("aaa");
+                expect(nodes[0].condition.name.location).toStrictEqual(locations.between(1, 2));
+
+                expect(nodes[0].condition.argument.valueOf()).toBe("bbb");
+                expect(nodes[0].condition.argument.location).toStrictEqual(locations.between(3, 4));
+
+                expect(nodes[0].actions.length).toBe(2);
+
+                expect(nodes[0].actions[0].name.valueOf()).toBe("ccc")
+                expect(nodes[0].actions[0].name.location).toStrictEqual(locations.between(5, 6));
+                expect(nodes[0].actions[0].argument.valueOf()).toBe("ddd");
+                expect(nodes[0].actions[0].argument.location).toStrictEqual(locations.between(7, 8));
+
+                expect(nodes[0].actions[1].name.valueOf()).toBe("eee")
+                expect(nodes[0].actions[1].name.location).toStrictEqual(locations.between(0x09, 0x0B));
+                expect(nodes[0].actions[1].argument.valueOf()).toBe("fff");
+                expect(nodes[0].actions[1].argument.location).toStrictEqual(locations.between(0x0C, 0x0D));
             }
         });
     });

@@ -3,7 +3,8 @@ import {
     BaseErrorListener,
     RecognitionException,
     LexerNoViableAltException,
-    Parser
+    Parser,
+    NoViableAltException
 } from "antlr4ng";
 
 import { withLocation } from "./utils";
@@ -16,6 +17,10 @@ class InterceptedError {
 export class ErrorStrategy extends DefaultErrorStrategy {
     private dispatch(recognizer: Parser, error: ParseError) {
         recognizer.notifyErrorListeners("", null, new InterceptedError(error) as any);
+    }
+
+    reportNoViableAlternative(recognizer: Parser, e: NoViableAltException) {
+        this.reportInputMismatch(recognizer);
     }
 
     reportUnwantedToken(recognizer: Parser) {

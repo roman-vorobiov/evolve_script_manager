@@ -32,7 +32,13 @@ export type Trigger = {
     action: CallExpression
 }
 
-export type Node = SourceTracked<SettingAssignment | Trigger>;
+export type TriggerChain = {
+    type: "TriggerChain",
+    condition: CallExpression,
+    actions: CallExpression[]
+}
+
+export type Node = SourceTracked<SettingAssignment | Trigger | TriggerChain>;
 
 export type ParseError = {
     message: string,

@@ -96,6 +96,14 @@ class Visitor extends DSLVisitor<any> {
             condition: getCallExpression(ctx.triggerCondition())
         }));
     }
+
+    visitTriggerChain = (ctx: Context.TriggerChainContext) => {
+        this.nodes.push(withLocation(ctx, {
+            type: "TriggerChain",
+            condition: getCallExpression(ctx.triggerCondition()),
+            actions: ctx.triggerAction().map(getCallExpression)
+        }));
+    }
 }
 
 export function parse(rawText: string): Parser.ParseResult {
