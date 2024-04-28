@@ -6,7 +6,17 @@ export type SettingAssignment = {
     value: any
 }
 
-export type Statement = SettingAssignment;
+export type Trigger = {
+    type: "Trigger",
+    actionType: string,
+    actionId: string,
+    actionCount: number,
+    conditionType: string,
+    conditionId: string,
+    conditionCount: number
+}
+
+export type Statement = SettingAssignment | Trigger;
 
 export type CompilationResult = {
     config: any,

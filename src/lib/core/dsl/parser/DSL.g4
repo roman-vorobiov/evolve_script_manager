@@ -1,5 +1,7 @@
 grammar DSL;
 
+// Statements
+
 root
     : statement* EOF
     ;
@@ -12,7 +14,10 @@ statement
 
 expression
     : settingAssignment
+    | trigger
     ;
+
+// Settings
 
 settingAssignment
     : setting '=' value
@@ -35,6 +40,22 @@ compoundSettingId
     : Identifier ':' Identifier
     ;
 
+// Triggers
+
+trigger
+    : triggerAction 'when' triggerCondition
+    ;
+
+triggerAction
+    : '{' Identifier ':' Identifier '}'
+    ;
+
+triggerCondition
+    : '{' Identifier ':' Identifier '}'
+    ;
+
+// Values
+
 value
     : booleanValue
     | stringValue
@@ -54,6 +75,10 @@ numericValue
     : Number
     ;
 
+// Lexer rules
+
+Keyword: 'when';
+
 Colon: ':';
 
 OpeningBrace: '{';
@@ -66,7 +91,7 @@ ON: 'ON';
 
 OFF: 'OFF';
 
-Identifier: [a-zA-Z]+;
+Identifier: [a-zA-Z] [a-zA-Z\-_0-9]*;
 
 Number: '-'? ('0' | [1-9] [0-9]*) ('.' [0-9]+)?;
 

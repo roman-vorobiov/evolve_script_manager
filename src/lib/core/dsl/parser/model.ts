@@ -23,10 +23,16 @@ export type Setting = {
 export type SettingAssignment = {
     type: "SettingAssignment",
     setting: Setting,
-    value: SourceTracked<any>
+    value: SourceTracked<String | Number | Boolean>
 }
 
-export type Node = SourceTracked<SettingAssignment>;
+export type Trigger = {
+    type: "Trigger",
+    condition: CallExpression,
+    action: CallExpression
+}
+
+export type Node = SourceTracked<SettingAssignment | Trigger>;
 
 export type ParseError = {
     message: string,

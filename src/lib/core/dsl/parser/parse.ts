@@ -1,12 +1,22 @@
-import { CharStream, CommonTokenStream } from "antlr4ng";
+import { CharStream, CommonTokenStream, TerminalNode } from "antlr4ng";
 import { ErrorStrategy, ErrorListener } from "./errors";
 import { withLocation } from "./utils";
 import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
 
-import type { ParseError, ParseResult, Node, Setting, SourceTracked } from "./model";
+import type { ParseError, ParseResult, Node, Setting, SourceTracked, CallExpression } from "./model";
 import type * as Context from "./.antlr/DSLParser";
+
+function getCallExpression<T extends { Identifier(i: number): TerminalNode | null }>(ctx: T): CallExpression {
+    const name = ctx.Identifier(0)!;
+    const argument = ctx.Identifier(1)!;
+
+    return {
+        name: withLocation(name.symbol, name.getText()),
+        argument: withLocation(argument.symbol, argument.getText())
+    };
+}
 
 class SettingIdGetter extends DSLVisitor<Setting> {
     visitSetting = (ctx: Context.SettingContext) => {
@@ -22,14 +32,8 @@ class SettingIdGetter extends DSLVisitor<Setting> {
     }
 
     visitCompoundSettingId = (ctx: Context.CompoundSettingIdContext) => {
-        const name = ctx.Identifier(0)!;
-        const argument = ctx.Identifier(1)!;
-
         return {
-            expression: {
-                name: withLocation(name.symbol, name.getText()),
-                argument: withLocation(argument.symbol, argument.getText())
-            }
+            expression: getCallExpression(ctx)
         };
     }
 }
@@ -58,17 +62,6 @@ class Visitor extends DSLVisitor<any> {
         super();
     }
 
-    visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
-        const settingName = this.settingIdGetter.visit(ctx.setting())!;
-        const settingValue = this.settingValueGetter.visit(ctx.value())!;
-
-        this.nodes.push(withLocation(ctx, {
-            type: "SettingAssignment",
-            setting: settingName,
-            value: settingValue
-        }));
-    }
-
     visitRoot = (ctx: Context.RootContext) => {
         ctx.children.forEach(child => {
             try {
@@ -83,6 +76,25 @@ class Visitor extends DSLVisitor<any> {
             nodes: this.nodes,
             errors: this.errors
         };
+    }
+
+    visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
+        const settingName = this.settingIdGetter.visit(ctx.setting())!;
+        const settingValue = this.settingValueGetter.visit(ctx.value())!;
+
+        this.nodes.push(withLocation(ctx, {
+            type: "SettingAssignment",
+            setting: settingName,
+            value: settingValue
+        }));
+    }
+
+    visitTrigger = (ctx: Context.TriggerContext) => {
+        this.nodes.push(withLocation(ctx, {
+            type: "Trigger",
+            action: getCallExpression(ctx.triggerAction()),
+            condition: getCallExpression(ctx.triggerCondition())
+        }));
     }
 }
 
