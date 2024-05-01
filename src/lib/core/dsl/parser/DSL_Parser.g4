@@ -35,7 +35,7 @@ settingAssignment
     ;
 
 settingId
-    : '{' Identifier (':' Identifier)? '}'
+    : Identifier ('.' Identifier)?
     ;
 
 // Triggers
@@ -57,7 +57,7 @@ triggerCondition
     ;
 
 triggerActionOrCondition
-    : '{' Identifier ':' Identifier (':' Number)? '}'
+    : Identifier Identifier ('(' Number ')')?
     ;
 
 // Values

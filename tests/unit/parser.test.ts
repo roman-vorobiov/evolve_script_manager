@@ -39,8 +39,8 @@ describe("Parser", () => {
     describe("Statement separation", () => {
         it("should split on newline", () => {
             const { nodes, errors, locations } = parse(`
-                \x01{foo} = ON\x02
-                \x03{bar} = OFF\x04
+                \x01foo = ON\x02
+                \x03bar = OFF\x04
             `);
 
             expect(errors).toStrictEqual([]);
@@ -52,10 +52,10 @@ describe("Parser", () => {
 
         it("should split on newlines", () => {
             const { nodes, errors, locations } = parse(`
-                \x01{foo} = ON\x02
+                \x01foo = ON\x02
 
 
-                \x03{bar} = OFF\x04
+                \x03bar = OFF\x04
             `);
 
             expect(errors).toStrictEqual([]);
@@ -67,7 +67,7 @@ describe("Parser", () => {
 
         it("should split on semicolon", () => {
             const { nodes, errors, locations } = parse(`
-                \x01{foo} = ON\x02;\x03{bar} = OFF\x04
+                \x01foo = ON\x02;\x03bar = OFF\x04
             `);
 
             expect(errors).toStrictEqual([]);
@@ -81,7 +81,7 @@ describe("Parser", () => {
     describe("Comments", () => {
         it("should ignore lines starting with '#'", () => {
             const { nodes, errors, locations } = parse(`
-                # {baz} = 123
+                # baz = 123
             `);
 
             expect(errors).toStrictEqual([]);
@@ -90,7 +90,7 @@ describe("Parser", () => {
 
         it("should ignore anything after '#'", () => {
             const { nodes, errors, locations } = parse(`
-                {foo} = bar; # {baz} = 123
+                foo = bar; # baz = 123
             `);
 
             expect(errors).toStrictEqual([]);
@@ -102,7 +102,7 @@ describe("Parser", () => {
         describe("String value", () => {
             it("should parse an unqoted literal", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x03bar\x04
+                    \x01foo\x02 = \x03bar\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -122,7 +122,7 @@ describe("Parser", () => {
         describe("Numeric value", () => {
             it("should parse a positive integer value", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x03123\x04
+                    \x01foo\x02 = \x03123\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -140,7 +140,7 @@ describe("Parser", () => {
 
             it("should parse a negative integer value", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x03-1\x04
+                    \x01foo\x02 = \x03-1\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -158,7 +158,7 @@ describe("Parser", () => {
 
             it("should parse a positive float value", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x031.23\x04
+                    \x01foo\x02 = \x031.23\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -176,7 +176,7 @@ describe("Parser", () => {
 
             it("should parse a negative float value", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x03-1.23\x04
+                    \x01foo\x02 = \x03-1.23\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -196,7 +196,7 @@ describe("Parser", () => {
         describe("Boolean value", () => {
             it("should parse a truthy value", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x03ON\x04
+                    \x01foo\x02 = \x03ON\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -214,7 +214,7 @@ describe("Parser", () => {
 
             it("should parse a falsy value", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02} = \x03OFF\x04
+                    \x01foo\x02 = \x03OFF\x04
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -234,7 +234,7 @@ describe("Parser", () => {
         describe("Compound setting names", () => {
             it("should parse prefix + suffix", () => {
                 const { nodes, errors, locations } = parse(`
-                    {\x01foo\x02:\x03bar\x04} = \x05baz\x06
+                    \x01foo\x02.\x03bar\x04 = \x05baz\x06
                 `);
 
                 expect(errors).toStrictEqual([]);
@@ -259,7 +259,7 @@ describe("Parser", () => {
     describe("Triggers", () => {
         it("should parse inline triggers", () => {
             const { nodes, errors, locations } = parse(`
-                {\x01aaa\x02:\x03bbb\x04} when {\x05ccc\x06:\x07ddd\x08}
+                \x01aaa\x02 \x03bbb\x04 when \x05ccc\x06 \x07ddd\x08
             `);
 
             expect(errors).toStrictEqual([]);
@@ -284,7 +284,7 @@ describe("Parser", () => {
         });
         it("should parse inline triggers with count", () => {
             const { nodes, errors, locations } = parse(`
-                {\x01aaa\x02:\x03bbb\x04:\x05123\x06} when {\x07ccc\x08:\x09ddd\x0B:\x0C456\x0D}
+                \x01aaa\x02 \x03bbb\x04 (\x05123\x06) when \x07ccc\x08 \x09ddd\x0B (\x0C456\x0D)
             `);
 
             expect(errors).toStrictEqual([]);
@@ -314,9 +314,9 @@ describe("Parser", () => {
 
         it("should parse block triggers", () => {
             const { nodes, errors, locations } = parse(`
-                when {\x01aaa\x02:\x03bbb\x04} do
-                    {\x05ccc\x06:\x07ddd\x08}
-                    {\x09eee\x0B:\x0Cfff\x0D}
+                when \x01aaa\x02 \x03bbb\x04 do
+                    \x05ccc\x06 \x07ddd\x08
+                    \x09eee\x0B \x0Cfff\x0D
                 end
             `);
 
