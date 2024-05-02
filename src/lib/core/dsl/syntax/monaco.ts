@@ -1,14 +1,42 @@
 import { CharStream } from "antlr4ng";
 import { DSLLexer } from "$lib/core/dsl/parser/.antlr/DSLLexer";
+import { isCapitalized } from "$lib/core/utils/stringUtils";
+
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+
+const keywords = new Set([
+    "When",
+    "Do",
+    "End"
+]);
 
 class DSLToken implements Monaco.languages.IToken {
     scopes: string;
     startIndex: number;
 
-    constructor(ruleName: String, startIndex: number) {
-        this.scopes = ruleName.toLowerCase() + ".dsl";
+    constructor(tokenName: string, startIndex: number, tokenText?: string, previousToken?: string) {
+        this.scopes = this.ruleName(tokenName, tokenText, previousToken)
         this.startIndex = startIndex;
+    }
+
+    private ruleName(tokenName: string, tokenText?: string, previousToken?: string) {
+        if (tokenName === "ON" || tokenName === "OFF") {
+            return "attribute.value.dsl";
+        }
+        else if (keywords.has(tokenName)) {
+            return "keyword.dsl";
+        }
+        else if (tokenName === "Identifier") {
+            if (previousToken === "Assignment") {
+                return "attribute.value.dsl";
+            }
+            else {
+                return isCapitalized(tokenText!) ? "type.dsl" : "variable.dsl";
+            }
+        }
+        else {
+            return tokenName.toLowerCase() + ".dsl";
+        }
     }
 }
 
@@ -45,6 +73,7 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
         lexer.removeErrorListeners();
 
         let tokens: Monaco.languages.IToken[] = [];
+        let previousToken: string | undefined;
         while (true) {
             let token = lexer.nextToken();
             if (token === null || token.type === EOF) {
@@ -53,7 +82,8 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
 
             const tokenName = lexer.symbolicNames[token.type];
             if (tokenName !== null) {
-                tokens.push(new DSLToken(tokenName!, token.column));
+                tokens.push(new DSLToken(tokenName, token.column, token.text, previousToken));
+                previousToken = tokenName;
             }
         }
 
