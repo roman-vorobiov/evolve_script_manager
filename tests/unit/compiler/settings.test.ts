@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
-import { withLocation, makeDummyLocation, withDummyLocation } from "./fixture";
-import type { SettingAssignment, SourceTracked } from "$lib/core/dsl/parser/model";
+import { withLocation } from "$lib/core/dsl/parser/utils";
+import { makeDummyLocation, withDummyLocation } from "./fixture";
+
+import type { SourceTracked } from "$lib/core/dsl/parser/source";
+import type { SettingAssignment } from "$lib/core/dsl/parser/model";
 
 describe("Compiler", () => {
     describe("Simple setting assignment", () => {
@@ -9,10 +12,10 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: {
+                setting: withDummyLocation({
                     name: withDummyLocation("autoBuild"),
                     arguments: []
-                },
+                }),
                 value: withDummyLocation(true)
             };
 
@@ -34,10 +37,10 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: {
+                setting: withDummyLocation({
                     name: withLocation(location, "hello"),
                     arguments: []
-                },
+                }),
                 value: withDummyLocation(true)
             };
 
@@ -56,10 +59,10 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: {
+                setting: withDummyLocation({
                     name: withDummyLocation("Log"),
                     arguments: [withDummyLocation("prestige")]
-                },
+                }),
                 value: withDummyLocation(true)
             };
 
@@ -81,10 +84,10 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: {
+                setting: withDummyLocation({
                     name: withLocation(location, "hello"),
                     arguments: [withDummyLocation("prestige")]
-                },
+                }),
                 value: withDummyLocation(true)
             };
 
@@ -103,10 +106,10 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: {
+                setting: withDummyLocation({
                     name: withDummyLocation("Log"),
                     arguments: [withLocation(location, "prestigea")]
-                },
+                }),
                 value: withDummyLocation(true)
             };
 

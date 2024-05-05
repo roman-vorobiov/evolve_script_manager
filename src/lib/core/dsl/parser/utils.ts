@@ -1,6 +1,6 @@
 import { ParserRuleContext, Token } from "antlr4ng";
 
-import type { SourceLocation, SourceTracked } from "./model";
+import type { SourceLocation, SourceTracked } from "./source";
 
 function contextLocation(ctx: ParserRuleContext) {
     return {

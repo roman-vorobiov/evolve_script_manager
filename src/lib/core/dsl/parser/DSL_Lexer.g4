@@ -4,17 +4,32 @@ lexer grammar DSL_Lexer;
 
 Dot           : '.';
 
-Semicolon     : ';';
-
-OpeningBrace  : '(';
-ClosingBrace  : ')';
-OpeningCBrace : '{';
-ClosingCBrace : '}';
+OpeningParen  : '(';
+ClosingParen  : ')';
+OpeningBrace  : '{';
+ClosingBrace  : '}';
 
 Assignment    : '=';
 
+MUL           : '*';
+DIV           : '/';
+PLUS          : '+';
+MINUS         : '-';
+
+EQ            : '==';
+NEQ           : '!=';
+LT            : '<';
+LE            : '<=';
+GT            : '>';
+GE            : '>=';
+AND           : 'and';
+OR            : 'or';
+NOT           : 'not';
+
 // Identifiers
 
+If   : 'if';
+Then : 'then';
 When : 'when';
 Do   : 'do';
 End  : 'end';

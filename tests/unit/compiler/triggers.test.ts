@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
-import { withLocation, makeDummyLocation, withDummyLocation } from "./fixture";
-import type { SourceTracked, Trigger, TriggerChain } from "$lib/core/dsl/parser/model";
+import { withLocation } from "$lib/core/dsl/parser/utils";
+import { makeDummyLocation, withDummyLocation } from "./fixture";
+
+import type { SourceTracked } from "$lib/core/dsl/parser/source";
+import type { Trigger, TriggerChain } from "$lib/core/dsl/parser/model";
 
 describe("Compiler", () => {
     describe("Triggers", () => {
@@ -9,14 +12,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well"), withDummyLocation(123)]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well"), withDummyLocation(456)]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -39,14 +42,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -69,19 +72,19 @@ describe("Compiler", () => {
             const node: SourceTracked<TriggerChain> = {
                 type: "TriggerChain",
                 location: makeDummyLocation(),
-                condition: {
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well"), withDummyLocation(123)]
-                },
+                }),
                 actions: [
-                    {
+                    withDummyLocation({
                         name: withDummyLocation("Build"),
                         arguments: [withDummyLocation("city-oil_well"), withDummyLocation(456)]
-                    },
-                    {
+                    }),
+                    withDummyLocation({
                         name: withDummyLocation("Build"),
                         arguments: [withDummyLocation("city-cement_plant"), withDummyLocation(789)]
-                    }
+                    })
                 ]
             };
 
@@ -115,14 +118,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Arpa"),
                     arguments: [withDummyLocation("lhc")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -147,14 +150,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withLocation(location, "Research"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -172,14 +175,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withLocation(location, "Hello"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -197,14 +200,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withLocation(location, "hello")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -222,14 +225,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well"), withLocation(location, 1.23)]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -247,14 +250,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withLocation(location, "city-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -272,14 +275,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withLocation(location, "Hello"),
                     arguments: [withDummyLocation("city-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -297,14 +300,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withLocation(location, "hello")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -322,14 +325,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withDummyLocation("city-oil_well"), withLocation(location, 1.23)]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);
@@ -347,14 +350,14 @@ describe("Compiler", () => {
             const node: SourceTracked<Trigger> = {
                 type: "Trigger",
                 location: makeDummyLocation(),
-                action: {
+                action: withDummyLocation({
                     name: withDummyLocation("Build"),
                     arguments: [withLocation(location, "tech-oil_well")]
-                },
-                condition: {
+                }),
+                condition: withDummyLocation({
                     name: withDummyLocation("Researched"),
                     arguments: [withDummyLocation("tech-oil_well")]
-                }
+                })
             };
 
             const { statements, errors } = compile([node]);

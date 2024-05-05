@@ -1,8 +1,6 @@
 import { withLocation } from "$lib/core/dsl/parser/utils";
 
-import type { SourceLocation } from "$lib/core/dsl/parser/model";
-
-export { withLocation } from "$lib/core/dsl/parser/utils";
+import type { SourceLocation } from "$lib/core/dsl/parser/source";
 
 export function makeDummyLocation(id = 0): SourceLocation {
     return {

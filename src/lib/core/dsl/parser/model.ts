@@ -1,14 +1,14 @@
-export type Position = {
-    line: number,
-    column: number
+import type { SourceTracked, SourceLocation } from "./source";
+
+export type ParseError = {
+    message: string,
+    location: SourceLocation
 }
 
-export type SourceLocation = {
-    start: Position,
-    stop: Position
+export type Expression = {
+    op: SourceTracked<String>,
+    arguments: SourceTracked<Expression | Value | CallExpression>[]
 }
-
-export type SourceTracked<T> = T & { location: SourceLocation }
 
 export type Value = String | Number | Boolean;
 
@@ -19,30 +19,26 @@ export type CallExpression = {
 
 export type SettingAssignment = {
     type: "SettingAssignment",
-    setting: CallExpression,
-    value: SourceTracked<Value>
+    setting: SourceTracked<CallExpression>,
+    value: SourceTracked<Value>,
+    condition?: SourceTracked<Expression | Value | CallExpression>
 }
 
 export type Trigger = {
     type: "Trigger",
-    condition: CallExpression,
-    action: CallExpression
+    condition: SourceTracked<CallExpression>,
+    action: SourceTracked<CallExpression>
 }
 
 export type TriggerChain = {
     type: "TriggerChain",
-    condition: CallExpression,
-    actions: CallExpression[]
+    condition: SourceTracked<CallExpression>,
+    actions: SourceTracked<CallExpression>[]
 }
 
-export type Node = SourceTracked<SettingAssignment | Trigger | TriggerChain>;
-
-export type ParseError = {
-    message: string,
-    location: SourceLocation
-}
+export type Node = SettingAssignment | Trigger | TriggerChain;
 
 export type ParseResult = {
-    nodes: Node[],
+    nodes: SourceTracked<Node>[],
     errors: ParseError[]
 }

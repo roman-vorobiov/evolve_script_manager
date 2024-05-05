@@ -7,35 +7,23 @@ options {
 // Statements
 
 root
-    : (statement | EOL)* EOF
+    : (statements | EOL)* EOF
+    ;
+
+statements
+    : statement (EOL statement)*
     ;
 
 statement
-    : simpleStatements
-    | compoundStatement
-    ;
-
-simpleStatements
-    : simpleStatement (';' simpleStatement)* ';'? EOL
-    ;
-
-simpleStatement
     : settingAssignment
     | trigger
-    ;
-
-compoundStatement
-    : triggerChain
+    | triggerChain
     ;
 
 // Settings
 
 settingAssignment
-    : settingId '=' value
-    ;
-
-settingId
-    : Identifier ('.' Identifier)?
+    : identifier '=' value ('if' expression)?
     ;
 
 // Triggers
@@ -58,6 +46,29 @@ triggerCondition
 
 triggerActionOrCondition
     : Identifier Identifier ('(' Number ')')?
+    ;
+
+// Expressions
+
+expression
+    : op=NOT expression
+    | expression op=(MUL | DIV) expression
+    | expression op=(PLUS | MINUS) expression
+    | expression op=(LT | LE | GT | GE) expression
+    | expression op=(EQ | NEQ) expression
+    | expression op=AND expression
+    | expression op=OR expression
+    | OpeningParen expression ClosingParen
+    | unaryExpression
+    ;
+
+unaryExpression
+    : identifier
+    | value
+    ;
+
+identifier
+    : Identifier ('.' Identifier)?
     ;
 
 // Values

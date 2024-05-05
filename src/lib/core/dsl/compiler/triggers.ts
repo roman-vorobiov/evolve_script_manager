@@ -1,6 +1,7 @@
 import { triggerConditions, triggerActions } from "$lib/core/domain";
 
-import type * as Parser from "$lib/core/dsl/parser/model";
+import type { SourceTracked } from "../parser/source";
+import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
 function normalizeTriggerActionId(t: string, id: string): string {
@@ -12,7 +13,7 @@ function normalizeTriggerActionId(t: string, id: string): string {
     }
 }
 
-function validateTriggerCount(value: Parser.SourceTracked<Number> | undefined): number {
+function validateTriggerCount(value: SourceTracked<Number> | undefined): number {
     if (value === undefined) {
         return 1;
     }
@@ -27,7 +28,7 @@ function validateTriggerCount(value: Parser.SourceTracked<Number> | undefined): 
 function validateTriggerType(
     key: "condition" | "action",
     types: typeof triggerConditions | typeof triggerActions,
-    t: Parser.SourceTracked<String>
+    t: SourceTracked<String>
 ): string {
     if (types[t.valueOf() as keyof typeof types] === undefined) {
         throw { message: `Unknown trigger ${key} '${t}'`, location: t.location };
@@ -39,7 +40,7 @@ function validateTriggerType(
 function validateTriggerId(
     t: string,
     types: typeof triggerConditions | typeof triggerActions,
-    id: Parser.SourceTracked<String>
+    id: SourceTracked<String>
 ): string {
     const candidates = types[t as keyof typeof types] as string[];
 
@@ -55,27 +56,27 @@ function validateTriggerId(
     return id.valueOf();
 }
 
-function validateTriggerConditionType(conditionType: Parser.SourceTracked<String>): string {
+function validateTriggerConditionType(conditionType: SourceTracked<String>): string {
     return validateTriggerType("condition", triggerConditions, conditionType);
 }
 
-function validateTriggerActionType(actionType: Parser.SourceTracked<String>): string {
+function validateTriggerActionType(actionType: SourceTracked<String>): string {
     return validateTriggerType("action", triggerActions, actionType);
 }
 
-function validateTriggerConditionId(conditionType: string, conditionId: Parser.SourceTracked<String>): string {
+function validateTriggerConditionId(conditionType: string, conditionId: SourceTracked<String>): string {
     return validateTriggerId(conditionType, triggerConditions, conditionId);
 }
 
-function validateTriggerActionId(actionType: string, actionId: Parser.SourceTracked<String>): string {
+function validateTriggerActionId(actionType: string, actionId: SourceTracked<String>): string {
     const id = validateTriggerId(actionType, triggerActions, actionId);
     return normalizeTriggerActionId(actionType, id);
 }
 
 function compileCondition(condition: Parser.CallExpression) {
     const conditionType = validateTriggerConditionType(condition.name);
-    const conditionId = validateTriggerConditionId(conditionType, condition.arguments[0] as Parser.SourceTracked<String>);
-    const conditionCount = validateTriggerCount(condition.arguments[1] as Parser.SourceTracked<Number>);
+    const conditionId = validateTriggerConditionId(conditionType, condition.arguments[0] as SourceTracked<String>);
+    const conditionCount = validateTriggerCount(condition.arguments[1] as SourceTracked<Number>);
 
     return {
         conditionType: conditionType.toLowerCase(),
@@ -86,8 +87,8 @@ function compileCondition(condition: Parser.CallExpression) {
 
 function compileAction(action: Parser.CallExpression) {
     const actionType = validateTriggerActionType(action.name);
-    const actionId = validateTriggerActionId(actionType, action.arguments[0] as Parser.SourceTracked<String>);
-    const actionCount = validateTriggerCount(action.arguments[1] as Parser.SourceTracked<Number>);
+    const actionId = validateTriggerActionId(actionType, action.arguments[0] as SourceTracked<String>);
+    const actionCount = validateTriggerCount(action.arguments[1] as SourceTracked<Number>);
 
     return {
         actionType: actionType.toLowerCase(),

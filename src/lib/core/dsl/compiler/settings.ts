@@ -2,10 +2,11 @@ import { settingPrefixes } from "$lib/core/domain";
 import defaultSettings from "$lib/assets/default.json";
 import { withLocation } from "$lib/core/dsl/parser/utils";
 
-import type * as Parser from "$lib/core/dsl/parser/model";
+import type { SourceTracked } from "../parser/source";
+import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
-function validateSettingPrefix(settingPrefix: Parser.SourceTracked<String>): string {
+function validateSettingPrefix(settingPrefix: SourceTracked<String>): string {
     const prefix = settingPrefixes[settingPrefix.valueOf()];
 
     if (prefix === undefined) {
@@ -15,7 +16,7 @@ function validateSettingPrefix(settingPrefix: Parser.SourceTracked<String>): str
     return prefix;
 }
 
-function validateSetting(settingName: Parser.SourceTracked<String>): string {
+function validateSetting(settingName: SourceTracked<String>): string {
     if (defaultSettings[settingName.valueOf() as keyof typeof defaultSettings] === undefined) {
         throw { message: `Unknown setting '${settingName}'`, location: settingName.location };
     }

@@ -1,7 +1,7 @@
 import { compileSettingAssignment } from "./settings";
 import { compileTrigger, compileTriggerChain } from "./triggers";
 
-import type * as Parser from "$lib/core/dsl/parser/model";
+import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
 function *normalize(nodes: Parser.Node[], errors: Parser.ParseError[]): Generator<Compiler.Statement> {
@@ -22,7 +22,7 @@ function *normalize(nodes: Parser.Node[], errors: Parser.ParseError[]): Generato
                 yield* impl(node as any);
             }
             else {
-                throw new Error(`Unknown node: ${node.type}`);
+                console.error(`Unknown node: ${node.type}`);
             }
         }
         catch (e) {
