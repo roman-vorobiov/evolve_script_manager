@@ -12,12 +12,12 @@ function fillConfig(config: Config, statement: Compiler.Statement) {
         config.triggers.push({
             seq: idx,
             priority: idx,
-            requirementType: statement.conditionType,
-            requirementId: statement.conditionId,
-            requirementCount: statement.conditionCount,
-            actionType: statement.actionType,
-            actionId: statement.actionId,
-            actionCount: statement.actionCount,
+            requirementType: statement.condition.type,
+            requirementId: statement.condition.id,
+            requirementCount: statement.condition.count,
+            actionType: statement.action.type,
+            actionId: statement.action.id,
+            actionCount: statement.action.count,
             complete: false
         });
     }

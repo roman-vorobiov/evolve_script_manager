@@ -79,9 +79,9 @@ function compileCondition(condition: Parser.CallExpression) {
     const conditionCount = validateTriggerCount(condition.arguments[1] as SourceTracked<Number>);
 
     return {
-        conditionType: conditionType.toLowerCase(),
-        conditionId,
-        conditionCount
+        type: conditionType.toLowerCase(),
+        id: conditionId,
+        count: conditionCount
     }
 }
 
@@ -91,34 +91,34 @@ function compileAction(action: Parser.CallExpression) {
     const actionCount = validateTriggerCount(action.arguments[1] as SourceTracked<Number>);
 
     return {
-        actionType: actionType.toLowerCase(),
-        actionId,
-        actionCount
+        type: actionType.toLowerCase(),
+        id: actionId,
+        count: actionCount
     }
 }
 
 export function *compileTrigger(node: Parser.Trigger): Generator<Compiler.Trigger> {
     yield {
         type: "Trigger",
-        ...compileCondition(node.condition),
-        ...compileAction(node.action)
+        condition: compileCondition(node.condition),
+        action: compileAction(node.action)
     };
 }
 
 export function *compileTriggerChain(node: Parser.TriggerChain): Generator<Compiler.Trigger> {
     const condition = compileCondition(node.condition);
     const chainCondition = {
-        conditionType: "chain",
-        conditionId: "",
-        conditionCount: 0
+        type: "chain",
+        id: "",
+        count: 0
     }
 
     let isFirst = true;
     for (let action of node.actions) {
         yield {
             type: "Trigger",
-            ...(isFirst ? condition : chainCondition),
-            ...compileAction(action)
+            condition: (isFirst ? condition : chainCondition),
+            action: compileAction(action)
         };
 
         isFirst = false;

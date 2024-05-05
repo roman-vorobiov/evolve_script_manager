@@ -26,12 +26,8 @@ describe("Generator", () => {
         it("should generate triggers", () => {
             const statement: Trigger = {
                 type: "Trigger",
-                actionType: "action",
-                actionId: "foo",
-                actionCount: 123,
-                conditionType: "requirement",
-                conditionId: "bar",
-                conditionCount: 456
+                action: { type: "action", id: "foo", count: 123, },
+                condition: { type: "requirement", id: "bar", count: 456 }
             };
 
             const { config, errors } = generateConfig([statement]);

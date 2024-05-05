@@ -29,12 +29,12 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
-                expect(statements[0].conditionType).toBe("researched");
-                expect(statements[0].conditionId).toBe("tech-oil_well");
-                expect(statements[0].conditionCount).toBe(456);
-                expect(statements[0].actionType).toBe("build");
-                expect(statements[0].actionId).toBe("city-oil_well");
-                expect(statements[0].actionCount).toBe(123);
+                expect(statements[0].condition.type).toBe("researched");
+                expect(statements[0].condition.id).toBe("tech-oil_well");
+                expect(statements[0].condition.count).toBe(456);
+                expect(statements[0].action.type).toBe("build");
+                expect(statements[0].action.id).toBe("city-oil_well");
+                expect(statements[0].action.count).toBe(123);
             }
         });
 
@@ -59,12 +59,12 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
-                expect(statements[0].conditionType).toBe("researched");
-                expect(statements[0].conditionId).toBe("tech-oil_well");
-                expect(statements[0].conditionCount).toBe(1);
-                expect(statements[0].actionType).toBe("build");
-                expect(statements[0].actionId).toBe("city-oil_well");
-                expect(statements[0].actionCount).toBe(1);
+                expect(statements[0].condition.type).toBe("researched");
+                expect(statements[0].condition.id).toBe("tech-oil_well");
+                expect(statements[0].condition.count).toBe(1);
+                expect(statements[0].action.type).toBe("build");
+                expect(statements[0].action.id).toBe("city-oil_well");
+                expect(statements[0].action.count).toBe(1);
             }
         });
 
@@ -95,22 +95,22 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
-                expect(statements[0].conditionType).toBe("researched");
-                expect(statements[0].conditionId).toBe("tech-oil_well");
-                expect(statements[0].conditionCount).toBe(123);
-                expect(statements[0].actionType).toBe("build");
-                expect(statements[0].actionId).toBe("city-oil_well");
-                expect(statements[0].actionCount).toBe(456);
+                expect(statements[0].condition.type).toBe("researched");
+                expect(statements[0].condition.id).toBe("tech-oil_well");
+                expect(statements[0].condition.count).toBe(123);
+                expect(statements[0].action.type).toBe("build");
+                expect(statements[0].action.id).toBe("city-oil_well");
+                expect(statements[0].action.count).toBe(456);
             }
 
             expect(statements[1].type).toBe("Trigger");
             if (statements[1].type === "Trigger") {
-                expect(statements[1].conditionType).toBe("chain");
-                expect(statements[1].conditionId).toBe("");
-                expect(statements[1].conditionCount).toBe(0);
-                expect(statements[1].actionType).toBe("build");
-                expect(statements[1].actionId).toBe("city-cement_plant");
-                expect(statements[1].actionCount).toBe(789);
+                expect(statements[1].condition.type).toBe("chain");
+                expect(statements[1].condition.id).toBe("");
+                expect(statements[1].condition.count).toBe(0);
+                expect(statements[1].action.type).toBe("build");
+                expect(statements[1].action.id).toBe("city-cement_plant");
+                expect(statements[1].action.count).toBe(789);
             }
         });
 
@@ -135,12 +135,12 @@ describe("Compiler", () => {
 
             expect(statements[0].type).toBe("Trigger");
             if (statements[0].type === "Trigger") {
-                expect(statements[0].conditionType).toBe("researched");
-                expect(statements[0].conditionId).toBe("tech-oil_well");
-                expect(statements[0].conditionCount).toBe(1);
-                expect(statements[0].actionType).toBe("arpa");
-                expect(statements[0].actionId).toBe("arpalhc");
-                expect(statements[0].actionCount).toBe(1);
+                expect(statements[0].condition.type).toBe("researched");
+                expect(statements[0].condition.id).toBe("tech-oil_well");
+                expect(statements[0].condition.count).toBe(1);
+                expect(statements[0].action.type).toBe("arpa");
+                expect(statements[0].action.id).toBe("arpalhc");
+                expect(statements[0].action.count).toBe(1);
             }
         });
 

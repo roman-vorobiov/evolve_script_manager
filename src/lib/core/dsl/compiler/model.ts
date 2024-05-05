@@ -1,19 +1,23 @@
 import type { ParseError } from "../parser/model";
 
+type Value = string | number | boolean;
+
 export type SettingAssignment = {
     type: "SettingAssignment",
     setting: string,
-    value: any
+    value: Value
+}
+
+type TriggerArgument = {
+    type: string,
+    id: string,
+    count: number
 }
 
 export type Trigger = {
     type: "Trigger",
-    actionType: string,
-    actionId: string,
-    actionCount: number,
-    conditionType: string,
-    conditionId: string,
-    conditionCount: number
+    action: TriggerArgument,
+    condition: TriggerArgument
 }
 
 export type Statement = SettingAssignment | Trigger;
