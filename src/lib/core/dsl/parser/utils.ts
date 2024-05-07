@@ -4,29 +4,23 @@ import type { SourceLocation, SourceTracked } from "./source";
 
 function contextLocation(ctx: ParserRuleContext) {
     return {
-        start: {
-            line: ctx.start!.line,
-            column: ctx.start!.column + 1
-        },
-        stop: {
-            line: ctx.stop!.line,
-            column: ctx.stop!.column + (ctx.stop?.stop! - ctx.stop?.start!) + 2
-        }
-    }
+        start: tokenLocation(ctx.start!).start,
+        stop: tokenLocation(ctx.stop!).stop
+    };
 }
 
 function tokenLocation(token: Token) {
-    const length = token.stop - token.start;
+    const length = token.text!.length;
 
     return {
         start: { line: token.line, column: token.column + 1 },
-        stop: { line: token.line, column: token.column + 2 + length }
+        stop: { line: token.line, column: token.column + 1 + length }
     };
 }
 
 type SourceEntity = ParserRuleContext | Token;
 
-type SourceTrackedType<T> = SourceTracked<
+export type SourceTrackedType<T> = SourceTracked<
     T extends string ? String :
     T extends number ? Number :
     T extends boolean ? Boolean :
@@ -38,10 +32,10 @@ export function withLocation<T>(sourceEntity: SourceEntity | SourceLocation, val
         if (sourceEntity instanceof ParserRuleContext) {
             return contextLocation(sourceEntity);
         }
-        else if ((sourceEntity as Token).tokenIndex !== undefined) {
+        else if ((sourceEntity as any).tokenIndex !== undefined) {
             return tokenLocation(sourceEntity as Token);
         }
-        else if ((sourceEntity as SourceLocation).start !== undefined) {
+        else if ((sourceEntity as any).start !== undefined) {
             return sourceEntity as SourceLocation;
         }
         else {

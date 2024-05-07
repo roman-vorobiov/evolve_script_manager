@@ -9,26 +9,26 @@ import type { SourceTracked } from "./source";
 import type * as Parser from "./model";
 import type * as Context from "./.antlr/DSLParser";
 
-class ExpressionGetter extends DSLVisitor<any> {
-    visitExpression = (ctx: Context.ExpressionContext): Parser.Expression => {
+class ExpressionGetter extends DSLVisitor<SourceTracked<Parser.Expression>> {
+    visitExpression = (ctx: Context.ExpressionContext): SourceTracked<Parser.Expression> => {
         if (ctx._op) {
             return withLocation(ctx, {
-                op: withLocation(ctx._op, ctx._op.text!),
-                arguments: ctx.expression().map(expr => this.visit(expr))
+                operator: withLocation(ctx._op, ctx._op.text!),
+                args: ctx.expression().map(expr => this.visit(expr)!)
             });
         }
         else {
             const expression = (ctx.unaryExpression() || ctx.expression(0))!;
-            return this.visit(expression);
+            return this.visit(expression)!;
         }
     }
 
-    visitIdentifier = (ctx: Context.IdentifierContext): Parser.CallExpression => {
-        const [name, ...args] = ctx.Identifier();
+    visitIdentifier = (ctx: Context.IdentifierContext): SourceTracked<Parser.Identifier> => {
+        const [name, ...targets] = ctx.Identifier();
 
         return withLocation(ctx, {
-            name: withLocation(name.symbol, name.getText()),
-            arguments: args.map(arg => withLocation(arg.symbol, arg.getText()))
+            name: withLocation(name.getSymbol(), name.getText()),
+            targets: targets.map(t => withLocation(t.getSymbol(), t.getText()))
         });
     }
 
@@ -45,20 +45,21 @@ class ExpressionGetter extends DSLVisitor<any> {
     }
 }
 
-class TriggerGetter extends DSLVisitor<SourceTracked<Parser.CallExpression>> {
-    visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext) => {
-        const [t, id] = ctx.Identifier();
+class TriggerGetter extends DSLVisitor<SourceTracked<Parser.TriggerArgument>> {
+    visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext): SourceTracked<Parser.TriggerArgument> => {
+        const [type, id] = ctx.Identifier();
         const count = ctx.Number();
 
-        const args: SourceTracked<Parser.Value>[] = [withLocation(id.symbol, id.getText())];
+        let node: Parser.TriggerArgument = {
+            type: withLocation(type.getSymbol(), type.getText()),
+            id: withLocation(id.getSymbol(), id.getText())
+        };
+
         if (count !== null) {
-            args.push(withLocation(count.symbol, new Number(count.getText())));
+            node.count = withLocation(count.getSymbol(), new Number(count.getText()));
         }
 
-        return withLocation(ctx, {
-            name: withLocation(t.symbol, t.getText()),
-            arguments: args
-        });
+        return withLocation(ctx, node);
     }
 }
 
@@ -86,8 +87,8 @@ class Visitor extends DSLVisitor<any> {
     }
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
-        const settingName = this.expressionGetter.visit(ctx.identifier())!;
-        const settingValue = this.expressionGetter.visit(ctx.value());
+        const settingName = this.expressionGetter.visit(ctx.settingId()) as SourceTracked<Parser.Identifier>;
+        const settingValue = this.expressionGetter.visit(ctx.value()) as SourceTracked<Parser.Constant>;
 
         const node: Parser.SettingAssignment = {
             type: "SettingAssignment",
@@ -96,7 +97,7 @@ class Visitor extends DSLVisitor<any> {
         };
 
         if (ctx.expression() !== null) {
-            node.condition = this.expressionGetter.visit(ctx.expression()!);
+            node.condition = this.expressionGetter.visit(ctx.expression()!)!;
         }
 
         this.nodes.push(withLocation(ctx, node));
@@ -105,14 +106,14 @@ class Visitor extends DSLVisitor<any> {
     visitTrigger = (ctx: Context.TriggerContext) => {
         this.nodes.push(withLocation(ctx, {
             type: "Trigger",
-            action: this.triggerGetter.visit(ctx.triggerAction())!,
-            condition: this.triggerGetter.visit(ctx.triggerCondition())!
+            condition: this.triggerGetter.visit(ctx.triggerCondition())!,
+            actions: [this.triggerGetter.visit(ctx.triggerAction())!]
         }));
     }
 
     visitTriggerChain = (ctx: Context.TriggerChainContext) => {
         this.nodes.push(withLocation(ctx, {
-            type: "TriggerChain",
+            type: "Trigger",
             condition: this.triggerGetter.visit(ctx.triggerCondition())!,
             actions: ctx.triggerAction().map(c => this.triggerGetter.visit(c)!)
         }));

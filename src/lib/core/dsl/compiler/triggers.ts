@@ -4,8 +4,8 @@ import type { SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
-function normalizeTriggerActionId(t: string, id: string): string {
-    if (t === "Arpa") {
+function normalizeTriggerActionId(type: string, id: string): string {
+    if (type === "Arpa") {
         return "arpa" + id;
     }
     else {
@@ -13,7 +13,7 @@ function normalizeTriggerActionId(t: string, id: string): string {
     }
 }
 
-function validateTriggerCount(value: SourceTracked<Number> | undefined): number {
+function validateTriggerCount(value?: SourceTracked<Number>): number {
     if (value === undefined) {
         return 1;
     }
@@ -28,24 +28,24 @@ function validateTriggerCount(value: SourceTracked<Number> | undefined): number 
 function validateTriggerType(
     key: "condition" | "action",
     types: typeof triggerConditions | typeof triggerActions,
-    t: SourceTracked<String>
+    type: SourceTracked<String>
 ): string {
-    if (types[t.valueOf() as keyof typeof types] === undefined) {
-        throw { message: `Unknown trigger ${key} '${t}'`, location: t.location };
+    if (types[type.valueOf() as keyof typeof types] === undefined) {
+        throw { message: `Unknown trigger ${key} '${type}'`, location: type.location };
     }
 
-    return t.valueOf();
+    return type.valueOf();
 }
 
 function validateTriggerId(
-    t: string,
+    type: string,
     types: typeof triggerConditions | typeof triggerActions,
     id: SourceTracked<String>
 ): string {
-    const candidates = types[t as keyof typeof types] as string[];
+    const candidates = types[type as keyof typeof types] as string[];
 
     if (candidates.indexOf(id.valueOf()) === -1) {
-        if (t === "Built" || t === "Build") {
+        if (type === "Built" || type === "Build") {
             throw { message: `Unknown building '${id}'`, location: id.location };
         }
         else {
@@ -73,39 +73,31 @@ function validateTriggerActionId(actionType: string, actionId: SourceTracked<Str
     return normalizeTriggerActionId(actionType, id);
 }
 
-function compileCondition(condition: Parser.CallExpression) {
-    const conditionType = validateTriggerConditionType(condition.name);
-    const conditionId = validateTriggerConditionId(conditionType, condition.arguments[0] as SourceTracked<String>);
-    const conditionCount = validateTriggerCount(condition.arguments[1] as SourceTracked<Number>);
+function compileCondition(condition: Parser.TriggerArgument): Compiler.TriggerArgument {
+    const type = validateTriggerConditionType(condition.type);
+    const id = validateTriggerConditionId(type, condition.id);
+    const count = validateTriggerCount(condition.count);
 
     return {
-        type: conditionType.toLowerCase(),
-        id: conditionId,
-        count: conditionCount
+        type: type.toLowerCase(),
+        id,
+        count
     }
 }
 
-function compileAction(action: Parser.CallExpression) {
-    const actionType = validateTriggerActionType(action.name);
-    const actionId = validateTriggerActionId(actionType, action.arguments[0] as SourceTracked<String>);
-    const actionCount = validateTriggerCount(action.arguments[1] as SourceTracked<Number>);
+function compileAction(action: Parser.TriggerArgument): Compiler.TriggerArgument {
+    const type = validateTriggerActionType(action.type);
+    const id = validateTriggerActionId(type, action.id);
+    const count = validateTriggerCount(action.count);
 
     return {
-        type: actionType.toLowerCase(),
-        id: actionId,
-        count: actionCount
+        type: type.toLowerCase(),
+        id,
+        count
     }
 }
 
 export function *compileTrigger(node: Parser.Trigger): Generator<Compiler.Trigger> {
-    yield {
-        type: "Trigger",
-        condition: compileCondition(node.condition),
-        action: compileAction(node.action)
-    };
-}
-
-export function *compileTriggerChain(node: Parser.TriggerChain): Generator<Compiler.Trigger> {
     const condition = compileCondition(node.condition);
     const chainCondition = {
         type: "chain",

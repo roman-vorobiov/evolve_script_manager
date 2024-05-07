@@ -23,7 +23,11 @@ statement
 // Settings
 
 settingAssignment
-    : identifier '=' value ('if' expression)?
+    : settingId '=' value ('if' expression)?
+    ;
+
+settingId
+    : identifier
     ;
 
 // Triggers

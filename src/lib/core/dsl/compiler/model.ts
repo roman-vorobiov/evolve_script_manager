@@ -8,7 +8,7 @@ export type SettingAssignment = {
     value: Value
 }
 
-type TriggerArgument = {
+export type TriggerArgument = {
     type: string,
     id: string,
     count: number

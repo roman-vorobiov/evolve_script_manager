@@ -1,5 +1,5 @@
 import { compileSettingAssignment } from "./settings";
-import { compileTrigger, compileTriggerChain } from "./triggers";
+import { compileTrigger } from "./triggers";
 
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
@@ -7,8 +7,7 @@ import type * as Compiler from "./model";
 function *normalize(nodes: Parser.Node[], errors: Parser.ParseError[]): Generator<Compiler.Statement> {
     const dispatch = {
         SettingAssignment: compileSettingAssignment,
-        Trigger: compileTrigger,
-        TriggerChain: compileTriggerChain
+        Trigger: compileTrigger
     };
 
     function isParseError(error: any): error is Parser.ParseError {

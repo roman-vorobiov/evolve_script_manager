@@ -14,9 +14,9 @@ describe("Parser", () => {
 
                 expect(nodes[0]).toStrictEqual(maps("foo = bar if aaa.bbb", <SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
                     value: maps("bar"),
-                    condition: maps("aaa.bbb", { name: maps("aaa"), arguments: [maps("bbb")] })
+                    condition: maps("aaa.bbb", { name: maps("aaa"), targets: [maps("bbb")] })
                 }));
             });
 
@@ -28,12 +28,12 @@ describe("Parser", () => {
 
                 expect(nodes[0]).toStrictEqual(maps("foo = bar if not aaa.bbb", <SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
                     value: maps("bar"),
                     condition: maps("not aaa.bbb", {
-                        op: maps("not"),
-                        arguments: [
-                            maps("aaa.bbb", { name: maps("aaa"), arguments: [maps("bbb")] })
+                        operator: maps("not"),
+                        args: [
+                            maps("aaa.bbb", { name: maps("aaa"), targets: [maps("bbb")] })
                         ]
                     })
                 }));
@@ -47,13 +47,13 @@ describe("Parser", () => {
 
                 expect(nodes[0]).toStrictEqual(maps("foo = bar if aaa.bbb < 123", <SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
                     value: maps("bar"),
                     condition: maps("aaa.bbb < 123", {
-                        op: maps("<"),
-                        arguments: [
-                            maps("aaa.bbb", { name: maps("aaa"), arguments: [maps("bbb")] }),
-                            maps("123", 123),
+                        operator: maps("<"),
+                        args: [
+                            maps("aaa.bbb", { name: maps("aaa"), targets: [maps("bbb")] }),
+                            maps("123", 123)
                         ]
                     })
                 }));
@@ -68,16 +68,16 @@ describe("Parser", () => {
 
                     expect(nodes[0]).toStrictEqual(maps("foo = bar if not (aaa or bbb)", <SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                        setting: maps("foo", { name: maps("foo"), targets: [] }),
                         value: maps("bar"),
                         condition: maps("not (aaa or bbb)", {
-                            op: maps("not"),
-                            arguments: [
+                            operator: maps("not"),
+                            args: [
                                 maps("aaa or bbb", {
-                                    op: maps("or"),
-                                    arguments: [
-                                        maps("aaa", { name: maps("aaa"), arguments: [] }),
-                                        maps("bbb", { name: maps("bbb"), arguments: [] }),
+                                    operator: maps("or"),
+                                    args: [
+                                        maps("aaa", { name: maps("aaa"), targets: [] }),
+                                        maps("bbb", { name: maps("bbb"), targets: [] })
                                     ]
                                 })
                             ]
@@ -93,18 +93,16 @@ describe("Parser", () => {
 
                     expect(nodes[0]).toStrictEqual(maps("foo = bar if not aaa * bbb", <SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                        setting: maps("foo", { name: maps("foo"), targets: [] }),
                         value: maps("bar"),
                         condition: maps("not aaa * bbb", {
-                            op: maps("*"),
-                            arguments: [
+                            operator: maps("*"),
+                            args: [
                                 maps("not aaa", {
-                                    op: maps("not"),
-                                    arguments: [
-                                        maps("aaa", { name: maps("aaa"), arguments: [] })
-                                    ]
+                                    operator: maps("not"),
+                                    args: [maps("aaa", { name: maps("aaa"), targets: [] })]
                                 }),
-                                maps("bbb", { name: maps("bbb"), arguments: [] })
+                                maps("bbb", { name: maps("bbb"), targets: [] })
                             ]
                         })
                     }));
@@ -157,25 +155,25 @@ describe("Parser", () => {
 
                         expect(nodes[0]).toStrictEqual(maps(`foo = bar if aaa ${second} bbb ${first} ccc ${second} ddd`, <SettingAssignment> {
                             type: "SettingAssignment",
-                            setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                            setting: maps("foo", { name: maps("foo"), targets: [] }),
                             value: maps("bar"),
                             condition: maps(`aaa ${second} bbb ${first} ccc ${second} ddd`, {
-                                op: maps(second),
-                                arguments: [
+                                operator: maps(second),
+                                args: [
                                     maps(`aaa ${second} bbb ${first} ccc`, {
-                                        op: maps(second),
-                                        arguments: [
-                                            maps("aaa", { name: maps("aaa"), arguments: [] }),
+                                        operator: maps(second),
+                                        args: [
+                                            maps("aaa", { name: maps("aaa"), targets: [] }),
                                             maps(`bbb ${first} ccc`, {
-                                                op: maps(first),
-                                                arguments: [
-                                                    maps("bbb", { name: maps("bbb"), arguments: [] }),
-                                                    maps("ccc", { name: maps("ccc"), arguments: [] })
+                                                operator: maps(first),
+                                                args: [
+                                                    maps("bbb", { name: maps("bbb"), targets: [] }),
+                                                    maps("ccc", { name: maps("ccc"), targets: [] })
                                                 ]
                                             })
                                         ]
                                     }),
-                                    maps("ddd", { name: maps("ddd"), arguments: [] })
+                                    maps("ddd", { name: maps("ddd"), targets: [] })
                                 ]
                             })
                         }));
@@ -189,23 +187,23 @@ describe("Parser", () => {
 
                         expect(nodes[0]).toStrictEqual(maps(`foo = bar if aaa ${first} bbb ${second} ccc ${first} ddd`, <SettingAssignment> {
                             type: "SettingAssignment",
-                            setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                            setting: maps("foo", { name: maps("foo"), targets: [] }),
                             value: maps("bar"),
                             condition: maps(`aaa ${first} bbb ${second} ccc ${first} ddd`, {
-                                op: maps(second),
-                                arguments: [
+                                operator: maps(second),
+                                args: [
                                     maps(`aaa ${first} bbb`, {
-                                        op: maps(first),
-                                        arguments: [
-                                            maps("aaa", { name: maps("aaa"), arguments: [] }),
-                                            maps("bbb", { name: maps("bbb"), arguments: [] })
+                                        operator: maps(first),
+                                        args: [
+                                            maps("aaa", { name: maps("aaa"), targets: [] }),
+                                            maps("bbb", { name: maps("bbb"), targets: [] })
                                         ]
                                     }),
                                     maps(`ccc ${first} ddd`, {
-                                        op: maps(first),
-                                        arguments: [
-                                            maps("ccc", { name: maps("ccc"), arguments: [] }),
-                                            maps("ddd", { name: maps("ddd"), arguments: [] })
+                                        operator: maps(first),
+                                        args: [
+                                            maps("ccc", { name: maps("ccc"), targets: [] }),
+                                            maps("ddd", { name: maps("ddd"), targets: [] })
                                         ]
                                     })
                                 ]
@@ -233,29 +231,29 @@ describe("Parser", () => {
 
                     expect(nodes[0]).toStrictEqual(maps(`foo = bar if aaa ${first} bbb ${second} ccc ${first} ddd`, <SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                        setting: maps("foo", { name: maps("foo"), targets: [] }),
                         value: maps("bar"),
                         condition: maps(`aaa ${first} bbb ${second} ccc ${first} ddd`, {
-                            op: maps(first),
-                            arguments: [
+                            operator: maps(first),
+                            args: [
                                 maps(`aaa ${first} bbb ${second} ccc`, {
-                                    op: maps(second),
-                                    arguments: [
+                                    operator: maps(second),
+                                    args: [
                                         maps(`aaa ${first} bbb`, {
-                                            op: maps(first),
-                                            arguments: [
-                                                maps("aaa", { name: maps("aaa"), arguments: [] }),
-                                                maps("bbb", { name: maps("bbb"), arguments: [] })
+                                            operator: maps(first),
+                                            args: [
+                                                maps("aaa", { name: maps("aaa"), targets: [] }),
+                                                maps("bbb", { name: maps("bbb"), targets: [] })
                                             ]
                                         }),
-                                        maps("ccc", { name: maps("ccc"), arguments: [] })
+                                        maps("ccc", { name: maps("ccc"), targets: [] })
                                     ]
                                 }),
-                                maps("ddd", { name: maps("ddd"), arguments: [] })
+                                maps("ddd", { name: maps("ddd"), targets: [] })
                             ]
                         })
                     }));
-                });
+               });
             });
         });
     });

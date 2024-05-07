@@ -5,38 +5,38 @@ export type ParseError = {
     location: SourceLocation
 }
 
-export type Expression = {
-    op: SourceTracked<String>,
-    arguments: SourceTracked<Expression | Value | CallExpression>[]
+export type Constant = String | Number | Boolean;
+
+export type Identifier = {
+    name: SourceTracked<String>,
+    targets: SourceTracked<String>[]
 }
 
-export type Value = String | Number | Boolean;
-
-export type CallExpression = {
-    name: SourceTracked<String>,
-    arguments: SourceTracked<Value>[]
+export type Expression = Constant | Identifier | {
+    operator: SourceTracked<String>,
+    args: SourceTracked<Expression>[]
 }
 
 export type SettingAssignment = {
     type: "SettingAssignment",
-    setting: SourceTracked<CallExpression>,
-    value: SourceTracked<Value>,
-    condition?: SourceTracked<Expression | Value | CallExpression>
+    setting: SourceTracked<Identifier>,
+    value: SourceTracked<Constant>,
+    condition?: SourceTracked<Expression>
+}
+
+export type TriggerArgument = {
+    type: SourceTracked<String>,
+    id: SourceTracked<String>,
+    count?: SourceTracked<Number>
 }
 
 export type Trigger = {
     type: "Trigger",
-    condition: SourceTracked<CallExpression>,
-    action: SourceTracked<CallExpression>
+    condition: SourceTracked<TriggerArgument>,
+    actions: SourceTracked<TriggerArgument>[]
 }
 
-export type TriggerChain = {
-    type: "TriggerChain",
-    condition: SourceTracked<CallExpression>,
-    actions: SourceTracked<CallExpression>[]
-}
-
-export type Node = SettingAssignment | Trigger | TriggerChain;
+export type Node = SettingAssignment | Trigger;
 
 export type ParseResult = {
     nodes: SourceTracked<Node>[],

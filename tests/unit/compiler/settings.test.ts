@@ -4,7 +4,28 @@ import { withLocation } from "$lib/core/dsl/parser/utils";
 import { makeDummyLocation, withDummyLocation } from "./fixture";
 
 import type { SourceTracked } from "$lib/core/dsl/parser/source";
-import type { SettingAssignment } from "$lib/core/dsl/parser/model";
+import type { Identifier, SettingAssignment } from "$lib/core/dsl/parser/model";
+
+function makeSettingId(
+    name: string | SourceTracked<String>,
+    suffix?: string | SourceTracked<String>
+): SourceTracked<Identifier> {
+    if (typeof name === "string") {
+        name = withDummyLocation(name);
+    }
+
+    if (typeof suffix === "string") {
+        suffix = withDummyLocation(suffix);
+    }
+
+    const node: Identifier = { name, targets: [] };
+
+    if (suffix !== undefined) {
+        node.targets.push(suffix);
+    }
+
+    return withDummyLocation(node);
+}
 
 describe("Compiler", () => {
     describe("Simple setting assignment", () => {
@@ -12,10 +33,7 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: withDummyLocation({
-                    name: withDummyLocation("autoBuild"),
-                    arguments: []
-                }),
+                setting: makeSettingId("autoBuild"),
                 value: withDummyLocation(true)
             };
 
@@ -37,10 +55,7 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: withDummyLocation({
-                    name: withLocation(location, "hello"),
-                    arguments: []
-                }),
+                setting: makeSettingId(withLocation(location, "hello")),
                 value: withDummyLocation(true)
             };
 
@@ -59,10 +74,7 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: withDummyLocation({
-                    name: withDummyLocation("Log"),
-                    arguments: [withDummyLocation("prestige")]
-                }),
+                setting: makeSettingId("Log", "prestige"),
                 value: withDummyLocation(true)
             };
 
@@ -84,10 +96,7 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: withDummyLocation({
-                    name: withLocation(location, "hello"),
-                    arguments: [withDummyLocation("prestige")]
-                }),
+                setting: makeSettingId(withLocation(location, "hello"), "prestige"),
                 value: withDummyLocation(true)
             };
 
@@ -106,10 +115,7 @@ describe("Compiler", () => {
             const node: SourceTracked<SettingAssignment> = {
                 type: "SettingAssignment",
                 location: makeDummyLocation(),
-                setting: withDummyLocation({
-                    name: withDummyLocation("Log"),
-                    arguments: [withLocation(location, "prestigea")]
-                }),
+                setting: makeSettingId("Log", withLocation(location, "prestigea")),
                 value: withDummyLocation(true)
             };
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "./fixture";
 
-import type { SettingAssignment } from "$lib/core/dsl/parser/model";
+import type { Identifier, SettingAssignment } from "$lib/core/dsl/parser/model";
 
 describe("Parser", () => {
     describe("Settings", () => {
@@ -22,7 +22,7 @@ describe("Parser", () => {
 
                 expect(nodes[0]).toStrictEqual(maps(`foo = ${source}`, <SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: maps("foo", { name: maps("foo"), arguments: [] }),
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
                     value: maps(source, target)
                 }));
             });
@@ -37,7 +37,7 @@ describe("Parser", () => {
 
                 expect(nodes[0]).toStrictEqual(maps("foo.bar = baz", <SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: maps("foo.bar", { name: maps("foo"), arguments: [maps("bar")] }),
+                    setting: maps("foo.bar", { name: maps("foo"), targets: [maps("bar")] }),
                     value: maps("baz")
                 }));
             });

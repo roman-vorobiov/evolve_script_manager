@@ -24,18 +24,18 @@ function validateSetting(settingName: SourceTracked<String>): string {
     return settingName.valueOf();
 }
 
-function normalizeCompoundSettingName(node: Parser.CallExpression): string {
+function normalizeCompoundSettingName(node: Parser.Identifier): string {
     const prefix = validateSettingPrefix(node.name);
-    return `${prefix}${node.arguments[0].valueOf()}`;
+    return `${prefix}${node.targets[0].valueOf()}`;
 }
 
-function normalizeSettingName(node: Parser.CallExpression): string {
-    if (node.arguments.length === 0) {
-        return validateSetting(node.name);
+function normalizeSettingName(node: SourceTracked<Parser.Identifier>): string {
+    if (node.targets.length !== 0) {
+        const setting = normalizeCompoundSettingName(node);
+        return validateSetting(withLocation(node.targets[0].location, setting));
     }
     else {
-        const setting = normalizeCompoundSettingName(node);
-        return validateSetting(withLocation(node.arguments[0].location, setting));
+        return validateSetting(node.name);
     }
 }
 

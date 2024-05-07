@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "./fixture";
 
-import type { Trigger, TriggerChain } from "$lib/core/dsl/parser/model";
+import type { Trigger } from "$lib/core/dsl/parser/model";
 
 describe("Parser", () => {
     describe("Triggers", () => {
@@ -13,8 +13,8 @@ describe("Parser", () => {
 
             expect(nodes[0]).toStrictEqual(maps("aaa bbb when ccc ddd", <Trigger> {
                 type: "Trigger",
-                condition: maps("ccc ddd", { name: maps("ccc"), arguments: [maps("ddd")] }),
-                action: maps("aaa bbb", { name: maps("aaa"), arguments: [maps("bbb")] })
+                condition: maps("ccc ddd", { type: maps("ccc"), id: maps("ddd") }),
+                actions: [maps("aaa bbb", { type: maps("aaa"), id: maps("bbb") })]
             }));
         });
 
@@ -26,8 +26,8 @@ describe("Parser", () => {
 
             expect(nodes[0]).toStrictEqual(maps("aaa bbb (123) when ccc ddd (456)", <Trigger> {
                 type: "Trigger",
-                condition: maps("ccc ddd (456)", { name: maps("ccc"), arguments: [maps("ddd"), maps("456", 456)] }),
-                action: maps("aaa bbb (123)", { name: maps("aaa"), arguments: [maps("bbb"), maps("123", 123)] })
+                condition: maps("ccc ddd (456)", { type: maps("ccc"), id: maps("ddd"), count: maps("456", 456) }),
+                actions: [maps("aaa bbb (123)", { type: maps("aaa"), id: maps("bbb"), count: maps("123", 123) })]
             }));
         });
 
@@ -42,12 +42,12 @@ describe("Parser", () => {
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            expect(nodes[0]).toStrictEqual(maps([0x01, 0x02], <TriggerChain> {
-                type: "TriggerChain",
-                condition: maps("aaa bbb", { name: maps("aaa"), arguments: [maps("bbb")] }),
+            expect(nodes[0]).toStrictEqual(maps([0x01, 0x02], <Trigger> {
+                type: "Trigger",
+                condition: maps("aaa bbb", { type: maps("aaa"), id: maps("bbb") }),
                 actions: [
-                    maps("ccc ddd", { name: maps("ccc"), arguments: [maps("ddd")] }),
-                    maps("eee fff", { name: maps("eee"), arguments: [maps("fff")] })
+                    maps("ccc ddd", { type: maps("ccc"), id: maps("ddd") }),
+                    maps("eee fff", { type: maps("eee"), id: maps("fff") })
                 ]
             }));
         });

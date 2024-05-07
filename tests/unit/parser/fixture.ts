@@ -1,7 +1,8 @@
 import { parse as parseImpl } from "$lib/core/dsl/parser/parse";
 import { withLocation } from "$lib/core/dsl/parser/utils";
 
-import type { Position, SourceLocation } from "$lib/core/dsl/parser/source";
+import type { SourceTrackedType } from "$lib/core/dsl/parser/utils";
+import type { Position, SourceLocation, SourceTracked } from "$lib/core/dsl/parser/source";
 
 export function parse(rawSource: string) {
     const MAX_POSITION_LITERALS = 20;
@@ -33,9 +34,9 @@ export function parse(rawSource: string) {
     };
 
     const mapCache: any = {};
-    function maps(from: string | [number, number], to?: any) {
+    function maps<T>(from: string | [number, number], to?: T): SourceTrackedType<T> {
         if (to === undefined) {
-            return maps(from, from);
+            return (typeof from === "string") ? maps(from, from) : (undefined as any);
         }
 
         if (Array.isArray(from)) {
@@ -66,6 +67,8 @@ export function parse(rawSource: string) {
         if (location !== undefined) {
             return withLocation(location, to);
         }
+
+        return undefined as any;
     }
 
     function at(startIdx: number, stopIdx: number) {

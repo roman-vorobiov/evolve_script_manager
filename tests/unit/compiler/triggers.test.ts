@@ -4,23 +4,36 @@ import { withLocation } from "$lib/core/dsl/parser/utils";
 import { makeDummyLocation, withDummyLocation } from "./fixture";
 
 import type { SourceTracked } from "$lib/core/dsl/parser/source";
-import type { Trigger, TriggerChain } from "$lib/core/dsl/parser/model";
+import type { Trigger, TriggerArgument } from "$lib/core/dsl/parser/model";
+
+function makeTriggerArgument(
+    type: string | SourceTracked<String>,
+    id: string | SourceTracked<String>,
+    count?: number | SourceTracked<Number>
+): SourceTracked<TriggerArgument> {
+    if (typeof type === "string") {
+        type = withDummyLocation(type);
+    }
+
+    if (typeof id === "string") {
+        id = withDummyLocation(id);
+    }
+
+    if (typeof count === "number") {
+        count = withDummyLocation(count);
+    }
+
+    return withDummyLocation(<TriggerArgument> { type, id, count });
+}
 
 describe("Compiler", () => {
     describe("Triggers", () => {
         it("should transform valid triggers", () => {
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well"), withDummyLocation(123)]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well"), withDummyLocation(456)]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well", 456),
+                actions: [makeTriggerArgument("Build", "city-oil_well", 123)]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -39,18 +52,11 @@ describe("Compiler", () => {
         });
 
         it("should transform valid triggers without count", () => {
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well"),
+                actions: [makeTriggerArgument("Build", "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -69,24 +75,14 @@ describe("Compiler", () => {
         });
 
         it("should transform valid triggers chains", () => {
-            const node: SourceTracked<TriggerChain> = {
-                type: "TriggerChain",
-                location: makeDummyLocation(),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well"), withDummyLocation(123)]
-                }),
+            const node = withDummyLocation(<Trigger> {
+                type: "Trigger",
+                condition: makeTriggerArgument("Researched", "tech-oil_well", 123),
                 actions: [
-                    withDummyLocation({
-                        name: withDummyLocation("Build"),
-                        arguments: [withDummyLocation("city-oil_well"), withDummyLocation(456)]
-                    }),
-                    withDummyLocation({
-                        name: withDummyLocation("Build"),
-                        arguments: [withDummyLocation("city-cement_plant"), withDummyLocation(789)]
-                    })
+                    makeTriggerArgument("Build", "city-oil_well", 456),
+                    makeTriggerArgument("Build", "city-cement_plant", 789)
                 ]
-            };
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -115,18 +111,11 @@ describe("Compiler", () => {
         });
 
         it("should normalize arpa ids", () => {
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Arpa"),
-                    arguments: [withDummyLocation("lhc")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well"),
+                actions: [makeTriggerArgument("Arpa", "lhc")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -147,18 +136,11 @@ describe("Compiler", () => {
         it("should refuse mismatched condition/action types", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withLocation(location, "Research"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument(withLocation(location, "Research"), "tech-oil_well"),
+                actions: [makeTriggerArgument("Build", "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -172,18 +154,11 @@ describe("Compiler", () => {
         it("should refuse invalid condition types", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withLocation(location, "Hello"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument(withLocation(location, "Hello"), "tech-oil_well"),
+                actions: [makeTriggerArgument("Build", "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -197,18 +172,11 @@ describe("Compiler", () => {
         it("should refuse invalid condition ids", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withLocation(location, "hello")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", withLocation(location, "hello")),
+                actions: [makeTriggerArgument("Build", "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -222,18 +190,11 @@ describe("Compiler", () => {
         it("should refuse invalid condition count", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well"), withLocation(location, 1.23)]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well", withLocation(location, 1.23)),
+                actions: [makeTriggerArgument("Build", "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -247,18 +208,11 @@ describe("Compiler", () => {
         it("should refuse mismatched condition type/id", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withLocation(location, "city-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", withLocation(location, "city-oil_well")),
+                actions: [makeTriggerArgument("Build", "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -272,18 +226,11 @@ describe("Compiler", () => {
         it("should refuse invalid action types", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withLocation(location, "Hello"),
-                    arguments: [withDummyLocation("city-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well"),
+                actions: [makeTriggerArgument(withLocation(location, "Hello"), "city-oil_well")]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -297,18 +244,11 @@ describe("Compiler", () => {
         it("should refuse invalid action ids", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withLocation(location, "hello")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well"),
+                actions: [makeTriggerArgument("Build", withLocation(location, "hello"))]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -322,18 +262,11 @@ describe("Compiler", () => {
         it("should refuse invalid action count", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withDummyLocation("city-oil_well"), withLocation(location, 1.23)]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well"),
+                actions: [makeTriggerArgument("Build", "city-oil_well", withLocation(location, 1.23))]
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -347,18 +280,11 @@ describe("Compiler", () => {
         it("should refuse mismatched action type/id", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<Trigger> = {
+            const node = withDummyLocation(<Trigger> {
                 type: "Trigger",
-                location: makeDummyLocation(),
-                action: withDummyLocation({
-                    name: withDummyLocation("Build"),
-                    arguments: [withLocation(location, "tech-oil_well")]
-                }),
-                condition: withDummyLocation({
-                    name: withDummyLocation("Researched"),
-                    arguments: [withDummyLocation("tech-oil_well")]
-                })
-            };
+                condition: makeTriggerArgument("Researched", "tech-oil_well"),
+                actions: [makeTriggerArgument("Build", withLocation(location, "tech-oil_well"))]
+            });
 
             const { statements, errors } = compile([node]);
 
