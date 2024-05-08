@@ -103,6 +103,22 @@ class Visitor extends DSLVisitor<any> {
         this.nodes.push(withLocation(ctx, node));
     }
 
+    visitConditionBlock = (ctx: Context.ConditionBlockContext) => {
+        this.nodes.push(withLocation(ctx, {
+            type: "ConditionPush",
+            condition: this.expressionGetter.visit(ctx.expression())!
+        }));
+
+        try {
+            ctx.settingStatement().forEach(s => this.visit(s));
+        }
+        finally {
+            this.nodes.push(withLocation(ctx, {
+                type: "ConditionPop",
+            }));
+        }
+    }
+
     visitTrigger = (ctx: Context.TriggerContext) => {
         this.nodes.push(withLocation(ctx, {
             type: "Trigger",

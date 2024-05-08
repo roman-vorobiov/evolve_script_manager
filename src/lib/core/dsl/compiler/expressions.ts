@@ -173,9 +173,9 @@ export function makeOverrideCondition(node: SourceTracked<Parser.Expression>): C
     }
 }
 
-export function *compileCondition(node: SourceTracked<Parser.Expression>): Generator<Compiler.OverrideCondition> {
+export function compileCondition(node: SourceTracked<Parser.Expression>): Compiler.OverrideCondition {
     const type = validateExpression(node);
     checkType(type, "boolean", node.location);
 
-    yield makeOverrideCondition(node);
+    return makeOverrideCondition(node);
 }

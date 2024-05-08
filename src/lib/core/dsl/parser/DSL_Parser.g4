@@ -15,12 +15,25 @@ statements
     ;
 
 statement
+    : settingStatement
+    | triggerStatement
+    ;
+
+settingStatement
     : settingAssignment
-    | trigger
+    | conditionBlock
+    ;
+
+triggerStatement
+    : trigger
     | triggerChain
     ;
 
 // Settings
+
+conditionBlock
+    : 'if' expression 'then' EOL (settingStatement? EOL)* 'end'
+    ;
 
 settingAssignment
     : settingId '=' value ('if' expression)?
@@ -37,7 +50,7 @@ trigger
     ;
 
 triggerChain
-    : 'when' triggerCondition 'do' EOL (triggerAction EOL)* 'end'
+    : 'when' triggerCondition 'do' EOL (triggerAction? EOL)* 'end'
     ;
 
 triggerAction

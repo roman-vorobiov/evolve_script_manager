@@ -12,9 +12,9 @@ function addOverride(config: Config, statement: Compiler.Override) {
     overrides.push({
         type1: statement.condition.left.type,
         arg1: statement.condition.left.value,
+        cmp: statement.condition.op,
         type2: statement.condition.right.type,
         arg2: statement.condition.right.value,
-        cmp: statement.condition.op,
         ret: statement.value
     });
 }

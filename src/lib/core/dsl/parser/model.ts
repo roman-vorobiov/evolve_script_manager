@@ -32,6 +32,15 @@ export type SettingAssignment = {
     condition?: SourceTracked<Expression>
 }
 
+export type ConditionPush = {
+    type: "ConditionPush",
+    condition: SourceTracked<Expression>
+}
+
+export type ConditionPop = {
+    type: "ConditionPop"
+}
+
 export type TriggerArgument = {
     type: SourceTracked<String>,
     id: SourceTracked<String>,
@@ -44,7 +53,7 @@ export type Trigger = {
     actions: SourceTracked<TriggerArgument>[]
 }
 
-export type Node = SettingAssignment | Trigger;
+export type Node = SettingAssignment | ConditionPush | ConditionPop | Trigger;
 
 export type ParseResult = {
     nodes: SourceTracked<Node>[],

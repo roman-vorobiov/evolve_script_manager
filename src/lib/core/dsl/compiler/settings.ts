@@ -1,13 +1,14 @@
-import settingPrefixes from "$lib/core/domain/prefixes";
 import defaultSettings from "$lib/assets/default.json";
+import settingPrefixes from "$lib/core/domain/prefixes";
+import { settingType } from "$lib/core/domain/settings";
 import { compileCondition } from "./expressions";
+import { conjunction } from "./conditions";
 import { ParseError } from "../parser/model";
 import { withLocation } from "../parser/utils";
 
 import type { SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
-import { settingType } from "$lib/core/domain/settings";
 
 function validateSettingPrefix(settingPrefix: SourceTracked<String>): string {
     const prefix = settingPrefixes[settingPrefix.valueOf()];
@@ -53,19 +54,23 @@ function normalizeSettingName(node: SourceTracked<Parser.Identifier>): string {
     }
 }
 
-export function *compileSettingAssignment(node: Parser.SettingAssignment): Generator<Compiler.SettingAssignment | Compiler.Override> {
+export function *compileSettingAssignment(
+    node: Parser.SettingAssignment,
+    scopeCondition?: SourceTracked<Parser.Expression>
+): Generator<Compiler.SettingAssignment | Compiler.Override> {
     const settingName = normalizeSettingName(node.setting);
     const settingValue = validateSettingValue(settingName, node.value);
 
-    if (node.condition !== undefined) {
-        for (let condition of compileCondition(node.condition)) {
-            yield {
-                type: "Override",
-                target: settingName,
-                condition,
-                value: settingValue
-            };
-        }
+    const condition = conjunction(scopeCondition, node.condition);
+
+    if (condition !== undefined) {
+        const computedCondition = compileCondition(condition);
+        yield {
+            type: "Override",
+            target: settingName,
+            condition: computedCondition,
+            value: settingValue
+        };
     }
     else {
         yield {

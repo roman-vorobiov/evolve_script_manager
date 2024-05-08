@@ -1,4 +1,4 @@
-import { challenges as challengeNames } from "./challenges";
+import { challenges } from "./challenges";
 import { races as raceNames, pseudoRaces } from "./races";
 import { playableGenera, mimicGenera } from "./genera";
 import traitNames from "./traits";
@@ -10,7 +10,6 @@ import { resources as resourceNames } from "./resources";
 import { jobs as jobNames, servantJobs as servantJobNames, crafters as crafterJobsNames } from "./jobs";
 import * as enums from "./enums";
 
-const challenges = Object.keys(challengeNames);
 const buildings = Object.keys(buildingNames);
 const projects = Object.keys(projectNames);
 const researches = Object.keys(researchNames);

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "./fixture";
 
-import type { SettingAssignment } from "$lib/core/dsl/parser/model";
+import type { ConditionPush, ConditionPop, SettingAssignment } from "$lib/core/dsl/parser/model";
 
 describe("Parser", () => {
     describe("Conditions", () => {
@@ -254,6 +254,65 @@ describe("Parser", () => {
                         })
                     }));
                });
+            });
+        });
+
+        describe("Blocks", () => {
+            it("should push and pop condition", () => {
+                const { nodes, errors, maps } = parse(`
+                    \x01if aaa.bbb then
+                        \x03if ccc then
+                            foo = 123
+                        end\x04
+
+                        bar = 456
+
+                        \x05if ddd then
+                        end\x06
+                    end\x02
+                `);
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(8);
+
+                expect(nodes[0]).toStrictEqual(maps([1, 2], <ConditionPush> {
+                    type: "ConditionPush",
+                    condition: maps("aaa.bbb", { name: maps("aaa"), targets: [maps("bbb")] })
+                }));
+
+                expect(nodes[1]).toStrictEqual(maps([3, 4], <ConditionPush> {
+                    type: "ConditionPush",
+                    condition: maps("ccc", { name: maps("ccc"), targets: [] })
+                }));
+
+                expect(nodes[2]).toStrictEqual(maps("foo = 123", <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("123", 123)
+                }));
+
+                expect(nodes[3]).toStrictEqual(maps([3, 4], <ConditionPop> {
+                    type: "ConditionPop",
+                }));
+
+                expect(nodes[4]).toStrictEqual(maps("bar = 456", <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("bar", { name: maps("bar"), targets: [] }),
+                    value: maps("456", 456)
+                }));
+
+                expect(nodes[5]).toStrictEqual(maps([5, 6], <ConditionPush> {
+                    type: "ConditionPush",
+                    condition: maps("ddd", { name: maps("ddd"), targets: [] })
+                }));
+
+                expect(nodes[6]).toStrictEqual(maps([5, 6], <ConditionPop> {
+                    type: "ConditionPop"
+                }));
+
+                expect(nodes[7]).toStrictEqual(maps([1, 2], <ConditionPop> {
+                    type: "ConditionPop"
+                }));
             });
         });
     });
