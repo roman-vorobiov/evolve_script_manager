@@ -1,41 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
 import { withLocation } from "$lib/core/dsl/parser/utils";
-import { makeDummyLocation, withDummyLocation } from "./fixture";
+import { makeDummyLocation, withDummyLocation, makeSettingId } from "./fixture";
 
-import type { SourceTracked } from "$lib/core/dsl/parser/source";
-import type { Identifier, SettingAssignment } from "$lib/core/dsl/parser/model";
-
-function makeSettingId(
-    name: string | SourceTracked<String>,
-    suffix?: string | SourceTracked<String>
-): SourceTracked<Identifier> {
-    if (typeof name === "string") {
-        name = withDummyLocation(name);
-    }
-
-    if (typeof suffix === "string") {
-        suffix = withDummyLocation(suffix);
-    }
-
-    const node: Identifier = { name, targets: [] };
-
-    if (suffix !== undefined) {
-        node.targets.push(suffix);
-    }
-
-    return withDummyLocation(node);
-}
+import type { SettingAssignment } from "$lib/core/dsl/parser/model";
 
 describe("Compiler", () => {
     describe("Simple setting assignment", () => {
         it("should transform valid settings", () => {
-            const node: SourceTracked<SettingAssignment> = {
+            const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                location: makeDummyLocation(),
                 setting: makeSettingId("autoBuild"),
                 value: withDummyLocation(true)
-            };
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -49,15 +26,14 @@ describe("Compiler", () => {
             }
         });
 
-        it("should refuse invalid settings", () => {
+        it("should reject invalid settings", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<SettingAssignment> = {
+            const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                location: makeDummyLocation(),
                 setting: makeSettingId(withLocation(location, "hello")),
                 value: withDummyLocation(true)
-            };
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -67,16 +43,33 @@ describe("Compiler", () => {
             expect(errors[0].message).toBe("Unknown setting 'hello'");
             expect(errors[0].location).toStrictEqual(location);
         });
+
+        it("should reject mismatched setting type", () => {
+            const location = makeDummyLocation(123);
+
+            const node = withDummyLocation(<SettingAssignment> {
+                type: "SettingAssignment",
+                setting: makeSettingId("autoBuild"),
+                value: withLocation(location, 123)
+            });
+
+            const { statements, errors } = compile([node]);
+
+            expect(statements).toStrictEqual([]);
+            expect(errors.length).toBe(1);
+
+            expect(errors[0].message).toBe("Expected boolean, got number");
+            expect(errors[0].location).toStrictEqual(location);
+        });
     });
 
     describe("Compound setting assignment", () => {
         it("should transform valid settings", () => {
-            const node: SourceTracked<SettingAssignment> = {
+            const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                location: makeDummyLocation(),
                 setting: makeSettingId("Log", "prestige"),
                 value: withDummyLocation(true)
-            };
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -90,15 +83,14 @@ describe("Compiler", () => {
             }
         });
 
-        it("should refuse invalid prefix", () => {
+        it("should reject invalid prefix", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<SettingAssignment> = {
+            const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                location: makeDummyLocation(),
                 setting: makeSettingId(withLocation(location, "hello"), "prestige"),
                 value: withDummyLocation(true)
-            };
+            });
 
             const { statements, errors } = compile([node]);
 
@@ -109,15 +101,14 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid suffix", () => {
+        it("should reject invalid suffix", () => {
             const location = makeDummyLocation(123);
 
-            const node: SourceTracked<SettingAssignment> = {
+            const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                location: makeDummyLocation(),
                 setting: makeSettingId("Log", withLocation(location, "prestigea")),
                 value: withDummyLocation(true)
-            };
+            });
 
             const { statements, errors } = compile([node]);
 

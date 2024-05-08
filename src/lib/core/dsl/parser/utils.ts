@@ -18,7 +18,22 @@ function tokenLocation(token: Token) {
     };
 }
 
-type SourceEntity = ParserRuleContext | Token;
+export type SourceEntity = ParserRuleContext | Token | SourceLocation;
+
+export function locationOf(sourceEntity: SourceEntity): SourceLocation {
+    if (sourceEntity instanceof ParserRuleContext) {
+        return contextLocation(sourceEntity);
+    }
+    else if ((sourceEntity as any).tokenIndex !== undefined) {
+        return tokenLocation(sourceEntity as Token);
+    }
+    else if ((sourceEntity as any).start !== undefined) {
+        return sourceEntity as SourceLocation;
+    }
+    else {
+        throw new Error(`Unknown source entity: ${sourceEntity}`);
+    }
+}
 
 export type SourceTrackedType<T> = SourceTracked<
     T extends string ? String :
@@ -27,21 +42,8 @@ export type SourceTrackedType<T> = SourceTracked<
     T
 >;
 
-export function withLocation<T>(sourceEntity: SourceEntity | SourceLocation, value: T): SourceTrackedType<T> {
-    const location = (() => {
-        if (sourceEntity instanceof ParserRuleContext) {
-            return contextLocation(sourceEntity);
-        }
-        else if ((sourceEntity as any).tokenIndex !== undefined) {
-            return tokenLocation(sourceEntity as Token);
-        }
-        else if ((sourceEntity as any).start !== undefined) {
-            return sourceEntity as SourceLocation;
-        }
-        else {
-            throw new Error(`Unknown source entity: ${sourceEntity}`);
-        }
-    })();
+export function withLocation<T>(sourceEntity: SourceEntity, value: T): SourceTrackedType<T> {
+    const location = locationOf(sourceEntity);
 
     const result = (() => {
         if (typeof value === "string") {

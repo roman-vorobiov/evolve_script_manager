@@ -1,4 +1,5 @@
-import { triggerConditions, triggerActions } from "$lib/core/domain";
+import { triggerConditions, triggerActions } from "$lib/core/domain/triggers";
+import { ParseError } from "../parser/model";
 
 import type { SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
@@ -19,7 +20,7 @@ function validateTriggerCount(value?: SourceTracked<Number>): number {
     }
 
     if (!Number.isInteger(value.valueOf())) {
-        throw { message: "Value must be an integer", location: value.location };
+        throw new ParseError("Value must be an integer", value.location);
     }
 
     return value.valueOf();
@@ -31,7 +32,7 @@ function validateTriggerType(
     type: SourceTracked<String>
 ): string {
     if (types[type.valueOf() as keyof typeof types] === undefined) {
-        throw { message: `Unknown trigger ${key} '${type}'`, location: type.location };
+        throw new ParseError(`Unknown trigger ${key} '${type}'`, type.location);
     }
 
     return type.valueOf();
@@ -46,10 +47,10 @@ function validateTriggerId(
 
     if (candidates.indexOf(id.valueOf()) === -1) {
         if (type === "Built" || type === "Build") {
-            throw { message: `Unknown building '${id}'`, location: id.location };
+            throw new ParseError(`Unknown building '${id}'`, id.location);
         }
         else {
-            throw { message: `Unknown tech '${id}'`, location: id.location };
+            throw new ParseError(`Unknown tech '${id}'`, id.location);
         }
     }
 

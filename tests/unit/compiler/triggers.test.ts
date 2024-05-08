@@ -1,30 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
 import { withLocation } from "$lib/core/dsl/parser/utils";
-import { makeDummyLocation, withDummyLocation } from "./fixture";
+import { makeDummyLocation, withDummyLocation, makeTriggerArgument } from "./fixture";
 
-import type { SourceTracked } from "$lib/core/dsl/parser/source";
-import type { Trigger, TriggerArgument } from "$lib/core/dsl/parser/model";
-
-function makeTriggerArgument(
-    type: string | SourceTracked<String>,
-    id: string | SourceTracked<String>,
-    count?: number | SourceTracked<Number>
-): SourceTracked<TriggerArgument> {
-    if (typeof type === "string") {
-        type = withDummyLocation(type);
-    }
-
-    if (typeof id === "string") {
-        id = withDummyLocation(id);
-    }
-
-    if (typeof count === "number") {
-        count = withDummyLocation(count);
-    }
-
-    return withDummyLocation(<TriggerArgument> { type, id, count });
-}
+import type { Trigger } from "$lib/core/dsl/parser/model";
 
 describe("Compiler", () => {
     describe("Triggers", () => {
@@ -133,7 +112,7 @@ describe("Compiler", () => {
             }
         });
 
-        it("should refuse mismatched condition/action types", () => {
+        it("should reject mismatched condition/action types", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -151,7 +130,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid condition types", () => {
+        it("should reject invalid condition types", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -169,7 +148,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid condition ids", () => {
+        it("should reject invalid condition ids", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -187,7 +166,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid condition count", () => {
+        it("should reject invalid condition count", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -205,7 +184,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse mismatched condition type/id", () => {
+        it("should reject mismatched condition type/id", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -223,7 +202,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid action types", () => {
+        it("should reject invalid action types", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -241,7 +220,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid action ids", () => {
+        it("should reject invalid action ids", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -259,7 +238,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse invalid action count", () => {
+        it("should reject invalid action count", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {
@@ -277,7 +256,7 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
 
-        it("should refuse mismatched action type/id", () => {
+        it("should reject mismatched action type/id", () => {
             const location = makeDummyLocation(123);
 
             const node = withDummyLocation(<Trigger> {

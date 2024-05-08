@@ -1,31 +1,26 @@
 import { compileSettingAssignment } from "./settings";
 import { compileTrigger } from "./triggers";
+import { ParseError } from "../parser/model";
 
+import type { SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
-function *normalize(nodes: Parser.Node[], errors: Parser.ParseError[]): Generator<Compiler.Statement> {
-    const dispatch = {
-        SettingAssignment: compileSettingAssignment,
-        Trigger: compileTrigger
-    };
-
-    function isParseError(error: any): error is Parser.ParseError {
-        return error.message !== undefined && error.location !== undefined;
-    }
-
+function *normalize(nodes: SourceTracked<Parser.Node>[], errors: ParseError[]): Generator<Compiler.Statement> {
     for (let node of nodes) {
         try {
-            const impl = dispatch[node.type];
-            if (impl !== undefined) {
-                yield* impl(node as any);
+            if (node.type === "SettingAssignment") {
+                yield* compileSettingAssignment(node);
+            }
+            else if (node.type === "Trigger") {
+                yield* compileTrigger(node);
             }
             else {
-                console.error(`Unknown node: ${node.type}`);
+                console.error(`Unknown node: ${(node as any).type}`);
             }
         }
         catch (e) {
-            if (isParseError(e)) {
+            if (e instanceof ParseError) {
                 errors.push(e);
             }
             else {
@@ -35,8 +30,8 @@ function *normalize(nodes: Parser.Node[], errors: Parser.ParseError[]): Generato
     }
 }
 
-export function compile(nodes: Parser.Node[]): Compiler.CompilationResult {
-    const errors: Parser.ParseError[] = [];
+export function compile(nodes: SourceTracked<Parser.Node>[]): Compiler.CompilationResult {
+    const errors: ParseError[] = [];
     const statements = [...normalize(nodes, errors)];
 
     return { statements, errors };

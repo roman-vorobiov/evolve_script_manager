@@ -1,8 +1,14 @@
 import type { SourceTracked, SourceLocation } from "./source";
+import { locationOf, type SourceEntity } from "./utils";
 
-export type ParseError = {
-    message: string,
-    location: SourceLocation
+export class ParseError {
+    message: string;
+    location: SourceLocation;
+
+    constructor(message: string, sourceEntity: SourceEntity) {
+        this.message = message;
+        this.location = locationOf(sourceEntity);
+    }
 }
 
 export type Constant = String | Number | Boolean;
@@ -12,10 +18,12 @@ export type Identifier = {
     targets: SourceTracked<String>[]
 }
 
-export type Expression = Constant | Identifier | {
+export type EvaluatedExpression = {
     operator: SourceTracked<String>,
     args: SourceTracked<Expression>[]
 }
+
+export type Expression = Constant | Identifier | EvaluatedExpression;
 
 export type SettingAssignment = {
     type: "SettingAssignment",

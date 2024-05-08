@@ -1,3 +1,14 @@
+type Value = string | number | boolean;
+
+export type Override = {
+    type1: string,
+    arg1: Value,
+    cmp: string,
+    type2: string,
+    arg2: Value,
+    ret: Value
+}
+
 export type Trigger = {
     seq: number,
     priority: number,
@@ -11,6 +22,7 @@ export type Trigger = {
 }
 
 export type Config = {
+    overrides: { [target: string]: Override[] },
     triggers: Trigger[],
     [key: string]: any
 }

@@ -7,16 +7,11 @@ import {
     NoViableAltException
 } from "antlr4ng";
 
-import { withLocation } from "./utils";
-import type { ParseError } from "./model";
-
-class InterceptedError {
-    constructor(public error: ParseError) {}
-}
+import { ParseError } from "./model";
 
 export class ErrorStrategy extends DefaultErrorStrategy {
     private dispatch(recognizer: Parser, error: ParseError) {
-        recognizer.notifyErrorListeners("", null, new InterceptedError(error) as any);
+        recognizer.notifyErrorListeners("", null, error as any);
     }
 
     reportNoViableAlternative(recognizer: Parser, e: NoViableAltException) {
@@ -43,18 +38,14 @@ export class ErrorStrategy extends DefaultErrorStrategy {
         const token = recognizer.getCurrentToken();
         const expected = this.getExpectedTokens(recognizer).toStringWithVocabulary(recognizer.vocabulary);
 
-        const message = `Missing ${expected}`;
-
-        this.dispatch(recognizer, withLocation(token, { message }));
+        this.dispatch(recognizer, new ParseError(`Missing ${expected}`, token));
     }
 
     reportInputMismatch(recognizer: Parser) {
         const token = recognizer.getCurrentToken();
         const received = this.getTokenErrorDisplay(token);
 
-        const message = `Unexpected ${received}`;
-
-        this.dispatch(recognizer, withLocation(token, { message }));
+        this.dispatch(recognizer, new ParseError(`Unexpected ${received}`, token));
     }
 }
 
@@ -76,14 +67,14 @@ export class ErrorListener extends BaseErrorListener {
             stop: { line, column: charPositionInLine + 2 }
         };
 
-        if (e instanceof InterceptedError) {
-            this.errors.push(e.error);
+        if (e instanceof ParseError) {
+            this.errors.push(e);
         }
         else if (e instanceof LexerNoViableAltException) {
-            this.errors.push({ message: "Unexpected symbol", location: defaultPosition });
+            this.errors.push(new ParseError("Unexpected symbol", defaultPosition));
         }
         else {
-            this.errors.push({ message: "Unknown error", location: defaultPosition });
+            this.errors.push(new ParseError("Unknown error", defaultPosition));
             console.error(e);
         }
     }

@@ -2,6 +2,24 @@ import type { ParseError } from "../parser/model";
 
 type Value = string | number | boolean;
 
+type ExpressionArgument = {
+    type: string,
+    value: Value
+}
+
+export type OverrideCondition = {
+    op: string,
+    left: ExpressionArgument,
+    right: ExpressionArgument
+}
+
+export type Override = {
+    type: "Override",
+    target: string,
+    condition: OverrideCondition,
+    value: Value
+}
+
 export type SettingAssignment = {
     type: "SettingAssignment",
     setting: string,
@@ -20,7 +38,7 @@ export type Trigger = {
     condition: TriggerArgument
 }
 
-export type Statement = SettingAssignment | Trigger;
+export type Statement = SettingAssignment | Override | Trigger;
 
 export type CompilationResult = {
     statements: Statement[],
