@@ -2,7 +2,7 @@ import type { ParseError } from "../parser/model";
 
 type Value = string | number | boolean;
 
-type ExpressionArgument = {
+export type ExpressionArgument = {
     type: string,
     value: Value
 }

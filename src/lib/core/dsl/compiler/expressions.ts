@@ -1,30 +1,45 @@
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { settingType } from "$lib/core/domain/settings";
 import { ParseError } from "../parser/model";
-import type { SourceTracked } from "../parser/source";
+
+import type { SourceLocation, SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
-function getExpressionType(node: Parser.Identifier): string | null {
-    if (node.targets.length === 0) {
-        return otherExpressions[node.name.valueOf()].type;
+function identity<T>(value: T): T {
+    return value;
+}
+
+function isBinaryExpression(node: Parser.Expression): node is Parser.EvaluatedExpression {
+    return (node as any).operator !== undefined && (node as any).operator != "not";
+}
+
+function isUnaryExpression(node: Parser.Expression): node is Parser.EvaluatedExpression {
+    return (node as any).operator == "not";
+}
+
+function isIdentifier(node: Parser.Expression): node is Parser.Identifier {
+    return (node as any).name !== undefined;
+}
+
+function checkType(type: string | null, expected: string | null, location: SourceLocation) {
+    if (type == null || expected === null) {
+        return;
     }
-    else {
-        const info = expressions[node.name.valueOf()];
-        if (info.valueDescription === "setting") {
-            return settingType(node.targets[0].valueOf());
-        }
-        else {
-            return info.type;
-        }
+
+    if (type !== expected) {
+        throw new ParseError(`Expected ${expected}, got ${type}`, location);
     }
 }
 
-function validateIdentifier(node: SourceTracked<Parser.Identifier>) {
+function validateIdentifier(node: SourceTracked<Parser.Identifier>): string | null {
     if (node.targets.length === 0) {
-        if (otherExpressions[node.name.valueOf()] === undefined) {
+        const info = otherExpressions[node.name.valueOf()];
+        if (info === undefined) {
             throw new ParseError(`Unknown expression '${node.name}'`, node.location);
         }
+
+        return info.type;
     }
     else {
         const info = expressions[node.name.valueOf()];
@@ -38,61 +53,129 @@ function validateIdentifier(node: SourceTracked<Parser.Identifier>) {
                 throw new ParseError(`Unknown ${info.valueDescription} '${node.targets[0]}'`, node.targets[0].location);
             }
         }
-    }
-}
 
-function validateIdentifierType(node: SourceTracked<Parser.Identifier>, expectedType: string) {
-    const type = getExpressionType(node);
-    if (type !== null) {
-        if (type !== expectedType) {
-            throw new ParseError(`Expected ${expectedType}, got ${type}`, node.location);
+        if (info.valueDescription === "setting") {
+            return settingType(node.targets[0].valueOf());
         }
+
+        return info.type;
     }
 }
 
-function isBinaryExpression(node: Parser.Expression): node is Parser.EvaluatedExpression {
-    return (node as any).operator !== undefined && (node as any).operator !== "not";
+function validateEvaluatedExpression(node: SourceTracked<Parser.EvaluatedExpression>): string | null {
+    if (["==", "!="].indexOf(node.operator.valueOf()) !== -1) {
+        const lType = validateExpression(node.args[0]);
+        const rType = validateExpression(node.args[1]);
+        checkType(rType, lType, node.args[1].location);
+        return "boolean";
+    }
+    else if (["and", "or", "not"].indexOf(node.operator.valueOf()) !== -1) {
+        node.args.forEach(arg => checkType(validateExpression(arg), "boolean", arg.location));
+        return "boolean";
+    }
+    else if (["<", "<=", ">", ">="].indexOf(node.operator.valueOf()) !== -1) {
+        node.args.forEach(arg => checkType(validateExpression(arg), "number", arg.location));
+        return "boolean";
+    }
+    else if (["+", "-", "*", "/"].indexOf(node.operator.valueOf()) !== -1) {
+        node.args.forEach(arg => checkType(validateExpression(arg), "number", arg.location));
+        return "number";
+    }
+    else {
+        throw new ParseError(`Unknown operator '${node.operator}'`, node.operator.location);
+    }
 }
 
-function isUnaryExpression(node: Parser.Expression): node is Parser.EvaluatedExpression {
-    return (node as any).operator === "not";
+function validateExpression(node: SourceTracked<Parser.Expression>): string | null {
+    if (isBinaryExpression(node) || isUnaryExpression(node)) {
+        return validateEvaluatedExpression(node);
+    }
+    else if (isIdentifier(node)) {
+        return validateIdentifier(node);
+    }
+    else {
+        return typeof node.valueOf();
+    }
 }
 
-function isNullaryExpression(node: Parser.Expression): node is Parser.Identifier {
-    return (node as any).name !== undefined;
-}
-
-function makeBinaryExpression(node: SourceTracked<Parser.Expression>): Compiler.OverrideCondition | undefined {
+export function toEvalString(node: Parser.Expression, wrap: boolean = false): string {
     if (isBinaryExpression(node)) {
-        // Todo
+        const wrapper = wrap ? (value: string) => `(${value})` : identity;
+        return wrapper(`${toEvalString(node.args[0], true)} ${node.operator} ${toEvalString(node.args[1], true)}`);
     }
     else if (isUnaryExpression(node)) {
-        // Todo
+        return `!${toEvalString(node.args[0], true)}`;
     }
-    else if (isNullaryExpression(node)) {
-        validateIdentifier(node);
-        validateIdentifierType(node, "boolean");
+    else if (isIdentifier(node)) {
+        const normalized = makeExpressionArgument(node);
+        return `checkTypes.${normalized.type}.fn("${normalized.value}")`;
+    }
+    else {
+        return node instanceof String ? `"${node}"` : `${node}`
+    }
+}
 
+export function makeExpressionArgument(node: Parser.Expression): Compiler.ExpressionArgument {
+    if (isBinaryExpression(node) || isUnaryExpression(node)) {
         return {
-            op: "==",
-            left: {
+            type: "Eval",
+            value: toEvalString(node)
+        }
+    }
+    else if (isIdentifier(node)) {
+        if (node.targets.length === 0) {
+            return {
+                type: "Other",
+                value: otherExpressions[node.name.valueOf()].aliasFor
+            };
+        }
+        else {
+            const resolveAlias = expressions[node.name.valueOf()].alias ?? identity;
+            return {
                 type: node.name.valueOf(),
-                value: node.targets[0].valueOf()
-            },
-            right: {
-                type: "Boolean",
-                value: true
-            }
+                value: resolveAlias(node.targets[0].valueOf())
+            };
         }
     }
     else {
-        // Todo: constant
+        return {
+            type: node.constructor.name,
+            value: node.valueOf()
+        }
+    }
+}
+
+export function makeOverrideCondition(node: SourceTracked<Parser.Expression>): Compiler.OverrideCondition {
+    if (isBinaryExpression(node)) {
+        return {
+            op: node.operator.toUpperCase(),
+            left: makeExpressionArgument(node.args[0]),
+            right: makeExpressionArgument(node.args[1])
+        }
+    }
+    else if (isUnaryExpression(node)) {
+        return {
+            op: "==",
+            left: makeExpressionArgument(node.args[0]),
+            right: { type: "Boolean", value: false }
+        }
+    }
+    else if (isIdentifier(node)) {
+        return {
+            op: "==",
+            left: makeExpressionArgument(node),
+            right: { type: "Boolean", value: true }
+        }
+    }
+    else {
+        // Todo: evaluate and warn
+        throw new ParseError("Unexpected constant expression", node.location);
     }
 }
 
 export function *compileCondition(node: SourceTracked<Parser.Expression>): Generator<Compiler.OverrideCondition> {
-    const expression = makeBinaryExpression(node);
-    if (expression !== undefined) {
-        yield expression;
-    }
+    const type = validateExpression(node);
+    checkType(type, "boolean", node.location);
+
+    yield makeOverrideCondition(node);
 }
