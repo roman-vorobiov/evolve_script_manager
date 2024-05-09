@@ -102,7 +102,7 @@ booleanValue
     ;
 
 stringValue
-    : Identifier
+    : String
     ;
 
 numericValue

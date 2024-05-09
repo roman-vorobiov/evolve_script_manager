@@ -33,7 +33,7 @@ class ExpressionGetter extends DSLVisitor<SourceTracked<Parser.Expression>> {
     }
 
     visitStringValue = (ctx: Context.StringValueContext): SourceTracked<String> => {
-        return withLocation(ctx, ctx.getText());
+        return withLocation(ctx, ctx.getText().slice(1, -1));
     }
 
     visitBooleanValue = (ctx: Context.BooleanValueContext): SourceTracked<Boolean> => {

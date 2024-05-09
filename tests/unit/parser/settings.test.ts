@@ -7,7 +7,7 @@ describe("Parser", () => {
     describe("Settings", () => {
         describe("Simple setting names", () => {
             it.each([
-                { source: "bar", target: "bar" },
+                { source: '"bar"', target: "bar" },
                 { source: "123", target: 123 },
                 { source: "-123", target: -123 },
                 { source: "1.23", target: 1.23 },
@@ -30,15 +30,15 @@ describe("Parser", () => {
 
         describe("Compound setting names", () => {
             it("should parse prefix + suffix", () => {
-                const { nodes, errors, maps } = parse("foo.bar = baz");
+                const { nodes, errors, maps } = parse('foo.bar = "baz"');
 
                 expect(errors).toStrictEqual([]);
                 expect(nodes.length).toBe(1);
 
-                expect(nodes[0]).toStrictEqual(maps("foo.bar = baz", <SettingAssignment> {
+                expect(nodes[0]).toStrictEqual(maps('foo.bar = "baz"', <SettingAssignment> {
                     type: "SettingAssignment",
                     setting: maps("foo.bar", { name: maps("foo"), targets: [maps("bar")] }),
-                    value: maps("baz")
+                    value: maps('"baz"', "baz")
                 }));
             });
         });

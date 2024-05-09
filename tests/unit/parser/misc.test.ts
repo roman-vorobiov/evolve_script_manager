@@ -58,7 +58,7 @@ describe("Parser", () => {
 
         it("should ignore anything after '#'", () => {
             const { nodes, errors } = parse(`
-                foo = bar # baz = 123
+                foo = "bar" # baz = 123
             `);
 
             expect(errors).toStrictEqual([]);
