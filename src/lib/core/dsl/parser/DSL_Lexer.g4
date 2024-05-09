@@ -6,8 +6,8 @@ Dot           : '.';
 
 OpeningParen  : '(';
 ClosingParen  : ')';
-OpeningBrace  : '{';
-ClosingBrace  : '}';
+OpeningBrace  : '{' | '{{';
+ClosingBrace  : '}' | '}}';
 
 Assignment    : '=';
 
@@ -41,6 +41,9 @@ Identifier: [a-zA-Z] [a-zA-Z\-_0-9]*;
 Number: '-'? ('0' | [1-9] [0-9]*) ('.' [0-9]+)?;
 
 String: '"' ~["\\\r\n]* '"';
+
+BigEval   : '{{' .*? '}}';
+SmallEval : '{' .*? '}';
 
 // Misc
 

@@ -4,45 +4,56 @@ import { isCapitalized } from "$lib/core/utils/stringUtils";
 
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
-const keywords = new Set([
-    "When",
-    "Do",
-    "If",
-    "Then",
-    "End",
-    "AND",
-    "OR",
-    "NOT"
-]);
+function makeTokenMap(ruleToTokensMap: Record<string, string[]>) {
+    return Object.fromEntries(
+        Object.entries(ruleToTokensMap)
+            .map(([rule, tokens]) => tokens.map(t => [t, rule]))
+            .flat()
+    );
+}
 
-class DSLToken implements Monaco.languages.IToken {
-    scopes: string;
-    startIndex: number;
+const tokenMap = makeTokenMap({
+    "keyword.dsl": [
+        "When",
+        "Do",
+        "If",
+        "Then",
+        "End",
+        "AND",
+        "OR",
+        "NOT"
+    ],
+    "string.dsl": [
+        "BigEval",
+        "SmallEval",
+        "OpeningBrace",
+        "ClosingBrace"
+    ],
+    "attribute.value.dsl": [
+        "ON",
+        "OFF"
+    ]
+});
 
-    constructor(tokenName: string, startIndex: number, tokenText?: string, previousToken?: string) {
-        this.scopes = this.ruleName(tokenName, tokenText, previousToken)
-        this.startIndex = startIndex;
+function ruleName(tokenName: string, tokenText?: string, previousToken?: string): string {
+    if (tokenMap[tokenName] !== undefined) {
+        return tokenMap[tokenName];
     }
-
-    private ruleName(tokenName: string, tokenText?: string, previousToken?: string) {
-        if (tokenName === "ON" || tokenName === "OFF") {
-            return "attribute.value.dsl";
-        }
-        else if (keywords.has(tokenName)) {
-            return "keyword.dsl";
-        }
-        else if (tokenName === "Identifier") {
-            if (previousToken === "Assignment") {
-                return "attribute.value.dsl";
-            }
-            else {
-                return isCapitalized(tokenText!) ? "type.dsl" : "variable.dsl";
-            }
+    else if (tokenName === "Identifier") {
+        if (previousToken === "Dot" || !isCapitalized(tokenText!)) {
+            return "variable.dsl";
         }
         else {
-            return tokenName.toLowerCase() + ".dsl";
+            return "type.dsl";
         }
     }
+    else {
+        return tokenName.toLowerCase() + ".dsl";
+    }
+}
+
+class DSLToken implements Monaco.languages.IToken {
+    constructor(public scopes: string, public startIndex: number) {}
 }
 
 class DSLLineTokens implements Monaco.languages.ILineTokens {
@@ -56,8 +67,10 @@ class DSLLineTokens implements Monaco.languages.ILineTokens {
 }
 
 class DSLState implements Monaco.languages.IState {
+    constructor(public insideEval = false) {}
+
     clone(): Monaco.languages.IState {
-        return new DSLState();
+        return new DSLState(this.insideEval);
     }
 
     equals(other: Monaco.languages.IState) {
@@ -70,7 +83,7 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
         return new DSLState();
     }
 
-    tokenize(line: string, state: Monaco.languages.IState) {
+    tokenize(line: string, state: DSLState) {
         const EOF = -1;
 
         const chars = CharStream.fromString(line);
@@ -86,8 +99,19 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
             }
 
             const tokenName = lexer.symbolicNames[token.type];
-            if (tokenName !== null) {
-                tokens.push(new DSLToken(tokenName, token.column, token.text, previousToken));
+
+            if (state.insideEval) {
+                tokens.push(new DSLToken("string.dsl", token.column));
+            }
+            else if (tokenName !== null) {
+                if (tokenName === "OpeningBrace") {
+                    state.insideEval = true;
+                }
+                else if (tokenName === "ClosingBrace") {
+                    state.insideEval = false;
+                }
+
+                tokens.push(new DSLToken(ruleName(tokenName, token.text, previousToken), token.column));
                 previousToken = tokenName;
             }
         }

@@ -67,3 +67,7 @@ export function withLocation<T>(sourceEntity: SourceEntity, value: T): SourceTra
 
     return result;
 }
+
+export function stringContents<T extends { getText(): string }>(token: T | null, quoteLength: number = 1): string | undefined {
+    return token?.getText().slice(quoteLength, -quoteLength);
+}

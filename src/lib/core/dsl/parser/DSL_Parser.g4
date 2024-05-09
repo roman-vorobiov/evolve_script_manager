@@ -81,11 +81,17 @@ expression
 
 unaryExpression
     : identifier
+    | eval
     | value
     ;
 
 identifier
     : Identifier ('.' Identifier)?
+    ;
+
+eval
+    : BigEval
+    | SmallEval
     ;
 
 // Values

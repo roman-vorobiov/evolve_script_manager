@@ -20,6 +20,40 @@ describe("Parser", () => {
                 }));
             });
 
+            it("should parse small eval literals as unary conditions", () => {
+                const { nodes, errors, maps } = parse("foo = 123 if {aaa.bbb}");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps("foo = 123 if {aaa.bbb}", <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("123", 123),
+                    condition: maps("{aaa.bbb}", {
+                        name: maps("{aaa.bbb}", "Eval"),
+                        targets: [maps("aaa.bbb")]
+                    })
+                }));
+            });
+
+            it("should parse big eval literals as unary conditions", () => {
+                const { nodes, errors, maps } = parse('\x01foo = 123 if \x02{{ { a: "b" } == { c: "d" } }}\x03');
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps([1, 3], <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("123", 123),
+                    condition: maps([2, 3], {
+                        name: maps([2, 3], "Eval"),
+                        targets: [maps('{ a: "b" } == { c: "d" }')]
+                    })
+                }));
+            });
+
             it("should parse negated unary conditions", () => {
                 const { nodes, errors, maps } = parse("foo = 123 if not aaa.bbb");
 

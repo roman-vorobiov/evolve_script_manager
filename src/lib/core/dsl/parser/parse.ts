@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from "antlr4ng";
 import { ErrorStrategy, ErrorListener } from "./errors";
-import { withLocation } from "./utils";
+import { withLocation, stringContents } from "./utils";
 import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
@@ -32,8 +32,17 @@ class ExpressionGetter extends DSLVisitor<SourceTracked<Parser.Expression>> {
         });
     }
 
+    visitEval = (ctx: Context.EvalContext): SourceTracked<Parser.Expression> => {
+        const contents = stringContents(ctx.BigEval(), 2) ?? stringContents(ctx.SmallEval(), 1)!;
+
+        return withLocation((ctx.BigEval() ?? ctx.SmallEval())!.getSymbol(), {
+            name: withLocation(ctx, "Eval"),
+            targets: [withLocation(ctx, contents.trim())]
+        });
+    }
+
     visitStringValue = (ctx: Context.StringValueContext): SourceTracked<String> => {
-        return withLocation(ctx, ctx.getText().slice(1, -1));
+        return withLocation(ctx, stringContents(ctx));
     }
 
     visitBooleanValue = (ctx: Context.BooleanValueContext): SourceTracked<Boolean> => {
