@@ -528,7 +528,7 @@ describe("Compiler", () => {
                         value: true,
                         condition: {
                             op: "<",
-                            left: { type: "Eval", value: 'checkTypes.ResourceQuantity.fn("Lumber") + checkTypes.BuildingCount.fn("city-smokehouse")' },
+                            left: { type: "Eval", value: "checkTypes.ResourceQuantity.fn('Lumber') + checkTypes.BuildingCount.fn('city-smokehouse')" },
                             right: { type: "JobMax", value: "farmer" }
                         }
                     });

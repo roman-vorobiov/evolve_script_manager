@@ -16,7 +16,7 @@ describe("Compiler", () => {
             });
 
             it("should transform string constants", () => {
-                expect(toEvalString(new String("hello"))).toBe('"hello"');
+                expect(toEvalString(new String("hello"))).toBe("'hello'");
             });
 
             it("should transform identifiers", () => {
@@ -24,7 +24,7 @@ describe("Compiler", () => {
                     name: withDummyLocation("RacePillared"),
                     targets: [withDummyLocation("Imitation")]
                 };
-                expect(toEvalString(node)).toBe('checkTypes.RacePillared.fn("srace")');
+                expect(toEvalString(node)).toBe("checkTypes.RacePillared.fn('srace')");
             });
 
             it("should transform 'other' identifiers", () => {
@@ -32,7 +32,15 @@ describe("Compiler", () => {
                     name: withDummyLocation("RaceName"),
                     targets: []
                 };
-                expect(toEvalString(node)).toBe('checkTypes.Other.fn("rname")');
+                expect(toEvalString(node)).toBe("checkTypes.Other.fn('rname')");
+            });
+
+            it("should not transform eval expressions", () => {
+                const node: Parser.Identifier = {
+                    name: withDummyLocation("Eval"),
+                    targets: [withDummyLocation("a || b")]
+                };
+                expect(toEvalString(node)).toBe("a || b");
             });
 
             it("should transform unary expressions", () => {
@@ -45,7 +53,7 @@ describe("Compiler", () => {
                         })
                     ]
                 };
-                expect(toEvalString(node)).toBe('!checkTypes.RacePillared.fn("srace")');
+                expect(toEvalString(node)).toBe("!checkTypes.RacePillared.fn('srace')");
             });
 
             it("should transform binary expressions", () => {
@@ -59,7 +67,7 @@ describe("Compiler", () => {
                         withDummyLocation(123)
                     ]
                 };
-                expect(toEvalString(node)).toBe('checkTypes.BuildingCount.fn("city-oil_depot") < 123');
+                expect(toEvalString(node)).toBe("checkTypes.BuildingCount.fn('city-oil_depot') < 123");
             });
 
             it("should transform nested expressions", () => {
@@ -67,27 +75,32 @@ describe("Compiler", () => {
                     operator: withDummyLocation("not"),
                     args: [
                         withDummyLocation({
-                            operator: withDummyLocation("<"),
+                            operator: withDummyLocation("and"),
                             args: [
                                 withDummyLocation({
-                                    name: withDummyLocation("BuildingCount"),
+                                    name: withDummyLocation("BuildingUnlocked"),
                                     targets: [withDummyLocation("city-oil_depot")]
                                 }),
                                 withDummyLocation({
-                                    operator: withDummyLocation("*"),
+                                    operator: withDummyLocation("or"),
                                     args: [
                                         withDummyLocation({
-                                            name: withDummyLocation("JobCount"),
+                                            name: withDummyLocation("JobUnlocked"),
                                             targets: [withDummyLocation("lumberjack")]
                                         }),
-                                        withDummyLocation(2)
+                                        withDummyLocation({
+                                            name: withDummyLocation("ResearchUnlocked"),
+                                            targets: [withDummyLocation("tech-club")]
+                                        })
                                     ]
                                 })
                             ]
                         })
                     ]
                 };
-                expect(toEvalString(node)).toBe('!(checkTypes.BuildingCount.fn("city-oil_depot") < (checkTypes.JobCount.fn("lumberjack") * 2))');
+                expect(toEvalString(node)).toBe("!(checkTypes.BuildingUnlocked.fn('city-oil_depot') && " +
+                                                  "(checkTypes.JobUnlocked.fn('lumberjack') || " +
+                                                   "checkTypes.ResearchUnlocked.fn('tech-club')))");
             });
         });
 
@@ -152,6 +165,18 @@ describe("Compiler", () => {
                 expect(result.value).toBe("rname");
             });
 
+            it("should compile eval expressions", () => {
+                const node: Parser.Identifier = {
+                    name: withDummyLocation("Eval"),
+                    targets: [withDummyLocation("a || b")]
+                };
+
+                const result = makeExpressionArgument(node);
+
+                expect(result.type).toBe("Eval");
+                expect(result.value).toBe("a || b");
+            });
+
             it("should compile unary expressions", () => {
                 const node: Parser.EvaluatedExpression = {
                     operator: withDummyLocation("not"),
@@ -166,7 +191,7 @@ describe("Compiler", () => {
                 const result = makeExpressionArgument(node);
 
                 expect(result.type).toBe("Eval");
-                expect(result.value).toBe('!checkTypes.RacePillared.fn("srace")');
+                expect(result.value).toBe("!checkTypes.RacePillared.fn('srace')");
             });
 
             it("should compile binary expressions", () => {
@@ -184,7 +209,7 @@ describe("Compiler", () => {
                 const result = makeExpressionArgument(node);
 
                 expect(result.type).toBe("Eval");
-                expect(result.value).toBe('checkTypes.BuildingCount.fn("city-oil_depot") < 123');
+                expect(result.value).toBe("checkTypes.BuildingCount.fn('city-oil_depot') < 123");
             });
 
             it("should compile nested expressions", () => {
@@ -216,7 +241,7 @@ describe("Compiler", () => {
                 const result = makeExpressionArgument(node);
 
                 expect(result.type).toBe("Eval");
-                expect(result.value).toBe('!(checkTypes.BuildingCount.fn("city-oil_depot") < (checkTypes.JobCount.fn("lumberjack") * 2))');
+                expect(result.value).toBe("!(checkTypes.BuildingCount.fn('city-oil_depot') < (checkTypes.JobCount.fn('lumberjack') * 2))");
             });
         });
 
@@ -266,6 +291,21 @@ describe("Compiler", () => {
                 expect(result.right.value).toBe(true);
             });
 
+            it("should compile eval expressions", () => {
+                const node = withDummyLocation(<Parser.Identifier> {
+                    name: withDummyLocation("Eval"),
+                    targets: [withDummyLocation("a || b")]
+                });
+
+                const result = makeOverrideCondition(node);
+
+                expect(result.op).toBe("==");
+                expect(result.left.type).toBe("Eval");
+                expect(result.left.value).toBe("a || b");
+                expect(result.right.type).toBe("Boolean");
+                expect(result.right.value).toBe(true);
+            });
+
             it("should compile unary expressions", () => {
                 const node =withDummyLocation(<Parser.EvaluatedExpression> {
                     operator: withDummyLocation("not"),
@@ -288,23 +328,26 @@ describe("Compiler", () => {
 
             it("should compile binary expressions", () => {
                 const node = withDummyLocation(<Parser.EvaluatedExpression> {
-                    operator: withDummyLocation("<"),
+                    operator: withDummyLocation("and"),
                     args: [
                         withDummyLocation({
-                            name: withDummyLocation("BuildingCount"),
+                            name: withDummyLocation("BuildingUnlocked"),
                             targets: [withDummyLocation("city-oil_depot")]
                         }),
-                        withDummyLocation(123)
+                        withDummyLocation({
+                            name: withDummyLocation("ResearchUnlocked"),
+                            targets: [withDummyLocation("tech-club")]
+                        })
                     ]
                 });
 
                 const result = makeOverrideCondition(node);
 
-                expect(result.op).toBe("<");
-                expect(result.left.type).toBe("BuildingCount");
+                expect(result.op).toBe("AND");
+                expect(result.left.type).toBe("BuildingUnlocked");
                 expect(result.left.value).toBe("city-oil_depot");
-                expect(result.right.type).toBe("Number");
-                expect(result.right.value).toBe(123);
+                expect(result.right.type).toBe("ResearchUnlocked");
+                expect(result.right.value).toBe("tech-club");
             });
 
             it("should compile nested expressions", () => {
@@ -325,7 +368,16 @@ describe("Compiler", () => {
                                             name: withDummyLocation("JobCount"),
                                             targets: [withDummyLocation("lumberjack")]
                                         }),
-                                        withDummyLocation(2)
+                                        withDummyLocation({
+                                            operator: withDummyLocation("/"),
+                                            args: [
+                                                withDummyLocation({
+                                                    name: withDummyLocation("Eval"),
+                                                    targets: [withDummyLocation("2")]
+                                                }),
+                                                withDummyLocation(3)
+                                            ]
+                                        })
                                     ]
                                 })
                             ]
@@ -337,7 +389,7 @@ describe("Compiler", () => {
 
                 expect(result.op).toBe("==");
                 expect(result.left.type).toBe("Eval");
-                expect(result.left.value).toBe('checkTypes.BuildingCount.fn("city-oil_depot") < (checkTypes.JobCount.fn("lumberjack") * 2)');
+                expect(result.left.value).toBe("checkTypes.BuildingCount.fn('city-oil_depot') < (checkTypes.JobCount.fn('lumberjack') * ((2) / 3))");
                 expect(result.right.type).toBe("Boolean");
                 expect(result.right.value).toBe(false);
             });

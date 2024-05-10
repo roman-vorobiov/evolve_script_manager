@@ -98,20 +98,45 @@ function validateExpression(node: SourceTracked<Parser.Expression>): string | nu
     }
 }
 
+function operatorForEval(operator: string): string {
+    const map = <any> {
+        and: "&&",
+        or: "||",
+        not: "!"
+    };
+
+    return map[operator] ?? operator;
+}
+
+function operatorForCondition(operator: string): string {
+    return operator.toUpperCase();
+}
+
 export function toEvalString(node: Parser.Expression, wrap: boolean = false): string {
+    const wrapper = wrap ? (value: string) => `(${value})` : identity;
+
     if (isBinaryExpression(node)) {
-        const wrapper = wrap ? (value: string) => `(${value})` : identity;
-        return wrapper(`${toEvalString(node.args[0], true)} ${node.operator} ${toEvalString(node.args[1], true)}`);
+        const operator = operatorForEval(node.operator.valueOf());
+        const left = toEvalString(node.args[0], true);
+        const right = toEvalString(node.args[1], true);
+
+        return wrapper(`${left} ${operator} ${right}`);
     }
     else if (isUnaryExpression(node)) {
         return `!${toEvalString(node.args[0], true)}`;
     }
     else if (isIdentifier(node)) {
         const normalized = makeExpressionArgument(node);
-        return `checkTypes.${normalized.type}.fn("${normalized.value}")`;
+
+        if (normalized.type === "Eval") {
+            return wrapper(normalized.value as string);
+        }
+        else {
+            return `checkTypes.${normalized.type}.fn('${normalized.value}')`;
+        }
     }
     else {
-        return node instanceof String ? `"${node}"` : `${node}`
+        return node instanceof String ? `'${node}'` : `${node}`
     }
 }
 
@@ -148,7 +173,7 @@ export function makeExpressionArgument(node: Parser.Expression): Compiler.Expres
 export function makeOverrideCondition(node: SourceTracked<Parser.Expression>): Compiler.OverrideCondition {
     if (isBinaryExpression(node)) {
         return {
-            op: node.operator.toUpperCase(),
+            op: operatorForCondition(node.operator.valueOf()),
             left: makeExpressionArgument(node.args[0]),
             right: makeExpressionArgument(node.args[1])
         }
