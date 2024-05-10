@@ -128,7 +128,9 @@ export function initializeSyntax(monaco: typeof Monaco) {
     monaco.languages.setLanguageConfiguration("DSL", {
         wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
         autoClosingPairs: [
-            { open: "(", close: ")" }
+            { open: '(', close: ')' },
+            { open: '{', close: '}' },
+            { open: '"', close: '"' },
         ],
         comments: {
             lineComment: "#"
