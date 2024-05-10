@@ -26,9 +26,13 @@
         });
 
         const model = monaco.editor.createModel(state.config, "DSL");
-        editor.setModel(model);
+        model.updateOptions({
+            tabSize: 4
+        });
 
         model.onDidChangeContent(debounce(readCurrentValue, 500));
+
+        editor.setModel(model);
     });
 
     onDestroy(() => {
