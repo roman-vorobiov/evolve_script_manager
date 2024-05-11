@@ -56,6 +56,28 @@ describe("Compiler", () => {
                 }));
             });
 
+            it.each(["and", "or"])("should immediately unwrap boolean setting arguments", (op) => {
+                const node = at(1, <Parser.Identifier> {
+                    name: at(2, "SettingCurrent"),
+                    targets: [
+                        at(3, "challenge_plasmid"),
+                        at(4, "challenge_crispr")
+                    ],
+                    disjunction: withDummyLocation(op === "or")
+                });
+
+                const expression = unwrapExpression(node);
+
+                expect(isExpression(expression)).toBe(true);
+                expect(expression).toStrictEqual(at(1, {
+                    operator: at(1, op),
+                    args: [
+                        at(1, { name: at(2, "SettingCurrent"), targets: [at(5, "challenge_plasmid")] }),
+                        at(1, { name: at(2, "SettingCurrent"), targets: [at(5, "challenge_crispr")] })
+                    ]
+                }));
+            });
+
             it.each(["and", "or"])("should not immediately unwrap non-boolean prefixes", (op) => {
                 const node = at(1, <Parser.Identifier> {
                     name: at(2, "ResourceQuantity"),
@@ -76,6 +98,28 @@ describe("Compiler", () => {
                         at(1, { name: at(2, "ResourceQuantity"), targets: [at(3, "Food")] }),
                         at(1, { name: at(2, "ResourceQuantity"), targets: [at(4, "Lumber")] }),
                         at(1, { name: at(2, "ResourceQuantity"), targets: [at(5, "Stone")] })
+                    ]
+                }));
+            });
+
+            it.each(["and", "or"])("should not immediately unwrap non-boolean setting arguments", (op) => {
+                const node = at(1, <Parser.Identifier> {
+                    name: at(2, "SettingCurrent"),
+                    targets: [
+                        at(3, "foreignMinAdvantage"),
+                        at(4, "foreignMaxAdvantage")
+                    ],
+                    disjunction: withDummyLocation(op === "or")
+                });
+
+                const expression = unwrapExpression(node);
+
+                expect(isExpression(expression)).toBe(false);
+                expect(expression).toStrictEqual(at(1, {
+                    operator: op,
+                    expressions: [
+                        at(1, { name: at(2, "SettingCurrent"), targets: [at(3, "foreignMinAdvantage")] }),
+                        at(1, { name: at(2, "SettingCurrent"), targets: [at(4, "foreignMaxAdvantage")] })
                     ]
                 }));
             });
@@ -281,6 +325,30 @@ describe("Compiler", () => {
                 expect(exception).toBeInstanceOf(ParseError);
                 if (exception instanceof ParseError) {
                     expect(exception.message).toBe("Only one fold subexpression is allowed");
+                    expect(exception.location).toStrictEqual(makeDummyLocation(3));
+                }
+            });
+
+            it("should reject heterogeneous fold expressions", () => {
+                const node = at(1, <Parser.EvaluatedExpression> {
+                    operator: at(2, "*"),
+                    args: [
+                        at(3, <Parser.Identifier> {
+                            name: withDummyLocation("SettingCurrent"),
+                            targets: [
+                                withDummyLocation("challenge_plasmid"),
+                                withDummyLocation("foreignMaxAdvantage")
+                            ]
+                        }),
+                        withDummyLocation(2)
+                    ]
+                });
+
+                const exception = getExcepion(() => normalizeExpression(node));
+                expect(exception).toBeDefined();
+                expect(exception).toBeInstanceOf(ParseError);
+                if (exception instanceof ParseError) {
+                    expect(exception.message).toBe("All values of a fold expression must have the same type");
                     expect(exception.location).toStrictEqual(makeDummyLocation(3));
                 }
             });

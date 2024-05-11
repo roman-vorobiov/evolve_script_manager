@@ -1,4 +1,5 @@
 import { expressions } from "$lib/core/domain/expressions";
+import { settingType } from "$lib/core/domain/settings";
 import { ParseError } from "../parser/model";
 import { isBinaryExpression, isUnaryExpression, isIdentifier, combine, foldLeft } from "./utils";
 import { withLocation } from "../parser/utils";
@@ -91,6 +92,23 @@ function unwrapUnaryExpression(node: SourceTracked<Parser.EvaluatedExpression>):
     }
 }
 
+function getCommonType(node: SourceTracked<Parser.Identifier>): string | undefined {
+    const info = expressions[node.name.valueOf()];
+
+    if (info.type !== null) {
+        return info.type;
+    }
+
+    if (info.valueDescription === "setting") {
+        const types = [...new Set(node.targets.map(settingId => settingType(settingId.valueOf())))];
+        if (types.length !== 1) {
+            throw new ParseError("All values of a fold expression must have the same type", node.location);
+        }
+
+        return types[0];
+    }
+}
+
 export function unwrapExpression(node: SourceTracked<Parser.Expression>): SourceTracked<Parser.Expression | FoldExpression> {
     if (isBinaryExpression(node)) {
         return unwrapBinaryExpression(node);
@@ -105,8 +123,7 @@ export function unwrapExpression(node: SourceTracked<Parser.Expression>): Source
         else {
             const operator = node.disjunction?.valueOf() ? "or" : "and";
 
-            // Todo: a bit more complicated with setting values
-            if (expressions[node.name.valueOf()].type === "boolean") {
+            if (getCommonType(node) === "boolean") {
                 return foldLeft(withLocation(node.location, operator), ...unwrapIdentifier(node));
             }
             else {
