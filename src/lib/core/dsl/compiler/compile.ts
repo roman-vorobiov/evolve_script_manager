@@ -1,13 +1,14 @@
 import { compileSettingAssignment } from "./settings";
 import { compileTrigger } from "./triggers";
-import { conjunction } from "./conditions";
+import { conjunction } from "./utils";
 import { ParseError } from "../parser/model";
 
 import type { SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
+import { withLocation } from "../parser/utils";
 
-function *normalize(nodes: SourceTracked<Parser.Node>[], errors: ParseError[]): Generator<Compiler.Statement> {
+function* normalize(nodes: SourceTracked<Parser.Node>[], errors: ParseError[]): Generator<Compiler.Statement> {
     const conditionContext: SourceTracked<Parser.Expression>[] = [];
 
     for (let node of nodes) {
@@ -21,8 +22,8 @@ function *normalize(nodes: SourceTracked<Parser.Node>[], errors: ParseError[]): 
                 yield* compileTrigger(node);
             }
             else if (node.type === "ConditionPush") {
-                const expression = conjunction(scopeCondition, node.condition);
-                conditionContext.push(expression);
+                const expression = conjunction(scopeCondition, node.condition)!;
+                conditionContext.push(withLocation(node.condition.location, expression));
             }
             else if (node.type === "ConditionPop") {
                 conditionContext.pop();

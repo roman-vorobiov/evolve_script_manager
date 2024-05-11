@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "./fixture";
 
-import type { Identifier, SettingAssignment } from "$lib/core/dsl/parser/model";
+import type { SettingAssignment } from "$lib/core/dsl/parser/model";
 
 describe("Parser", () => {
     describe("Settings", () => {
@@ -62,6 +62,16 @@ describe("Parser", () => {
                     setting: maps("foo[aaa, bbb]", { name: maps("foo"), targets: [maps("aaa"), maps("bbb")] }),
                     value: maps('"bar"', "bar")
                 }));
+            });
+
+            it("should reject disjunction", () => {
+                const { nodes, errors, locations } = parse('foo[aaa, bbb \x01or\x02 ccc] = "bar"');
+
+                expect(nodes).toStrictEqual([]);
+                expect(errors.length).toBe(1);
+
+                expect(errors[0].message).toBe("Disjunction cannot be used in setting assignments");
+                expect(errors[0].location).toStrictEqual(locations.between(1, 2));
             });
         });
     });

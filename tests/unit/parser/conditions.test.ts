@@ -93,6 +93,41 @@ describe("Parser", () => {
                 }));
             });
 
+            it("should parse fold expressions", () => {
+                const { nodes, errors, maps } = parse("foo = 123 if aaa[bbb, ccc, ddd]");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps("foo = 123 if aaa[bbb, ccc, ddd]", <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("123", 123),
+                    condition: maps("aaa[bbb, ccc, ddd]", {
+                        name: maps("aaa"),
+                        targets: [maps("bbb"), maps("ccc"), maps("ddd")]
+                    })
+                }));
+            });
+
+            it("should parse disjunctive fold expressions", () => {
+                const { nodes, errors, maps } = parse("foo = 123 if aaa[bbb, ccc or ddd]");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps("foo = 123 if aaa[bbb, ccc or ddd]", <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("123", 123),
+                    condition: maps("aaa[bbb, ccc or ddd]", {
+                        name: maps("aaa"),
+                        targets: [maps("bbb"), maps("ccc"), maps("ddd")],
+                        disjunction: maps("or", true)
+                    })
+                }));
+            });
+
             describe("Operator precedence", () => {
                 it("should put quotes before anything else", () => {
                     const { nodes, errors, maps } = parse("foo = 123 if not (aaa or bbb)");

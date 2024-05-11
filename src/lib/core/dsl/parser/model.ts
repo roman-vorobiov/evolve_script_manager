@@ -1,12 +1,11 @@
 import type { SourceTracked, SourceLocation } from "./source";
 import { locationOf, type SourceEntity } from "./utils";
 
-export class ParseError {
-    message: string;
+export class ParseError extends Error {
     location: SourceLocation;
 
     constructor(message: string, sourceEntity: SourceEntity) {
-        this.message = message;
+        super(message);
         this.location = locationOf(sourceEntity);
     }
 }
@@ -15,7 +14,8 @@ export type Constant = String | Number | Boolean;
 
 export type Identifier = {
     name: SourceTracked<String>,
-    targets: SourceTracked<String>[]
+    targets: SourceTracked<String>[],
+    disjunction?: SourceTracked<Boolean>
 }
 
 export type EvaluatedExpression = {

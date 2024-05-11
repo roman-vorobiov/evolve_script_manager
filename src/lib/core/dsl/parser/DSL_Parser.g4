@@ -87,7 +87,9 @@ unaryExpression
 
 identifier
     : Identifier ('.' Identifier)?
-    | Identifier ('[' Identifier (',' Identifier)* ']')?
+    | Identifier '[' Identifier (',' Identifier)* ']'
+    | Identifier '[' Identifier (',' Identifier)* 'and' Identifier ']'
+    | Identifier '[' Identifier (',' Identifier)* 'or' Identifier ']'
     ;
 
 eval

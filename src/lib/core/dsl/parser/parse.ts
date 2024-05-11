@@ -1,4 +1,5 @@
 import { CharStream, CommonTokenStream } from "antlr4ng";
+import { ParseError } from "./model";
 import { ErrorStrategy, ErrorListener } from "./errors";
 import { withLocation, stringContents } from "./utils";
 import { DSLLexer } from "./.antlr/DSLLexer";
@@ -26,10 +27,16 @@ class ExpressionGetter extends DSLVisitor<SourceTracked<Parser.Expression>> {
     visitIdentifier = (ctx: Context.IdentifierContext): SourceTracked<Parser.Identifier> => {
         const [name, ...targets] = ctx.Identifier();
 
-        return withLocation(ctx, {
+        const node = <Parser.Identifier> {
             name: withLocation(name.getSymbol(), name.getText()),
             targets: targets.map(t => withLocation(t.getSymbol(), t.getText()))
-        });
+        };
+
+        if (ctx.OR()) {
+            node.disjunction = withLocation(ctx.OR()!.getSymbol(), true);
+        }
+
+        return withLocation(ctx, node);
     }
 
     visitEval = (ctx: Context.EvalContext): SourceTracked<Parser.Expression> => {
@@ -77,7 +84,7 @@ class Visitor extends DSLVisitor<any> {
     private triggerGetter = new TriggerGetter();
 
     private nodes: SourceTracked<Parser.Node>[] = [];
-    private errors: Parser.ParseError[] = [];
+    private errors: ParseError[] = [];
 
     visitRoot = (ctx: Context.RootContext): Parser.ParseResult => {
         ctx.children.forEach(child => {
@@ -85,7 +92,12 @@ class Visitor extends DSLVisitor<any> {
                 this.visit(child);
             }
             catch (e) {
-                this.errors.push(e as Parser.ParseError);
+                if (e instanceof ParseError) {
+                    this.errors.push(e);
+                }
+                else {
+                    throw e;
+                }
             }
         });
 
@@ -98,6 +110,10 @@ class Visitor extends DSLVisitor<any> {
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
         const settingName = this.expressionGetter.visit(ctx.settingId()) as SourceTracked<Parser.Identifier>;
         const settingValue = this.expressionGetter.visit(ctx.value()) as SourceTracked<Parser.Constant>;
+
+        if (settingName.disjunction) {
+            throw new ParseError("Disjunction cannot be used in setting assignments", settingName.disjunction.location);
+        }
 
         const node: Parser.SettingAssignment = {
             type: "SettingAssignment",
@@ -151,7 +167,7 @@ export function parse(rawText: string): Parser.ParseResult {
     const tokens = new CommonTokenStream(lexer);
     const parser = new DSLParser(tokens);
 
-    let errors: Parser.ParseError[] = [];
+    let errors: ParseError[] = [];
     const errorStrategy = new ErrorStrategy();
     const errorListener = new ErrorListener(errors);
     lexer.removeErrorListeners();

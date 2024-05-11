@@ -35,12 +35,12 @@ const tokenMap = makeTokenMap({
     ]
 });
 
-function ruleName(tokenName: string, tokenText?: string, previousToken?: string): string {
+function ruleName(tokenName: string, tokenText: string | undefined, state: DSLState): string {
     if (tokenMap[tokenName] !== undefined) {
         return tokenMap[tokenName];
     }
     else if (tokenName === "Identifier") {
-        if (previousToken === "Dot" || !isCapitalized(tokenText!)) {
+        if (state.insideSubscript || !isCapitalized(tokenText!)) {
             return "variable.dsl";
         }
         else {
@@ -67,10 +67,22 @@ class DSLLineTokens implements Monaco.languages.ILineTokens {
 }
 
 class DSLState implements Monaco.languages.IState {
-    constructor(public insideEval = false) {}
+    constructor(
+        public previousToken: string | undefined = undefined,
+        public insideEval = false,
+        private _insideSubscript = false,
+    ) {}
+
+    get insideSubscript() {
+        return this._insideSubscript || this.previousToken === "Dot";
+    }
+
+    set insideSubscript(value: boolean) {
+        this._insideSubscript = value;
+    }
 
     clone(): Monaco.languages.IState {
-        return new DSLState(this.insideEval);
+        return new DSLState(this.previousToken, this.insideEval, this._insideSubscript);
     }
 
     equals(other: Monaco.languages.IState) {
@@ -91,7 +103,6 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
         lexer.removeErrorListeners();
 
         let tokens: Monaco.languages.IToken[] = [];
-        let previousToken: string | undefined;
         while (true) {
             let token = lexer.nextToken();
             if (token === null || token.type === EOF) {
@@ -110,9 +121,15 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
                 else if (tokenName === "ClosingBrace") {
                     state.insideEval = false;
                 }
+                else if (tokenName === "OpeningBracket") {
+                    state.insideSubscript = true;
+                }
+                else if (tokenName === "ClosingBracket") {
+                    state.insideSubscript = false;
+                }
 
-                tokens.push(new DSLToken(ruleName(tokenName, token.text, previousToken), token.column));
-                previousToken = tokenName;
+                tokens.push(new DSLToken(ruleName(tokenName, token.text, state), token.column));
+                state.previousToken = tokenName;
             }
         }
 

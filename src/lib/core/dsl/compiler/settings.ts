@@ -2,7 +2,7 @@ import defaultSettings from "$lib/assets/default.json";
 import settingPrefixes from "$lib/core/domain/prefixes";
 import { settingType } from "$lib/core/domain/settings";
 import { compileCondition } from "./expressions";
-import { conjunction } from "./conditions";
+import { conjunction } from "./utils";
 import { ParseError } from "../parser/model";
 import { withLocation } from "../parser/utils";
 
@@ -53,7 +53,7 @@ function unwrapTargets(node: SourceTracked<Parser.Identifier>): SourceTracked<St
     }
 }
 
-export function *compileSettingAssignment(
+export function* compileSettingAssignment(
     node: Parser.SettingAssignment,
     scopeCondition?: SourceTracked<Parser.Expression>
 ): Generator<Compiler.SettingAssignment | Compiler.Override> {
@@ -64,7 +64,9 @@ export function *compileSettingAssignment(
         const condition = conjunction(scopeCondition, node.condition);
 
         if (condition !== undefined) {
-            const computedCondition = compileCondition(condition);
+            const conditionLocation = node.condition?.location ?? scopeCondition!.location;
+            const computedCondition = compileCondition(withLocation(conditionLocation, condition));
+
             yield {
                 type: "Override",
                 target: settingName,

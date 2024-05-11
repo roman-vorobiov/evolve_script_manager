@@ -98,7 +98,7 @@ function compileAction(action: Parser.TriggerArgument): Compiler.TriggerArgument
     }
 }
 
-export function *compileTrigger(node: Parser.Trigger): Generator<Compiler.Trigger> {
+export function* compileTrigger(node: Parser.Trigger): Generator<Compiler.Trigger> {
     const condition = compileCondition(node.condition);
     const chainCondition = {
         type: "chain",
