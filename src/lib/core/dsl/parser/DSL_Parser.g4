@@ -87,6 +87,7 @@ unaryExpression
 
 identifier
     : Identifier ('.' Identifier)?
+    | Identifier ('[' Identifier (',' Identifier)* ']')?
     ;
 
 eval

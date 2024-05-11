@@ -16,23 +16,16 @@ export function withDummyLocation<T>(value: T, id = 0) {
 
 export function makeSettingId(
     name: string | SourceTracked<String>,
-    suffix?: string | SourceTracked<String>
+    ...suffixes: (string | SourceTracked<String>)[]
 ): SourceTracked<Identifier> {
     if (typeof name === "string") {
         name = withDummyLocation(name);
     }
 
-    if (typeof suffix === "string") {
-        suffix = withDummyLocation(suffix);
-    }
-
-    const node: Identifier = { name, targets: [] };
-
-    if (suffix !== undefined) {
-        node.targets.push(suffix);
-    }
-
-    return withDummyLocation(node);
+    return withDummyLocation(<Identifier> {
+        name,
+        targets: suffixes.map(suffix => typeof suffix === "string" ? withDummyLocation(suffix) : suffix)
+    });
 }
 
 export function makeTriggerArgument(

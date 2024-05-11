@@ -130,6 +130,7 @@ export function initializeSyntax(monaco: typeof Monaco) {
         autoClosingPairs: [
             { open: '(', close: ')' },
             { open: '{', close: '}' },
+            { open: '[', close: ']' },
             { open: '"', close: '"' },
         ],
         comments: {

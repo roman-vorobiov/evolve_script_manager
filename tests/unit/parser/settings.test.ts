@@ -30,15 +30,37 @@ describe("Parser", () => {
 
         describe("Compound setting names", () => {
             it("should parse prefix + suffix", () => {
-                const { nodes, errors, maps } = parse('foo.bar = "baz"');
+                const { nodes, errors, maps } = parse(`
+                    foo.aaa = "bbb"
+                    bar[ccc] = "ddd"
+                `);
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(2);
+
+                expect(nodes[0]).toStrictEqual(maps('foo.aaa = "bbb"', <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo.aaa", { name: maps("foo"), targets: [maps("aaa")] }),
+                    value: maps('"bbb"', "bbb")
+                }));
+
+                expect(nodes[1]).toStrictEqual(maps('bar[ccc] = "ddd"', <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("bar[ccc]", { name: maps("bar"), targets: [maps("ccc")] }),
+                    value: maps('"ddd"', "ddd")
+                }));
+            });
+
+            it("should parse prefix + list", () => {
+                const { nodes, errors, maps } = parse('foo[aaa, bbb] = "bar"');
 
                 expect(errors).toStrictEqual([]);
                 expect(nodes.length).toBe(1);
 
-                expect(nodes[0]).toStrictEqual(maps('foo.bar = "baz"', <SettingAssignment> {
+                expect(nodes[0]).toStrictEqual(maps('foo[aaa, bbb] = "bar"', <SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: maps("foo.bar", { name: maps("foo"), targets: [maps("bar")] }),
-                    value: maps('"baz"', "baz")
+                    setting: maps("foo[aaa, bbb]", { name: maps("foo"), targets: [maps("aaa"), maps("bbb")] }),
+                    value: maps('"bar"', "bar")
                 }));
             });
         });

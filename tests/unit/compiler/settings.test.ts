@@ -118,5 +118,48 @@ describe("Compiler", () => {
             expect(errors[0].message).toBe("Unknown setting 'log_prestigea'");
             expect(errors[0].location).toStrictEqual(location);
         });
+
+        it("should unwrap valid setting lists", () => {
+            const node = withDummyLocation(<SettingAssignment> {
+                type: "SettingAssignment",
+                setting: makeSettingId("AutoSell", "Lumber", "Stone"),
+                value: withDummyLocation(true)
+            });
+
+            const { statements, errors } = compile([node]);
+
+            expect(errors).toStrictEqual([]);
+            expect(statements.length).toBe(2);
+
+            expect(statements[0].type).toBe("SettingAssignment");
+            if (statements[0].type === "SettingAssignment") {
+                expect(statements[0].setting).toBe("sellLumber");
+                expect(statements[0].value).toBe(true);
+            }
+
+            expect(statements[1].type).toBe("SettingAssignment");
+            if (statements[1].type === "SettingAssignment") {
+                expect(statements[1].setting).toBe("sellStone");
+                expect(statements[1].value).toBe(true);
+            }
+        });
+
+        it("should reject invalid suffix in a list", () => {
+            const location = makeDummyLocation(123);
+
+            const node = withDummyLocation(<SettingAssignment> {
+                type: "SettingAssignment",
+                setting: makeSettingId("AutoSell", withLocation(location, "hello"), "Stone"),
+                value: withDummyLocation(true)
+            });
+
+            const { statements, errors } = compile([node]);
+
+            expect(statements).toStrictEqual([]);
+            expect(errors.length).toBe(1);
+
+            expect(errors[0].message).toBe("Unknown setting 'sellhello'");
+            expect(errors[0].location).toStrictEqual(location);
+        });
     });
 });

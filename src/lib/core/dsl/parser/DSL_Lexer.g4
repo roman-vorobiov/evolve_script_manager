@@ -3,11 +3,14 @@ lexer grammar DSL_Lexer;
 // Characters
 
 Dot           : '.';
+Comma         : ',';
 
 OpeningParen  : '(';
 ClosingParen  : ')';
 OpeningBrace  : '{' | '{{';
 ClosingBrace  : '}' | '}}';
+OpeningBracket: '[';
+ClosingBracket: ']';
 
 Assignment    : '=';
 

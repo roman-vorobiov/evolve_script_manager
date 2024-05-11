@@ -39,18 +39,17 @@ function validateSettingValue(settingName: string, settingValue: SourceTracked<P
     return settingValue.valueOf();
 }
 
-function normalizeCompoundSettingName(node: Parser.Identifier): string {
-    const prefix = validateSettingPrefix(node.name);
-    return `${prefix}${node.targets[0].valueOf()}`;
+function resolveTarget(prefix: string, target: SourceTracked<String>): SourceTracked<String> {
+    return withLocation(target.location, `${prefix}${target.valueOf()}`);
 }
 
-function normalizeSettingName(node: SourceTracked<Parser.Identifier>): string {
+function unwrapTargets(node: SourceTracked<Parser.Identifier>): SourceTracked<String>[] {
     if (node.targets.length !== 0) {
-        const setting = normalizeCompoundSettingName(node);
-        return validateSetting(withLocation(node.targets[0].location, setting));
+        const prefix = validateSettingPrefix(node.name);
+        return node.targets.map(target => resolveTarget(prefix, target));
     }
     else {
-        return validateSetting(node.name);
+        return [node.name];
     }
 }
 
@@ -58,25 +57,27 @@ export function *compileSettingAssignment(
     node: Parser.SettingAssignment,
     scopeCondition?: SourceTracked<Parser.Expression>
 ): Generator<Compiler.SettingAssignment | Compiler.Override> {
-    const settingName = normalizeSettingName(node.setting);
-    const settingValue = validateSettingValue(settingName, node.value);
+    for (const settingNameNode of unwrapTargets(node.setting)) {
+        const settingName = validateSetting(settingNameNode);
+        const settingValue = validateSettingValue(settingName, node.value);
 
-    const condition = conjunction(scopeCondition, node.condition);
+        const condition = conjunction(scopeCondition, node.condition);
 
-    if (condition !== undefined) {
-        const computedCondition = compileCondition(condition);
-        yield {
-            type: "Override",
-            target: settingName,
-            condition: computedCondition,
-            value: settingValue
-        };
-    }
-    else {
-        yield {
-            type: "SettingAssignment",
-            setting: settingName,
-            value: settingValue
-        };
+        if (condition !== undefined) {
+            const computedCondition = compileCondition(condition);
+            yield {
+                type: "Override",
+                target: settingName,
+                condition: computedCondition,
+                value: settingValue
+            };
+        }
+        else {
+            yield {
+                type: "SettingAssignment",
+                setting: settingName,
+                value: settingValue
+            };
+        }
     }
 }
