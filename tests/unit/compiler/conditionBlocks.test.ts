@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
-import { withDummyLocation, makeSettingId } from "./fixture";
+import { withDummyLocation, makeIdentifier } from "./fixture";
 
 import type { ConditionPush, ConditionPop, SettingAssignment } from "$lib/core/dsl/parser/model";
 
@@ -9,15 +9,12 @@ describe("Compiler", () => {
         it("should add conditions to assignments", () => {
             const pushNode = withDummyLocation(<ConditionPush> {
                 type: "ConditionPush",
-                condition: withDummyLocation({
-                    name: withDummyLocation("ResourceDemanded"),
-                    targets: [withDummyLocation("Lumber")]
-                })
+                condition: makeIdentifier("ResourceDemanded", "Lumber")
             });
 
             const settingNode = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("autoBuild"),
+                setting: makeIdentifier("autoBuild"),
                 value: withDummyLocation(true)
             });
 
@@ -41,23 +38,17 @@ describe("Compiler", () => {
         it("should combine scope conditions", () => {
             const pushNode1 = withDummyLocation(<ConditionPush> {
                 type: "ConditionPush",
-                condition: withDummyLocation({
-                    name: withDummyLocation("ResourceDemanded"),
-                    targets: [withDummyLocation("Lumber")]
-                })
+                condition: makeIdentifier("ResourceDemanded", "Lumber")
             });
 
             const pushNode2 = withDummyLocation(<ConditionPush> {
                 type: "ConditionPush",
-                condition: withDummyLocation({
-                    name: withDummyLocation("RacePillared"),
-                    targets: [withDummyLocation("Imitation")]
-                })
+                condition: makeIdentifier("RacePillared", "Imitation")
             });
 
             const settingNode = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("autoBuild"),
+                setting: makeIdentifier("autoBuild"),
                 value: withDummyLocation(true)
             });
 
@@ -81,23 +72,17 @@ describe("Compiler", () => {
         it("should pop the condition from the context", () => {
             const pushNode1 = withDummyLocation(<ConditionPush> {
                 type: "ConditionPush",
-                condition: withDummyLocation({
-                    name: withDummyLocation("ResourceDemanded"),
-                    targets: [withDummyLocation("Lumber")]
-                })
+                condition: makeIdentifier("ResourceDemanded", "Lumber")
             });
 
             const pushNode2 = withDummyLocation(<ConditionPush> {
                 type: "ConditionPush",
-                condition: withDummyLocation({
-                    name: withDummyLocation("RacePillared"),
-                    targets: [withDummyLocation("Imitation")]
-                })
+                condition: makeIdentifier("RacePillared", "Imitation")
             });
 
             const settingNode = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("autoBuild"),
+                setting: makeIdentifier("autoBuild"),
                 value: withDummyLocation(true)
             });
 
@@ -125,20 +110,14 @@ describe("Compiler", () => {
         it("should combine scope conditions with inline ones", () => {
             const pushNode = withDummyLocation(<ConditionPush> {
                 type: "ConditionPush",
-                condition: withDummyLocation({
-                    name: withDummyLocation("ResourceDemanded"),
-                    targets: [withDummyLocation("Lumber")]
-                })
+                condition: makeIdentifier("ResourceDemanded", "Lumber")
             });
 
             const settingNode = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("autoBuild"),
+                setting: makeIdentifier("autoBuild"),
                 value: withDummyLocation(true),
-                condition: withDummyLocation({
-                    name: withDummyLocation("RacePillared"),
-                    targets: [withDummyLocation("Imitation")]
-                })
+                condition: makeIdentifier("RacePillared", "Imitation")
             });
 
             const { statements, errors } = compile([pushNode, settingNode]);

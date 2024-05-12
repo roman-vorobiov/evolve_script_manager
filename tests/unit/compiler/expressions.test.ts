@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { toEvalString, makeExpressionArgument, makeOverrideCondition } from "$lib/core/dsl/compiler/expressions";
-import { withDummyLocation } from "./fixture";
+import { makeIdentifier, withDummyLocation } from "./fixture";
 
 import type * as Parser from "$lib/core/dsl/parser/model";
 
@@ -20,26 +20,17 @@ describe("Compiler", () => {
             });
 
             it("should transform identifiers", () => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("RacePillared"),
-                    targets: [withDummyLocation("Imitation")]
-                };
+                const node = makeIdentifier("RacePillared", "Imitation");
                 expect(toEvalString(node)).toBe("_('RacePillared', 'srace')");
             });
 
             it("should transform 'other' identifiers", () => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("RaceName"),
-                    targets: []
-                };
+                const node = makeIdentifier("RaceName");
                 expect(toEvalString(node)).toBe("_('Other', 'rname')");
             });
 
             it("should not transform eval expressions", () => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("Eval"),
-                    targets: [withDummyLocation("a || b")]
-                };
+                const node = makeIdentifier("Eval", "a || b");
                 expect(toEvalString(node)).toBe("a || b");
             });
 
@@ -47,10 +38,7 @@ describe("Compiler", () => {
                 const node: Parser.EvaluatedExpression = {
                     operator: withDummyLocation("not"),
                     args: [
-                        withDummyLocation({
-                            name: withDummyLocation("RacePillared"),
-                            targets: [withDummyLocation("Imitation")]
-                        })
+                        makeIdentifier("RacePillared", "Imitation")
                     ]
                 };
                 expect(toEvalString(node)).toBe("!_('RacePillared', 'srace')");
@@ -60,10 +48,7 @@ describe("Compiler", () => {
                 const node: Parser.EvaluatedExpression = {
                     operator: withDummyLocation("<"),
                     args: [
-                        withDummyLocation({
-                            name: withDummyLocation("BuildingCount"),
-                            targets: [withDummyLocation("city-oil_depot")]
-                        }),
+                        makeIdentifier("BuildingCount", "city-oil_depot"),
                         withDummyLocation(123)
                     ]
                 };
@@ -77,21 +62,12 @@ describe("Compiler", () => {
                         withDummyLocation({
                             operator: withDummyLocation("and"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("BuildingUnlocked"),
-                                    targets: [withDummyLocation("city-oil_depot")]
-                                }),
+                                makeIdentifier("BuildingUnlocked", "city-oil_depot"),
                                 withDummyLocation({
                                     operator: withDummyLocation("or"),
                                     args: [
-                                        withDummyLocation({
-                                            name: withDummyLocation("JobUnlocked"),
-                                            targets: [withDummyLocation("lumberjack")]
-                                        }),
-                                        withDummyLocation({
-                                            name: withDummyLocation("ResearchUnlocked"),
-                                            targets: [withDummyLocation("tech-club")]
-                                        })
+                                        makeIdentifier("JobUnlocked", "lumberjack"),
+                                        makeIdentifier("ResearchUnlocked", "tech-club")
                                     ]
                                 })
                             ]
@@ -127,10 +103,7 @@ describe("Compiler", () => {
             });
 
             it("should compile identifiers", () => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("ResourceDemanded"),
-                    targets: [withDummyLocation("Lumber")]
-                };
+                const node = makeIdentifier("ResourceDemanded", "Lumber");
 
                 const result = makeExpressionArgument(node);
 
@@ -142,10 +115,7 @@ describe("Compiler", () => {
                 { source: "Imitation", target: "srace" },
                 { source: "protoplasm", target: "protoplasm" }
             ])("should compile aliased identifiers (RacePillared $source -> $target)", ({ source, target }) => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("RacePillared"),
-                    targets: [withDummyLocation(source)]
-                };
+                const node = makeIdentifier("RacePillared", source);
 
                 const result = makeExpressionArgument(node);
 
@@ -154,10 +124,7 @@ describe("Compiler", () => {
             });
 
             it("should compile 'other' identifiers", () => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("RaceName"),
-                    targets: []
-                };
+                const node = makeIdentifier("RaceName");
 
                 const result = makeExpressionArgument(node);
 
@@ -166,10 +133,7 @@ describe("Compiler", () => {
             });
 
             it("should compile eval expressions", () => {
-                const node: Parser.Identifier = {
-                    name: withDummyLocation("Eval"),
-                    targets: [withDummyLocation("a || b")]
-                };
+                const node = makeIdentifier("Eval", "a || b");
 
                 const result = makeExpressionArgument(node);
 
@@ -181,10 +145,7 @@ describe("Compiler", () => {
                 const node: Parser.EvaluatedExpression = {
                     operator: withDummyLocation("not"),
                     args: [
-                        withDummyLocation({
-                            name: withDummyLocation("RacePillared"),
-                            targets: [withDummyLocation("Imitation")]
-                        })
+                        makeIdentifier("RacePillared", "Imitation")
                     ]
                 };
 
@@ -198,10 +159,7 @@ describe("Compiler", () => {
                 const node: Parser.EvaluatedExpression = {
                     operator: withDummyLocation("<"),
                     args: [
-                        withDummyLocation({
-                            name: withDummyLocation("BuildingCount"),
-                            targets: [withDummyLocation("city-oil_depot")]
-                        }),
+                        makeIdentifier("BuildingCount", "city-oil_depot"),
                         withDummyLocation(123)
                     ]
                 };
@@ -219,17 +177,11 @@ describe("Compiler", () => {
                         withDummyLocation({
                             operator: withDummyLocation("<"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("BuildingCount"),
-                                    targets: [withDummyLocation("city-oil_depot")]
-                                }),
+                                makeIdentifier("BuildingCount", "city-oil_depot"),
                                 withDummyLocation({
                                     operator: withDummyLocation("*"),
                                     args: [
-                                        withDummyLocation({
-                                            name: withDummyLocation("JobCount"),
-                                            targets: [withDummyLocation("lumberjack")]
-                                        }),
+                                        makeIdentifier("JobCount", "lumberjack"),
                                         withDummyLocation(2)
                                     ]
                                 })
@@ -247,10 +199,7 @@ describe("Compiler", () => {
 
         describe("Condition transformation", () => {
             it("should compile identifiers", () => {
-                const node = withDummyLocation(<Parser.Identifier> {
-                    name: withDummyLocation("ResourceDemanded"),
-                    targets: [withDummyLocation("Lumber")]
-                });
+                const node = makeIdentifier("ResourceDemanded", "Lumber");
 
                 const result = makeOverrideCondition(node);
 
@@ -261,11 +210,11 @@ describe("Compiler", () => {
                 expect(result.right.value).toBe(true);
             });
 
-            it("should compile aliased identifiers (RacePillared $source -> $target)", () => {
-                const node = withDummyLocation(<Parser.Identifier> {
-                    name: withDummyLocation("RacePillared"),
-                    targets: [withDummyLocation("Imitation")]
-                });
+            it.each([
+                { source: "Imitation", target: "srace" },
+                { source: "protoplasm", target: "protoplasm" }
+            ])("should compile aliased identifiers (RacePillared $source -> $target)", () => {
+                const node = makeIdentifier("RacePillared", "Imitation");
 
                 const result = makeOverrideCondition(node);
 
@@ -277,10 +226,7 @@ describe("Compiler", () => {
             });
 
             it("should compile 'other' identifiers", () => {
-                const node = withDummyLocation(<Parser.Identifier> {
-                    name: withDummyLocation("RaceName"),
-                    targets: []
-                });
+                const node = makeIdentifier("RaceName");
 
                 const result = makeOverrideCondition(node);
 
@@ -292,10 +238,7 @@ describe("Compiler", () => {
             });
 
             it("should compile eval expressions", () => {
-                const node = withDummyLocation(<Parser.Identifier> {
-                    name: withDummyLocation("Eval"),
-                    targets: [withDummyLocation("a || b")]
-                });
+                const node = makeIdentifier("Eval", "a || b");
 
                 const result = makeOverrideCondition(node);
 
@@ -310,10 +253,7 @@ describe("Compiler", () => {
                 const node =withDummyLocation(<Parser.EvaluatedExpression> {
                     operator: withDummyLocation("not"),
                     args: [
-                        withDummyLocation({
-                            name: withDummyLocation("RacePillared"),
-                            targets: [withDummyLocation("Imitation")]
-                        })
+                        makeIdentifier("RacePillared", "Imitation")
                     ]
                 });
 
@@ -330,14 +270,8 @@ describe("Compiler", () => {
                 const node = withDummyLocation(<Parser.EvaluatedExpression> {
                     operator: withDummyLocation("and"),
                     args: [
-                        withDummyLocation({
-                            name: withDummyLocation("BuildingUnlocked"),
-                            targets: [withDummyLocation("city-oil_depot")]
-                        }),
-                        withDummyLocation({
-                            name: withDummyLocation("ResearchUnlocked"),
-                            targets: [withDummyLocation("tech-club")]
-                        })
+                        makeIdentifier("BuildingUnlocked", "city-oil_depot"),
+                        makeIdentifier("ResearchUnlocked", "tech-club")
                     ]
                 });
 
@@ -357,24 +291,15 @@ describe("Compiler", () => {
                         withDummyLocation({
                             operator: withDummyLocation("<"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("BuildingCount"),
-                                    targets: [withDummyLocation("city-oil_depot")]
-                                }),
+                                makeIdentifier("BuildingCount", "city-oil_depot"),
                                 withDummyLocation({
                                     operator: withDummyLocation("*"),
                                     args: [
-                                        withDummyLocation({
-                                            name: withDummyLocation("JobCount"),
-                                            targets: [withDummyLocation("lumberjack")]
-                                        }),
+                                        makeIdentifier("JobCount", "lumberjack"),
                                         withDummyLocation({
                                             operator: withDummyLocation("/"),
                                             args: [
-                                                withDummyLocation({
-                                                    name: withDummyLocation("Eval"),
-                                                    targets: [withDummyLocation("2")]
-                                                }),
+                                                makeIdentifier("Eval", "2"),
                                                 withDummyLocation(3)
                                             ]
                                         })

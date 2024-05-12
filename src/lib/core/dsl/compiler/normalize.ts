@@ -187,7 +187,7 @@ export function makeConditionalAssignmentNode(
         return withLocation(valueNode.location, {
             operator: withLocation(valueNode.location, "A?B"),
             args: [conditionNode, valueNode]
-        })
+        });
     }
     else {
         return valueNode;

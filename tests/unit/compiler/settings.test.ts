@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
 import { withLocation } from "$lib/core/dsl/parser/utils";
-import { makeDummyLocation, withDummyLocation, makeSettingId } from "./fixture";
+import { makeDummyLocation, withDummyLocation, makeIdentifier } from "./fixture";
 
 import type { SettingAssignment } from "$lib/core/dsl/parser/model";
 
@@ -10,7 +10,7 @@ describe("Compiler", () => {
         it("should transform valid settings", () => {
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("autoBuild"),
+                setting: makeIdentifier("autoBuild"),
                 value: withDummyLocation(true)
             });
 
@@ -31,7 +31,7 @@ describe("Compiler", () => {
 
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId(withLocation(location, "hello")),
+                setting: makeIdentifier(withLocation(location, "hello")),
                 value: withDummyLocation(true)
             });
 
@@ -49,7 +49,7 @@ describe("Compiler", () => {
 
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("autoBuild"),
+                setting: makeIdentifier("autoBuild"),
                 value: withLocation(location, 123)
             });
 
@@ -67,7 +67,7 @@ describe("Compiler", () => {
         it("should transform valid settings", () => {
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("Log", "prestige"),
+                setting: makeIdentifier("Log", "prestige"),
                 value: withDummyLocation(true)
             });
 
@@ -86,11 +86,10 @@ describe("Compiler", () => {
         it("should expand wildcards", () => {
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: withDummyLocation({
-                    name: withDummyLocation("FleetPriority"),
-                    targets: [],
+                setting: {
+                    ...makeIdentifier("FleetPriority"),
                     wildcard: withDummyLocation(true)
-                }),
+                },
                 value: withDummyLocation(123)
             });
 
@@ -124,7 +123,7 @@ describe("Compiler", () => {
 
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId(withLocation(location, "hello"), "prestige"),
+                setting: makeIdentifier(withLocation(location, "hello"), "prestige"),
                 value: withDummyLocation(true)
             });
 
@@ -142,7 +141,7 @@ describe("Compiler", () => {
 
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("Log", withLocation(location, "prestigea")),
+                setting: makeIdentifier("Log", withLocation(location, "prestigea")),
                 value: withDummyLocation(true)
             });
 
@@ -158,7 +157,7 @@ describe("Compiler", () => {
         it("should unwrap valid setting lists", () => {
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("AutoSell", "Lumber", "Stone"),
+                setting: makeIdentifier("AutoSell", "Lumber", "Stone"),
                 value: withDummyLocation(true)
             });
 
@@ -185,7 +184,7 @@ describe("Compiler", () => {
 
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("AutoSell", withLocation(location, "hello"), "Stone"),
+                setting: makeIdentifier("AutoSell", withLocation(location, "hello"), "Stone"),
                 value: withDummyLocation(true)
             });
 
@@ -203,11 +202,8 @@ describe("Compiler", () => {
         it("should transform expressions", () => {
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("BuildingMax", "interstellar-habitat"),
-                value: withDummyLocation({
-                    name: withDummyLocation("BuildingCount"),
-                    targets: [withDummyLocation("interstellar-fusion")]
-                })
+                setting: makeIdentifier("BuildingMax", "interstellar-habitat"),
+                value: makeIdentifier("BuildingCount", "interstellar-fusion")
             });
 
             const { statements, errors } = compile([node]);
@@ -232,11 +228,8 @@ describe("Compiler", () => {
 
             const node = withDummyLocation(<SettingAssignment> {
                 type: "SettingAssignment",
-                setting: makeSettingId("BuildingMax", "interstellar-habitat"),
-                value: withLocation(location, {
-                    name: withDummyLocation("BuildingUnlocked"),
-                    targets: [withDummyLocation("interstellar-fusion")]
-                })
+                setting: makeIdentifier("BuildingMax", "interstellar-habitat"),
+                value: withLocation(location, makeIdentifier("BuildingUnlocked", "interstellar-fusion"))
             });
 
             const { statements, errors } = compile([node]);

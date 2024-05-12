@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { compile } from "$lib/core/dsl/compiler/compile";
-import { withDummyLocation, makeSettingId, makeDummyLocation } from "./fixture";
+import { withDummyLocation, makeIdentifier, makeDummyLocation } from "./fixture";
 
 import type { SettingAssignment } from "$lib/core/dsl/parser/model";
 import { withLocation } from "$lib/core/dsl/parser/utils";
@@ -14,12 +14,9 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
-                        condition: withLocation(location, {
-                            name: withDummyLocation("ResourceQuantity"),
-                            targets: [withDummyLocation("Morale")]
-                        })
+                        condition: withLocation(location, makeIdentifier("ResourceQuantity", "Morale"))
                     });
 
                     const { statements, errors } = compile([node]);
@@ -36,12 +33,9 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
-                        condition: withLocation(location, {
-                            name: withDummyLocation("SettingCurrent"),
-                            targets: [withDummyLocation("prestigeType")]
-                        })
+                        condition: withLocation(location, makeIdentifier("SettingCurrent", "prestigeType"))
                     });
 
                     const { statements, errors } = compile([node]);
@@ -56,12 +50,9 @@ describe("Compiler", () => {
                 it("should accept boolean setting values", () => {
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
-                        condition: withDummyLocation({
-                            name: withDummyLocation("SettingCurrent"),
-                            targets: [withDummyLocation("autoPrestige")]
-                        })
+                        condition: makeIdentifier("SettingCurrent", "autoPrestige")
                     });
 
                     const { statements, errors } = compile([node]);
@@ -85,12 +76,9 @@ describe("Compiler", () => {
             it("should accept valid identifiers", () => {
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
-                    condition: withDummyLocation({
-                        name: withDummyLocation("ResourceDemanded"),
-                        targets: [withDummyLocation("Lumber")]
-                    })
+                    condition: makeIdentifier("ResourceDemanded", "Lumber")
                 });
 
                 const { statements, errors } = compile([node]);
@@ -118,12 +106,9 @@ describe("Compiler", () => {
 
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
-                    condition: withDummyLocation({
-                        name: withDummyLocation(prefix),
-                        targets: [withLocation(location, "Morale")]
-                    })
+                    condition: makeIdentifier(prefix, withLocation(location, "Morale"))
                 });
 
                 const { statements, errors } = compile([node]);
@@ -140,12 +125,9 @@ describe("Compiler", () => {
 
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
-                    condition: withDummyLocation({
-                        name: withLocation(location, "hello"),
-                        targets: [withDummyLocation("Morale")]
-                    })
+                    condition: makeIdentifier(withLocation(location, "hello"), "Morale")
                 });
 
                 const { statements, errors } = compile([node]);
@@ -162,12 +144,9 @@ describe("Compiler", () => {
 
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
-                    condition: withLocation(location, {
-                        name: withDummyLocation("hello"),
-                        targets: []
-                    })
+                    condition: withLocation(location, makeIdentifier("hello"))
                 });
 
                 const { statements, errors } = compile([node]);
@@ -182,16 +161,12 @@ describe("Compiler", () => {
             it("should pass arguments from setting name as context to conditions", () => {
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: withDummyLocation({
-                        name: withDummyLocation("AutoTradePriority"),
-                        targets: [withDummyLocation("Lumber"), withDummyLocation("Stone")]
-                    }),
+                    setting: makeIdentifier("AutoTradePriority", "Lumber", "Stone"),
                     value: withDummyLocation(10),
-                    condition: withDummyLocation({
-                        name: withDummyLocation("ResourceDemanded"),
-                        targets: [],
+                    condition: {
+                        ...makeIdentifier("ResourceDemanded"),
                         placeholder: withDummyLocation(true)
-                    })
+                    }
                 });
 
                 const { statements, errors } = compile([node]);
@@ -225,20 +200,18 @@ describe("Compiler", () => {
             it("should pass arguments from setting name as context to conditions when using wildcards", () => {
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: withDummyLocation({
-                        name: withDummyLocation("AutoTrait"),
-                        targets: [],
+                    setting: {
+                        ...makeIdentifier("AutoTrait"),
                         wildcard: withDummyLocation(true)
-                    }),
+                    },
                     value: withDummyLocation(true),
                     condition: withDummyLocation({
                         operator: withDummyLocation("<"),
                         args: [
-                            withDummyLocation({
-                                name: withDummyLocation("TraitLevel"),
-                                targets: [],
+                            {
+                                ...makeIdentifier("TraitLevel"),
                                 placeholder: withDummyLocation(true)
-                            }),
+                            },
                             withDummyLocation(10)
                         ]
                     })
@@ -286,11 +259,10 @@ describe("Compiler", () => {
 
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
                     condition: withLocation(location, {
-                        name: withDummyLocation("TraitLevel"),
-                        targets: [],
+                        ...makeIdentifier("TraitLevel"),
                         wildcard: withLocation(location, true)
                     })
                 });
@@ -307,15 +279,9 @@ describe("Compiler", () => {
             it("should pass condition to expression assignment", () => {
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("bld_m_interstellar-habitat"),
-                    value: withDummyLocation({
-                        name: withDummyLocation("BuildingCount"),
-                        targets: [withDummyLocation("interstellar-fusion")]
-                    }),
-                    condition: withDummyLocation({
-                        name: withDummyLocation("ResourceDemanded"),
-                        targets: [withDummyLocation("Lumber")]
-                    })
+                    setting: makeIdentifier("bld_m_interstellar-habitat"),
+                    value: makeIdentifier("BuildingCount", "interstellar-fusion"),
+                    condition: makeIdentifier("ResourceDemanded", "Lumber")
                 });
 
                 const { statements, errors } = compile([node]);
@@ -340,15 +306,12 @@ describe("Compiler", () => {
             it("should accept boolean args", () => {
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
                     condition: withDummyLocation({
                         operator: withDummyLocation("not"),
                         args: [
-                            withDummyLocation({
-                                name: withDummyLocation("ResourceDemanded"),
-                                targets: [withDummyLocation("Lumber")]
-                            })
+                            makeIdentifier("ResourceDemanded", "Lumber")
                         ]
                     })
                 });
@@ -375,15 +338,12 @@ describe("Compiler", () => {
 
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
-                    setting: makeSettingId("autoBuild"),
+                    setting: makeIdentifier("autoBuild"),
                     value: withDummyLocation(true),
                     condition: withDummyLocation({
                         operator: withDummyLocation("not"),
                         args: [
-                            withLocation(location, {
-                                name: withDummyLocation("ResourceQuantity"),
-                                targets: [withDummyLocation("Lumber")]
-                            })
+                            withLocation(location, makeIdentifier("ResourceQuantity", "Lumber"))
                         ]
                     })
                 });
@@ -406,19 +366,13 @@ describe("Compiler", () => {
                 ])("should accept args of the same type", ({ leftType, leftValue, rightType, rightValue }) => {
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("=="),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation(leftType),
-                                    targets: [withDummyLocation(leftValue)]
-                                }),
-                                withDummyLocation({
-                                    name: withDummyLocation(rightType),
-                                    targets: [withDummyLocation(rightValue)]
-                                })
+                                makeIdentifier(leftType, leftValue),
+                                makeIdentifier(rightType, rightValue)
                             ]
                         })
                     });
@@ -445,19 +399,13 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("=="),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("ResourceQuantity"),
-                                    targets: [withDummyLocation("Lumber")]
-                                }),
-                                withLocation(location, {
-                                    name: withDummyLocation("ResourceDemanded"),
-                                    targets: [withDummyLocation("Lumber")]
-                                })
+                                makeIdentifier("ResourceQuantity", "Lumber"),
+                                withLocation(location, makeIdentifier("ResourceDemanded", "Lumber"))
                             ]
                         })
                     });
@@ -476,19 +424,13 @@ describe("Compiler", () => {
                 it("should accept boolean args", () => {
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("and"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("ResourceDemanded"),
-                                    targets: [withDummyLocation("Lumber")]
-                                }),
-                                withDummyLocation({
-                                    name: withDummyLocation("ResearchUnlocked"),
-                                    targets: [withDummyLocation("tech-club")]
-                                }),
+                                makeIdentifier("ResourceDemanded", "Lumber"),
+                                makeIdentifier("ResearchUnlocked", "tech-club"),
                             ]
                         })
                     });
@@ -515,19 +457,13 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("and"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("ResourceDemanded"),
-                                    targets: [withDummyLocation("Lumber")]
-                                }),
-                                withLocation(location, {
-                                    name: withDummyLocation("ResourceQuantity"),
-                                    targets: [withDummyLocation("Lumber")]
-                                })
+                                makeIdentifier("ResourceDemanded", "Lumber"),
+                                withLocation(location, makeIdentifier("ResourceQuantity", "Lumber"))
                             ]
                         })
                     });
@@ -546,19 +482,13 @@ describe("Compiler", () => {
                 it("should accept numeric args", () => {
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("<"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("ResourceQuantity"),
-                                    targets: [withDummyLocation("Lumber")]
-                                }),
-                                withDummyLocation({
-                                    name: withDummyLocation("BuildingCount"),
-                                    targets: [withDummyLocation("city-smokehouse")]
-                                }),
+                                makeIdentifier("ResourceQuantity", "Lumber"),
+                                makeIdentifier("BuildingCount", "city-smokehouse"),
                             ]
                         })
                     });
@@ -585,19 +515,13 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("<"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("ResourceQuantity"),
-                                    targets: [withDummyLocation("Lumber")]
-                                }),
-                                withLocation(location, {
-                                    name: withDummyLocation("ResourceDemanded"),
-                                    targets: [withDummyLocation("Lumber")]
-                                })
+                                makeIdentifier("ResourceQuantity", "Lumber"),
+                                withLocation(location, makeIdentifier("ResourceDemanded", "Lumber"))
                             ]
                         })
                     });
@@ -618,19 +542,13 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withLocation(location, {
                             operator: withDummyLocation("+"),
                             args: [
-                                withDummyLocation({
-                                    name: withDummyLocation("ResourceQuantity"),
-                                    targets: [withDummyLocation("Lumber")]
-                                }),
-                                withDummyLocation({
-                                    name: withDummyLocation("BuildingCount"),
-                                    targets: [withDummyLocation("city-smokehouse")]
-                                })
+                                makeIdentifier("ResourceQuantity", "Lumber"),
+                                makeIdentifier("BuildingCount", "city-smokehouse")
                             ]
                         })
                     });
@@ -647,7 +565,7 @@ describe("Compiler", () => {
                 it("should allow numeric values nested in a boolean condition", () => {
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("<"),
@@ -655,20 +573,11 @@ describe("Compiler", () => {
                                 withDummyLocation({
                                     operator: withDummyLocation("+"),
                                     args: [
-                                        withDummyLocation({
-                                            name: withDummyLocation("ResourceQuantity"),
-                                            targets: [withDummyLocation("Lumber")]
-                                        }),
-                                        withDummyLocation({
-                                            name: withDummyLocation("BuildingCount"),
-                                            targets: [withDummyLocation("city-smokehouse")]
-                                        })
+                                        makeIdentifier("ResourceQuantity", "Lumber"),
+                                        makeIdentifier("BuildingCount", "city-smokehouse")
                                     ]
                                 }),
-                                withDummyLocation({
-                                    name: withDummyLocation("JobMax"),
-                                    targets: [withDummyLocation("farmer")]
-                                })
+                                makeIdentifier("JobMax", "farmer")
                             ]
                         })
                     });
@@ -695,7 +604,7 @@ describe("Compiler", () => {
 
                     const node = withDummyLocation(<SettingAssignment> {
                         type: "SettingAssignment",
-                        setting: makeSettingId("autoBuild"),
+                        setting: makeIdentifier("autoBuild"),
                         value: withDummyLocation(true),
                         condition: withDummyLocation({
                             operator: withDummyLocation("<"),
@@ -703,20 +612,11 @@ describe("Compiler", () => {
                                 withDummyLocation({
                                     operator: withDummyLocation("+"),
                                     args: [
-                                        withDummyLocation({
-                                            name: withDummyLocation("ResourceQuantity"),
-                                            targets: [withDummyLocation("Lumber")]
-                                        }),
-                                        withLocation(location, {
-                                            name: withDummyLocation("ResourceSatisfied"),
-                                            targets: [withDummyLocation("Lumber")]
-                                        })
+                                        makeIdentifier("ResourceQuantity", "Lumber"),
+                                        withLocation(location, makeIdentifier("ResourceSatisfied", "Lumber"))
                                     ]
                                 }),
-                                withDummyLocation({
-                                    name: withDummyLocation("JobMax"),
-                                    targets: [withDummyLocation("farmer")]
-                                })
+                                makeIdentifier("JobMax", "farmer")
                             ]
                         })
                     });

@@ -14,7 +14,7 @@ export function withDummyLocation<T>(value: T, id = 0) {
     return withLocation(makeDummyLocation(id), value);
 }
 
-export function makeSettingId(
+export function makeIdentifier(
     name: string | SourceTracked<String>,
     ...suffixes: (string | SourceTracked<String>)[]
 ): SourceTracked<Identifier> {
