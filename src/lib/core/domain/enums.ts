@@ -113,3 +113,28 @@ export const soldierTypes = [
     "crew",
     "mercenaryCost",
 ];
+
+export const logCategories = [
+    "special",
+    "construction",
+    "multi_construction",
+    "arpa",
+    "research",
+    "spying",
+    "attack",
+    "mercenary",
+    "mech_build",
+    "mech_scrap",
+    "outer_fleet",
+    "mutation",
+    "prestige",
+];
+
+export const andromedaSystems = [
+    "gxy_stargate",
+    "gxy_alien2",
+    "gxy_alien1",
+    "gxy_chthonian",
+    "gxy_gateway",
+    "gxy_gorddon",
+]

@@ -1,4 +1,22 @@
-export default {
+export const minorTraits = {
+    "tactical": "Tactical",
+    "analytical": "Analytical",
+    "promiscuous": "Promiscuous",
+    "resilient": "Resilient",
+    "cunning": "Cunning",
+    "hardy": "Hardy",
+    "ambidextrous": "Ambidextrous",
+    "industrious": "Industrious",
+    "content": "Content",
+    "fibroblast": "Fibroblast",
+    "metallurgist": "Metallurgist",
+    "gambler": "Gambler",
+    "persuasive": "Persuasive",
+    "fortify": "Fortify",
+    "mastery": "Mastery"
+};
+
+export const traits = {
     "adaptable": "Adaptable",
     "wasteful": "Wasteful",
     "xenophobic": "Xenophobic",
@@ -156,19 +174,5 @@ export default {
     "soul_eater": "Soul Eater",
     "untapped": "Untapped Potential",
     "emfield": "Electromagnetic Field",
-    "tactical": "Tactical",
-    "analytical": "Analytical",
-    "promiscuous": "Promiscuous",
-    "resilient": "Resilient",
-    "cunning": "Cunning",
-    "hardy": "Hardy",
-    "ambidextrous": "Ambidextrous",
-    "industrious": "Industrious",
-    "content": "Content",
-    "fibroblast": "Fibroblast",
-    "metallurgist": "Metallurgist",
-    "gambler": "Gambler",
-    "persuasive": "Persuasive",
-    "fortify": "Fortify",
-    "mastery": "Mastery"
+    ...minorTraits
 };

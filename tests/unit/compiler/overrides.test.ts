@@ -221,6 +221,88 @@ describe("Compiler", () => {
                     }
                 });
             });
+
+            it("should pass arguments from setting name as context to conditions when using wildcards", () => {
+                const node = withDummyLocation(<SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: withDummyLocation({
+                        name: withDummyLocation("AutoTrait"),
+                        targets: [],
+                        wildcard: withDummyLocation(true)
+                    }),
+                    value: withDummyLocation(true),
+                    condition: withDummyLocation({
+                        operator: withDummyLocation("<"),
+                        args: [
+                            withDummyLocation({
+                                name: withDummyLocation("TraitLevel"),
+                                targets: [],
+                                placeholder: withDummyLocation(true)
+                            }),
+                            withDummyLocation(10)
+                        ]
+                    })
+                });
+
+                const traits = [
+                    "tactical",
+                    "analytical",
+                    "promiscuous",
+                    "resilient",
+                    "cunning",
+                    "hardy",
+                    "ambidextrous",
+                    "industrious",
+                    "content",
+                    "fibroblast",
+                    "metallurgist",
+                    "gambler",
+                    "persuasive",
+                    "fortify",
+                    "mastery",
+                ];
+
+                const { statements, errors } = compile([node]);
+
+                expect(errors).toStrictEqual([]);
+                expect(statements.length).toBe(traits.length);
+
+                for (const [i, trait] of traits.entries()) {
+                    expect(statements[i]).toStrictEqual({
+                        type: "Override",
+                        target: `mTrait_${trait}`,
+                        value: true,
+                        condition: {
+                            op: "<",
+                            left: { type: "TraitLevel", value: trait },
+                            right: { type: "Number", value: 10 }
+                        }
+                    });
+                }
+            });
+
+            it("should reject wildcards in conditions", () => {
+                const location = makeDummyLocation(123);
+
+                const node = withDummyLocation(<SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: makeSettingId("autoBuild"),
+                    value: withDummyLocation(true),
+                    condition: withLocation(location, {
+                        name: withDummyLocation("TraitLevel"),
+                        targets: [],
+                        wildcard: withLocation(location, true)
+                    })
+                });
+
+                const { statements, errors } = compile([node]);
+
+                expect(statements).toStrictEqual([]);
+                expect(errors.length).toBe(1);
+
+                expect(errors[0].message).toBe("Wildcards are not allowed in conditions");
+                expect(errors[0].location).toStrictEqual(location);
+            });
         });
 
         describe("Unary", () => {

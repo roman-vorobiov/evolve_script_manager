@@ -63,7 +63,7 @@ function applyToFold(
     }
 }
 
-function resolvePlaceholder(node: SourceTracked<Parser.Identifier>, context?: SourceTracked<String>) {
+function resolveIdentifier(node: SourceTracked<Parser.Identifier>, context?: SourceTracked<String>): SourceTracked<Parser.Identifier> {
     if (node.placeholder?.valueOf()) {
         if (context === undefined) {
             throw new ParseError("Placeholder used without the context to resolve it", node.placeholder.location);
@@ -74,12 +74,15 @@ function resolvePlaceholder(node: SourceTracked<Parser.Identifier>, context?: So
             targets: [withLocation(node.placeholder.location, context.valueOf())]
         });
     }
+    else if (node.wildcard?.valueOf()) {
+        throw new ParseError("Wildcards are not allowed in conditions", node.wildcard.location);
+    }
     else {
         return node;
     }
 }
 
-function resolveIdentifier(node: SourceTracked<Parser.Identifier>): SourceTracked<Parser.Identifier>[] {
+function unpackIdentifier(node: SourceTracked<Parser.Identifier>): SourceTracked<Parser.Identifier>[] {
     return node.targets.map(target => withLocation(node.location, <Parser.Identifier> {
         name: node.name,
         targets: [target]
@@ -129,18 +132,18 @@ function unwrapUnaryExpression(node: SourceTracked<Parser.EvaluatedExpression>, 
 
 function unwrapIdentifier(node: SourceTracked<Parser.Identifier>, context: SourceTracked<String> | undefined): SourceTracked<Parser.Expression | FoldExpression> {
     if (node.targets.length < 2) {
-        return resolvePlaceholder(node, context);
+        return resolveIdentifier(node, context);
     }
     else {
         const operator = node.disjunction?.valueOf() ? "or" : "and";
 
         if (getCommonType(node) === "boolean") {
-            return foldLeft(withLocation(node.location, operator), ...resolveIdentifier(node));
+            return foldLeft(withLocation(node.location, operator), ...unpackIdentifier(node));
         }
         else {
             return withLocation(node.location, {
                 operator,
-                expressions: resolveIdentifier(node)
+                expressions: unpackIdentifier(node)
             });
         }
     }

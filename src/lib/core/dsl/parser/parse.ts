@@ -35,9 +35,11 @@ class ExpressionGetter extends DSLVisitor<SourceTracked<Parser.Expression>> {
         if (ctx.OR()) {
             node.disjunction = withLocation(ctx.OR()!.getSymbol(), true);
         }
-
-        if (ctx.Ellipsis()) {
+        else if (ctx.Ellipsis()) {
             node.placeholder = withLocation(ctx.Ellipsis()!.getSymbol(), true);
+        }
+        else if (ctx.MUL()) {
+            node.wildcard = withLocation(ctx.MUL()!.getSymbol(), true);
         }
 
         return withLocation(ctx, node);

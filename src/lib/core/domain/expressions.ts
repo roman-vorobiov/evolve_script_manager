@@ -1,7 +1,7 @@
 import { challenges } from "./challenges";
 import { races as raceNames, pseudoRaces } from "./races";
 import { playableGenera, mimicGenera } from "./genera";
-import traitNames from "./traits";
+import { traits as traitNames } from "./traits";
 import { settings } from "./settings";
 import buildingNames from "./buildings";
 import researchNames from "./tech";

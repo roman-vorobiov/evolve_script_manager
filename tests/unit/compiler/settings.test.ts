@@ -83,6 +83,42 @@ describe("Compiler", () => {
             }
         });
 
+        it("should expand wildcards", () => {
+            const node = withDummyLocation(<SettingAssignment> {
+                type: "SettingAssignment",
+                setting: withDummyLocation({
+                    name: withDummyLocation("FleetPriority"),
+                    targets: [],
+                    wildcard: withDummyLocation(true)
+                }),
+                value: withDummyLocation(123)
+            });
+
+            const systems = [
+                "gxy_stargate",
+                "gxy_alien2",
+                "gxy_alien1",
+                "gxy_chthonian",
+                "gxy_gateway",
+                "gxy_gorddon",
+            ];
+
+            const { statements, errors } = compile([node]);
+
+            expect(errors).toStrictEqual([]);
+            expect(statements.length).toBe(systems.length);
+
+            for (const [i, system] of systems.entries()) {
+                const statement = statements[i];
+
+                expect(statement.type).toBe("SettingAssignment");
+                if (statement.type === "SettingAssignment") {
+                    expect(statement.setting).toBe(`fleet_pr_${system}`);
+                    expect(statement.value).toBe(123);
+                }
+            }
+        });
+
         it("should reject invalid prefix", () => {
             const location = makeDummyLocation(123);
 
@@ -115,7 +151,7 @@ describe("Compiler", () => {
             expect(statements).toStrictEqual([]);
             expect(errors.length).toBe(1);
 
-            expect(errors[0].message).toBe("Unknown setting 'log_prestigea'");
+            expect(errors[0].message).toBe("Unknown log category 'prestigea'");
             expect(errors[0].location).toStrictEqual(location);
         });
 
@@ -158,7 +194,7 @@ describe("Compiler", () => {
             expect(statements).toStrictEqual([]);
             expect(errors.length).toBe(1);
 
-            expect(errors[0].message).toBe("Unknown setting 'sellhello'");
+            expect(errors[0].message).toBe("Unknown resource 'hello'");
             expect(errors[0].location).toStrictEqual(location);
         });
     });

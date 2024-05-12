@@ -91,6 +91,7 @@ identifier
     | Identifier '[' Identifier (',' Identifier)* 'and' Identifier ']'
     | Identifier '[' Identifier (',' Identifier)* 'or' Identifier ']'
     | Identifier '[' Ellipsis ']'
+    | Identifier '[' MUL ']'
     ;
 
 eval

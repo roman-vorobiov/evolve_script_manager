@@ -16,7 +16,8 @@ export type Identifier = {
     name: SourceTracked<String>,
     targets: SourceTracked<String>[],
     disjunction?: SourceTracked<Boolean>,
-    placeholder?: SourceTracked<Boolean>
+    placeholder?: SourceTracked<Boolean>,
+    wildcard?: SourceTracked<Boolean>,
 }
 
 export type EvaluatedExpression = {

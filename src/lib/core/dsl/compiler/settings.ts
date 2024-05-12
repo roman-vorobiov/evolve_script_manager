@@ -11,13 +11,23 @@ import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
 
 function validateSettingPrefix(settingPrefix: SourceTracked<String>): string {
-    const prefix = settingPrefixes[settingPrefix.valueOf()];
+    const prefix = settingPrefixes[settingPrefix.valueOf()]?.prefix;
 
     if (prefix === undefined) {
         throw new ParseError(`Unknown setting prefix '${settingPrefix}'`, settingPrefix.location);
     }
 
     return prefix;
+}
+
+function validateSettingSuffix(settingPrefix: string, settingSuffix: SourceTracked<String>): string {
+    const info = settingPrefixes[settingPrefix];
+
+    if (info.allowedValues.indexOf(settingSuffix.valueOf()) === -1) {
+        throw new ParseError(`Unknown ${info.valueDescription} '${settingSuffix}'`, settingSuffix.location);
+    }
+
+    return settingSuffix.valueOf();
 }
 
 function validateSetting(settingName: SourceTracked<String>): string {
@@ -39,14 +49,27 @@ function validateSettingValue(settingName: string, settingValue: SourceTracked<P
     return settingValue.valueOf();
 }
 
-function resolveTarget(prefix: string, target: SourceTracked<String>): SourceTracked<String> {
-    return withLocation(target.location, `${prefix}${target.valueOf()}`);
+function resolveTarget(prefix: string, suffix: SourceTracked<String>): SourceTracked<String> {
+    return withLocation(suffix.location, `${prefix}${suffix}`);
 }
 
 function unwrapTargets(node: SourceTracked<Parser.Identifier>): [SourceTracked<String>, SourceTracked<String>][] {
     if (node.targets.length !== 0) {
         const prefix = validateSettingPrefix(node.name);
+
+        for (const suffix of node.targets) {
+            validateSettingSuffix(node.name.valueOf(), suffix);
+        }
+
         return node.targets.map(target => [target, resolveTarget(prefix, target)]);
+    }
+    else if (node.wildcard?.valueOf()) {
+        const prefix = validateSettingPrefix(node.name);
+
+        const info = settingPrefixes[node.name.valueOf()];
+        return info.allowedValues
+            .map(target => withLocation(node.wildcard!.location, target))
+            .map(target => [target, resolveTarget(prefix, target)]);
     }
     else {
         if (node.placeholder?.valueOf()) {

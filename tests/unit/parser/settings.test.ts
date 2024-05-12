@@ -73,6 +73,19 @@ describe("Parser", () => {
                 expect(errors[0].message).toBe("Disjunction cannot be used in setting assignments");
                 expect(errors[0].location).toStrictEqual(locations.between(1, 2));
             });
+
+            it("should parse wildcards", () => {
+                const { nodes, errors, maps } = parse('foo[*] = "bar"');
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps('foo[*] = "bar"', <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo[*]", { name: maps("foo"), targets: [], wildcard: maps("*", true) }),
+                    value: maps('"bar"', "bar")
+                }));
+            });
         });
     });
 });
