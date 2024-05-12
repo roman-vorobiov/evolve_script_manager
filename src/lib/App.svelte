@@ -2,10 +2,11 @@
     import { saveState, loadState } from "$lib/core/persistence";
     import { type State } from "$lib/core/state";
 
-    import ConfigLoader from "$lib/ConfigLoader.svelte";
+    import ConfigExporter from "$lib/ConfigExporter.svelte";
     import Workspace from "$lib/Workspace.svelte";
 
     let state: State = loadState();
+    let config: any = {};
 
     $: {
         saveState(state);
@@ -15,9 +16,9 @@
 <div class="flex flex-col h-dvh">
     <div class="border-b">
         <div class="flex h-16 items-center px-4 space-x-4">
-            <ConfigLoader bind:config={state.config}>Import Config</ConfigLoader>
+            <ConfigExporter {config}></ConfigExporter>
         </div>
     </div>
 
-    <Workspace bind:state={state}></Workspace>
+    <Workspace bind:state={state} bind:config={config}></Workspace>
 </div>

@@ -5,8 +5,8 @@
     import Editor from "$lib/Editor.svelte";
 
     export let state: State;
+    export let config: any;
 
-    let config: any = {};
     let errors: ParseError[] = [];
 
     $: view = JSON.stringify(config, null, 4);
@@ -21,10 +21,10 @@
 </script>
 
 <div class="flex flex-row h-full">
-    <div class="w-3/5 h-full">
+    <div class="w-4/5 h-full">
         <Editor bind:state={state} {errors}></Editor>
     </div>
     <div class="grow h-full">
-        <p class="font-mono whitespace-pre-wrap p-6">{view}</p>
+        <p class="font-mono text-sm whitespace-pre-wrap p-6">{view}</p>
     </div>
 </div>

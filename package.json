@@ -36,8 +36,10 @@
         "bits-ui": "^0.21.2",
         "clsx": "^2.1.0",
         "lodash": "^4.17.21",
+        "mode-watcher": "^0.3.0",
         "monaco-editor": "^0.47.0",
         "svelte-radix": "^1.1.0",
+        "svelte-sonner": "^0.3.24",
         "tailwind-merge": "^2.2.2",
         "tailwind-variants": "^0.2.1"
     }
