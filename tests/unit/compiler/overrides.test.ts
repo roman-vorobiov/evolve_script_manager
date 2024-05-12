@@ -183,7 +183,7 @@ describe("Compiler", () => {
                 const node = withDummyLocation(<SettingAssignment> {
                     type: "SettingAssignment",
                     setting: withDummyLocation({
-                        name: withDummyLocation("TradePriority"),
+                        name: withDummyLocation("AutoTradePriority"),
                         targets: [withDummyLocation("Lumber"), withDummyLocation("Stone")]
                     }),
                     value: withDummyLocation(10),

@@ -39,6 +39,19 @@ export const planetaryTraits = [
     "retrograde",
 ];
 
+export const planetaryBonuses = [
+    "Achievement",
+    "Orbit",
+    "Copper",
+    "Iron",
+    "Aluminium",
+    "Coal",
+    "Oil",
+    "Titanium",
+    "Uranium",
+    "Iridium",
+];
+
 export const governments = [
     "anarchy",
     "autocracy",
@@ -137,4 +150,22 @@ export const andromedaSystems = [
     "gxy_chthonian",
     "gxy_gateway",
     "gxy_gorddon",
+]
+
+export const rituals = [
+    "farmer",
+    "miner",
+    "lumberjack",
+    "science",
+    "factory",
+    "army",
+    "hunting",
+    "crafting",
+]
+
+export const fuelTypes = [
+    "Wood",
+    "Coal",
+    "Oil",
+    "Inferno",
 ]

@@ -16,7 +16,7 @@ export const minorTraits = {
     "mastery": "Mastery"
 };
 
-export const traits = {
+export const majorTraits = {
     "adaptable": "Adaptable",
     "wasteful": "Wasteful",
     "xenophobic": "Xenophobic",
@@ -174,5 +174,9 @@ export const traits = {
     "soul_eater": "Soul Eater",
     "untapped": "Untapped Potential",
     "emfield": "Electromagnetic Field",
+};
+
+export const traits = {
+    ...majorTraits,
     ...minorTraits
 };
