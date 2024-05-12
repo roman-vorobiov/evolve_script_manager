@@ -1,4 +1,4 @@
-import { challenges } from "./challenges";
+import { challenges as rawChallenges } from "./challenges";
 import {
     minorTraits as minorTraitNames,
     majorTraits as majorTraitNames
@@ -23,6 +23,7 @@ import {
 } from "./resources";
 import * as enums from "./enums";
 
+const challenges = rawChallenges.map(challenge => challenge.startsWith("no_") ? challenge.slice(3) : challenge);
 const buildings = Object.keys(buildingNames);
 const projects = Object.keys(projectNames);
 const jobs = Object.keys(jobNames);
