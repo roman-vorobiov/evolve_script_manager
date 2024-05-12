@@ -128,6 +128,24 @@ describe("Parser", () => {
                 }));
             });
 
+            it("should parse placeholders", () => {
+                const { nodes, errors, maps } = parse("foo = 123 if aaa[...]");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps("foo = 123 if aaa[...]", <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("123", 123),
+                    condition: maps("aaa[...]", {
+                        name: maps("aaa"),
+                        targets: [],
+                        placeholder: maps("...", true)
+                    })
+                }));
+            });
+
             describe("Operator precedence", () => {
                 it("should put quotes before anything else", () => {
                     const { nodes, errors, maps } = parse("foo = 123 if not (aaa or bbb)");

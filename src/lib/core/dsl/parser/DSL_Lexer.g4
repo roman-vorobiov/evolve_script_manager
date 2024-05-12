@@ -2,6 +2,7 @@ lexer grammar DSL_Lexer;
 
 // Characters
 
+Ellipsis      : '...';
 Dot           : '.';
 Comma         : ',';
 

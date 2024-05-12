@@ -1,5 +1,6 @@
 import { expressions } from "$lib/core/domain/expressions";
 import { settingType } from "$lib/core/domain/settings";
+import { assert } from "$lib/core/utils/typeUtils";
 import { ParseError } from "../parser/model";
 import { isBinaryExpression, isUnaryExpression, isIdentifier, combine, foldLeft } from "./utils";
 import { withLocation } from "../parser/utils";
@@ -20,7 +21,22 @@ function isArithmetic(operator: string) {
     return ["+", "-", "*", "/"].indexOf(operator) !== -1;
 }
 
-function assert<T>(value: any): asserts value is T {}
+function getCommonType(node: SourceTracked<Parser.Identifier>): string | undefined {
+    const info = expressions[node.name.valueOf()];
+
+    if (info.type !== null) {
+        return info.type;
+    }
+
+    if (info.valueDescription === "setting") {
+        const types = [...new Set(node.targets.map(settingId => settingType(settingId.valueOf())))];
+        if (types.length !== 1) {
+            throw new ParseError("All values of a fold expression must have the same type", node.location);
+        }
+
+        return types[0];
+    }
+}
 
 function applyToFold(
     operator: SourceTracked<String>,
@@ -47,19 +63,38 @@ function applyToFold(
     }
 }
 
-function unwrapIdentifier(node: SourceTracked<Parser.Identifier>): SourceTracked<Parser.Identifier>[] {
+function resolvePlaceholder(node: SourceTracked<Parser.Identifier>, context?: SourceTracked<String>) {
+    if (node.placeholder?.valueOf()) {
+        if (context === undefined) {
+            throw new ParseError("Placeholder used without the context to resolve it", node.placeholder.location);
+        }
+
+        return withLocation(node.location, <Parser.Identifier> {
+            name: node.name,
+            targets: [withLocation(node.placeholder.location, context.valueOf())]
+        });
+    }
+    else {
+        return node;
+    }
+}
+
+function resolveIdentifier(node: SourceTracked<Parser.Identifier>): SourceTracked<Parser.Identifier>[] {
     return node.targets.map(target => withLocation(node.location, <Parser.Identifier> {
         name: node.name,
         targets: [target]
     }));
 }
 
-function unwrapBinaryExpression(node: SourceTracked<Parser.EvaluatedExpression>): SourceTracked<Parser.Expression | FoldExpression> {
-    const l = unwrapExpression(node.args[0]);
-    const r = unwrapExpression(node.args[1]);
+function unwrapBinaryExpression(node: SourceTracked<Parser.EvaluatedExpression>, context: SourceTracked<String> | undefined): SourceTracked<Parser.Expression | FoldExpression> {
+    const l = unwrapExpression(node.args[0], context);
+    const r = unwrapExpression(node.args[1], context);
 
     if (!isFoldExpression(l) && !isFoldExpression(r)) {
-        return node;
+        return withLocation(node.location, <Parser.EvaluatedExpression> {
+            operator: node.operator,
+            args: [l, r]
+        });
     }
 
     if (isFoldExpression(l) && isFoldExpression(r)) {
@@ -76,8 +111,8 @@ function unwrapBinaryExpression(node: SourceTracked<Parser.EvaluatedExpression>)
     }
 }
 
-function unwrapUnaryExpression(node: SourceTracked<Parser.EvaluatedExpression>): SourceTracked<Parser.Expression> {
-    const subexpression = unwrapExpression(node.args[0]);
+function unwrapUnaryExpression(node: SourceTracked<Parser.EvaluatedExpression>, context: SourceTracked<String> | undefined): SourceTracked<Parser.Expression> {
+    const subexpression = unwrapExpression(node.args[0], context);
 
     if (isFoldExpression(subexpression)) {
         return withLocation(node.location, {
@@ -92,55 +127,42 @@ function unwrapUnaryExpression(node: SourceTracked<Parser.EvaluatedExpression>):
     }
 }
 
-function getCommonType(node: SourceTracked<Parser.Identifier>): string | undefined {
-    const info = expressions[node.name.valueOf()];
-
-    if (info.type !== null) {
-        return info.type;
+function unwrapIdentifier(node: SourceTracked<Parser.Identifier>, context: SourceTracked<String> | undefined): SourceTracked<Parser.Expression | FoldExpression> {
+    if (node.targets.length < 2) {
+        return resolvePlaceholder(node, context);
     }
+    else {
+        const operator = node.disjunction?.valueOf() ? "or" : "and";
 
-    if (info.valueDescription === "setting") {
-        const types = [...new Set(node.targets.map(settingId => settingType(settingId.valueOf())))];
-        if (types.length !== 1) {
-            throw new ParseError("All values of a fold expression must have the same type", node.location);
+        if (getCommonType(node) === "boolean") {
+            return foldLeft(withLocation(node.location, operator), ...resolveIdentifier(node));
         }
-
-        return types[0];
+        else {
+            return withLocation(node.location, {
+                operator,
+                expressions: resolveIdentifier(node)
+            });
+        }
     }
 }
 
-export function unwrapExpression(node: SourceTracked<Parser.Expression>): SourceTracked<Parser.Expression | FoldExpression> {
+export function unwrapExpression(node: SourceTracked<Parser.Expression>, context?: SourceTracked<String>): SourceTracked<Parser.Expression | FoldExpression> {
     if (isBinaryExpression(node)) {
-        return unwrapBinaryExpression(node);
+        return unwrapBinaryExpression(node, context);
     }
     else if (isUnaryExpression(node)) {
-        return unwrapUnaryExpression(node);
+        return unwrapUnaryExpression(node, context);
     }
     else if (isIdentifier(node)) {
-        if (node.targets.length < 2) {
-            return node;
-        }
-        else {
-            const operator = node.disjunction?.valueOf() ? "or" : "and";
-
-            if (getCommonType(node) === "boolean") {
-                return foldLeft(withLocation(node.location, operator), ...unwrapIdentifier(node));
-            }
-            else {
-                return withLocation(node.location, {
-                    operator,
-                    expressions: unwrapIdentifier(node)
-                });
-            }
-        }
+        return unwrapIdentifier(node, context);
     }
     else {
         return node;
     }
 }
 
-export function normalizeExpression(node: SourceTracked<Parser.Expression>): SourceTracked<Parser.Expression> {
-    const expression = unwrapExpression(node);
+export function normalizeExpression(node: SourceTracked<Parser.Expression>, context?: SourceTracked<String>): SourceTracked<Parser.Expression> {
+    const expression = unwrapExpression(node, context);
 
     if (isFoldExpression(expression)) {
         throw new ParseError("Fold expression detected outside of a boolean expression", expression.location);

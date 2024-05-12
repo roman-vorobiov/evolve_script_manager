@@ -15,7 +15,8 @@ export type Constant = String | Number | Boolean;
 export type Identifier = {
     name: SourceTracked<String>,
     targets: SourceTracked<String>[],
-    disjunction?: SourceTracked<Boolean>
+    disjunction?: SourceTracked<Boolean>,
+    placeholder?: SourceTracked<Boolean>
 }
 
 export type EvaluatedExpression = {

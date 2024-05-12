@@ -112,8 +112,8 @@ export function makeOverrideCondition(node: SourceTracked<Parser.Expression>): C
     }
 }
 
-export function compileCondition(node: SourceTracked<Parser.Expression>): Compiler.OverrideCondition {
-    node = normalizeExpression(node);
+export function compileCondition(node: SourceTracked<Parser.Expression>, context?: SourceTracked<String>): Compiler.OverrideCondition {
+    node = normalizeExpression(node, context);
 
     validateCondition(node);
 

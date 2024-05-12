@@ -178,6 +178,49 @@ describe("Compiler", () => {
                 expect(errors[0].message).toBe("Unknown expression 'hello'");
                 expect(errors[0].location).toStrictEqual(location);
             });
+
+            it("should pass arguments from setting name as context to conditions", () => {
+                const node = withDummyLocation(<SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: withDummyLocation({
+                        name: withDummyLocation("TradePriority"),
+                        targets: [withDummyLocation("Lumber"), withDummyLocation("Stone")]
+                    }),
+                    value: withDummyLocation(10),
+                    condition: withDummyLocation({
+                        name: withDummyLocation("ResourceDemanded"),
+                        targets: [],
+                        placeholder: withDummyLocation(true)
+                    })
+                });
+
+                const { statements, errors } = compile([node]);
+
+                expect(errors).toStrictEqual([]);
+                expect(statements.length).toBe(2);
+
+                expect(statements[0]).toStrictEqual({
+                    type: "Override",
+                    target: "res_trade_p_Lumber",
+                    value: 10,
+                    condition: {
+                        op: "==",
+                        left: { type: "ResourceDemanded", value: "Lumber" },
+                        right: { type: "Boolean", value: true }
+                    }
+                });
+
+                expect(statements[1]).toStrictEqual({
+                    type: "Override",
+                    target: "res_trade_p_Stone",
+                    value: 10,
+                    condition: {
+                        op: "==",
+                        left: { type: "ResourceDemanded", value: "Stone" },
+                        right: { type: "Boolean", value: true }
+                    }
+                });
+            });
         });
 
         describe("Unary", () => {

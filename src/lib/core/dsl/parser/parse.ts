@@ -36,6 +36,10 @@ class ExpressionGetter extends DSLVisitor<SourceTracked<Parser.Expression>> {
             node.disjunction = withLocation(ctx.OR()!.getSymbol(), true);
         }
 
+        if (ctx.Ellipsis()) {
+            node.placeholder = withLocation(ctx.Ellipsis()!.getSymbol(), true);
+        }
+
         return withLocation(ctx, node);
     }
 
@@ -111,7 +115,7 @@ class Visitor extends DSLVisitor<any> {
         const settingName = this.expressionGetter.visit(ctx.settingId()) as SourceTracked<Parser.Identifier>;
         const settingValue = this.expressionGetter.visit(ctx.value()) as SourceTracked<Parser.Constant>;
 
-        if (settingName.disjunction) {
+        if (settingName.disjunction?.valueOf()) {
             throw new ParseError("Disjunction cannot be used in setting assignments", settingName.disjunction.location);
         }
 

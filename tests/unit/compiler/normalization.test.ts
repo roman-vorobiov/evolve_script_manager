@@ -352,31 +352,67 @@ describe("Compiler", () => {
                     expect(exception.location).toStrictEqual(makeDummyLocation(3));
                 }
             });
+
+            it("should reject folds that are not a part of a boolean expression", () => {
+                const node = at(1, <Parser.EvaluatedExpression> {
+                    operator: at(2, "*"),
+                    args: [
+                        at(3, <Parser.Identifier> {
+                            name: withDummyLocation("ResourceQuantity"),
+                            targets: [
+                                withDummyLocation("Food"),
+                                withDummyLocation("Lumber"),
+                                withDummyLocation("Stone"),
+                            ]
+                        }),
+                        withDummyLocation(2)
+                    ]
+                });
+
+                const exception = getExcepion(() => normalizeExpression(node));
+                expect(exception).toBeDefined();
+                expect(exception).toBeInstanceOf(ParseError);
+                if (exception instanceof ParseError) {
+                    expect(exception.message).toBe("Fold expression detected outside of a boolean expression");
+                    expect(exception.location).toStrictEqual(makeDummyLocation(3));
+                }
+            });
         });
 
-        it("should reject folds that are not a part of a boolean expression", () => {
-            const node = at(1, <Parser.EvaluatedExpression> {
-                operator: at(2, "*"),
-                args: [
-                    at(3, <Parser.Identifier> {
-                        name: withDummyLocation("ResourceQuantity"),
-                        targets: [
-                            withDummyLocation("Food"),
-                            withDummyLocation("Lumber"),
-                            withDummyLocation("Stone"),
-                        ]
-                    }),
-                    withDummyLocation(2)
-                ]
+        describe("Placeholder resolution", () => {
+            it("should resolve placeholders from context", () => {
+                const node = at(1, <Parser.Identifier> {
+                    name: at(2, "ResourceDemanded"),
+                    targets: [],
+                    placeholder: at(3, true),
+                });
+
+                const context = at(4, "Food");
+
+                const expression = unwrapExpression(node, context);
+
+                expect(isExpression(expression)).toBe(true);
+                expect(expression).toStrictEqual(at(1, <Parser.Identifier> {
+                    name: at(2, "ResourceDemanded"),
+                    targets: [at(3, "Food")]
+                }));
             });
 
-            const exception = getExcepion(() => normalizeExpression(node));
-            expect(exception).toBeDefined();
-            expect(exception).toBeInstanceOf(ParseError);
-            if (exception instanceof ParseError) {
-                expect(exception.message).toBe("Fold expression detected outside of a boolean expression");
-                expect(exception.location).toStrictEqual(makeDummyLocation(3));
-            }
+            it("should reject placeholders without context", () => {
+                const node = at(1, <Parser.Identifier> {
+                    name: at(2, "ResourceDemanded"),
+                    targets: [],
+                    placeholder: at(3, true),
+                });
+
+                const exception = getExcepion(() => normalizeExpression(node));
+                expect(exception).toBeDefined();
+                expect(exception).toBeInstanceOf(ParseError);
+                if (exception instanceof ParseError) {
+                    expect(exception.message).toBe("Placeholder used without the context to resolve it");
+                    expect(exception.location).toStrictEqual(makeDummyLocation(3));
+                }
+            });
         });
     });
 });

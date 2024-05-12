@@ -43,13 +43,17 @@ function resolveTarget(prefix: string, target: SourceTracked<String>): SourceTra
     return withLocation(target.location, `${prefix}${target.valueOf()}`);
 }
 
-function unwrapTargets(node: SourceTracked<Parser.Identifier>): SourceTracked<String>[] {
+function unwrapTargets(node: SourceTracked<Parser.Identifier>): [SourceTracked<String>, SourceTracked<String>][] {
     if (node.targets.length !== 0) {
         const prefix = validateSettingPrefix(node.name);
-        return node.targets.map(target => resolveTarget(prefix, target));
+        return node.targets.map(target => [target, resolveTarget(prefix, target)]);
     }
     else {
-        return [node.name];
+        if (node.placeholder?.valueOf()) {
+            throw new ParseError("Placeholder used without the context to resolve it", node.placeholder.location);
+        }
+
+        return [[node.name, node.name]];
     }
 }
 
@@ -57,7 +61,7 @@ export function* compileSettingAssignment(
     node: Parser.SettingAssignment,
     scopeCondition?: SourceTracked<Parser.Expression>
 ): Generator<Compiler.SettingAssignment | Compiler.Override> {
-    for (const settingNameNode of unwrapTargets(node.setting)) {
+    for (const [arg, settingNameNode] of unwrapTargets(node.setting)) {
         const settingName = validateSetting(settingNameNode);
         const settingValue = validateSettingValue(settingName, node.value);
 
@@ -65,7 +69,7 @@ export function* compileSettingAssignment(
 
         if (condition !== undefined) {
             const conditionLocation = node.condition?.location ?? scopeCondition!.location;
-            const computedCondition = compileCondition(withLocation(conditionLocation, condition));
+            const computedCondition = compileCondition(withLocation(conditionLocation, condition), arg);
 
             yield {
                 type: "Override",
