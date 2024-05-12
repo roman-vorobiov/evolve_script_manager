@@ -24,7 +24,7 @@ describe("Compiler", () => {
                     name: withDummyLocation("RacePillared"),
                     targets: [withDummyLocation("Imitation")]
                 };
-                expect(toEvalString(node)).toBe("checkTypes.RacePillared.fn('srace')");
+                expect(toEvalString(node)).toBe("_('RacePillared', 'srace')");
             });
 
             it("should transform 'other' identifiers", () => {
@@ -32,7 +32,7 @@ describe("Compiler", () => {
                     name: withDummyLocation("RaceName"),
                     targets: []
                 };
-                expect(toEvalString(node)).toBe("checkTypes.Other.fn('rname')");
+                expect(toEvalString(node)).toBe("_('Other', 'rname')");
             });
 
             it("should not transform eval expressions", () => {
@@ -53,7 +53,7 @@ describe("Compiler", () => {
                         })
                     ]
                 };
-                expect(toEvalString(node)).toBe("!checkTypes.RacePillared.fn('srace')");
+                expect(toEvalString(node)).toBe("!_('RacePillared', 'srace')");
             });
 
             it("should transform binary expressions", () => {
@@ -67,7 +67,7 @@ describe("Compiler", () => {
                         withDummyLocation(123)
                     ]
                 };
-                expect(toEvalString(node)).toBe("checkTypes.BuildingCount.fn('city-oil_depot') < 123");
+                expect(toEvalString(node)).toBe("_('BuildingCount', 'city-oil_depot') < 123");
             });
 
             it("should transform nested expressions", () => {
@@ -98,9 +98,9 @@ describe("Compiler", () => {
                         })
                     ]
                 };
-                expect(toEvalString(node)).toBe("!(checkTypes.BuildingUnlocked.fn('city-oil_depot') && " +
-                                                  "(checkTypes.JobUnlocked.fn('lumberjack') || " +
-                                                   "checkTypes.ResearchUnlocked.fn('tech-club')))");
+                expect(toEvalString(node)).toBe("!(_('BuildingUnlocked', 'city-oil_depot') && " +
+                                                  "(_('JobUnlocked', 'lumberjack') || " +
+                                                   "_('ResearchUnlocked', 'tech-club')))");
             });
         });
 
@@ -191,7 +191,7 @@ describe("Compiler", () => {
                 const result = makeExpressionArgument(node);
 
                 expect(result.type).toBe("Eval");
-                expect(result.value).toBe("!checkTypes.RacePillared.fn('srace')");
+                expect(result.value).toBe("!_('RacePillared', 'srace')");
             });
 
             it("should compile binary expressions", () => {
@@ -209,7 +209,7 @@ describe("Compiler", () => {
                 const result = makeExpressionArgument(node);
 
                 expect(result.type).toBe("Eval");
-                expect(result.value).toBe("checkTypes.BuildingCount.fn('city-oil_depot') < 123");
+                expect(result.value).toBe("_('BuildingCount', 'city-oil_depot') < 123");
             });
 
             it("should compile nested expressions", () => {
@@ -241,7 +241,7 @@ describe("Compiler", () => {
                 const result = makeExpressionArgument(node);
 
                 expect(result.type).toBe("Eval");
-                expect(result.value).toBe("!(checkTypes.BuildingCount.fn('city-oil_depot') < (checkTypes.JobCount.fn('lumberjack') * 2))");
+                expect(result.value).toBe("!(_('BuildingCount', 'city-oil_depot') < (_('JobCount', 'lumberjack') * 2))");
             });
         });
 
@@ -389,7 +389,7 @@ describe("Compiler", () => {
 
                 expect(result.op).toBe("==");
                 expect(result.left.type).toBe("Eval");
-                expect(result.left.value).toBe("checkTypes.BuildingCount.fn('city-oil_depot') < (checkTypes.JobCount.fn('lumberjack') * ((2) / 3))");
+                expect(result.left.value).toBe("_('BuildingCount', 'city-oil_depot') < (_('JobCount', 'lumberjack') * ((2) / 3))");
                 expect(result.right.type).toBe("Boolean");
                 expect(result.right.value).toBe(false);
             });

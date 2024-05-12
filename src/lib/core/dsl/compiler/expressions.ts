@@ -46,7 +46,7 @@ export function toEvalString(node: Parser.Expression, wrap: boolean = false): st
             return wrapper(normalized.value as string);
         }
         else {
-            return `checkTypes.${normalized.type}.fn('${normalized.value}')`;
+            return `_('${normalized.type}', '${normalized.value}')`;
         }
     }
     else {
