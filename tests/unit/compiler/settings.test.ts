@@ -198,4 +198,54 @@ describe("Compiler", () => {
             expect(errors[0].location).toStrictEqual(location);
         });
     });
+
+    describe("Expression assignments", () => {
+        it("should transform expressions", () => {
+            const node = withDummyLocation(<SettingAssignment> {
+                type: "SettingAssignment",
+                setting: makeSettingId("BuildingMax", "interstellar-habitat"),
+                value: withDummyLocation({
+                    name: withDummyLocation("BuildingCount"),
+                    targets: [withDummyLocation("interstellar-fusion")]
+                })
+            });
+
+            const { statements, errors } = compile([node]);
+
+            expect(errors).toStrictEqual([]);
+            expect(statements.length).toBe(1);
+
+            expect(statements[0]).toStrictEqual({
+                type: "Override",
+                target: "bld_m_interstellar-habitat",
+                value: null,
+                condition: {
+                    op: "A?B",
+                    left: { type: "Boolean", value: true },
+                    right: { type: "BuildingCount", value: "interstellar-fusion" }
+                }
+            });
+        });
+
+        it("should reject expressions of a different type", () => {
+            const location = makeDummyLocation(123);
+
+            const node = withDummyLocation(<SettingAssignment> {
+                type: "SettingAssignment",
+                setting: makeSettingId("BuildingMax", "interstellar-habitat"),
+                value: withLocation(location, {
+                    name: withDummyLocation("BuildingUnlocked"),
+                    targets: [withDummyLocation("interstellar-fusion")]
+                })
+            });
+
+            const { statements, errors } = compile([node]);
+
+            expect(statements).toStrictEqual([]);
+            expect(errors.length).toBe(1);
+
+            expect(errors[0].message).toBe("Expected number, got boolean");
+            expect(errors[0].location).toStrictEqual(location);
+        });
+    });
 });

@@ -173,3 +173,23 @@ export function normalizeExpression(node: SourceTracked<Parser.Expression>, cont
 
     return expression;
 }
+
+export function makeConditionalAssignmentNode(
+    valueNode: SourceTracked<Parser.Expression>,
+    conditionNode: SourceTracked<Parser.Expression> | undefined,
+    context?: SourceTracked<String>
+): SourceTracked<Parser.Expression> {
+    valueNode = normalizeExpression(valueNode, context);
+
+    if (conditionNode !== undefined) {
+        conditionNode = normalizeExpression(conditionNode, context);
+
+        return withLocation(valueNode.location, {
+            operator: withLocation(valueNode.location, "A?B"),
+            args: [conditionNode, valueNode]
+        })
+    }
+    else {
+        return valueNode;
+    }
+}

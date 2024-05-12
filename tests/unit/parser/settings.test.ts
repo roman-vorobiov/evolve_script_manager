@@ -14,7 +14,7 @@ describe("Parser", () => {
                 { source: "-1.23", target: -1.23 },
                 { source: "ON", target: true },
                 { source: "OFF", target: false },
-            ])("should parse value assignments", ({ source, target }) => {
+            ])("should parse constant assignments", ({ source, target }) => {
                 const { nodes, errors, maps } = parse(`foo = ${source}`);
 
                 expect(errors).toStrictEqual([]);
@@ -24,6 +24,38 @@ describe("Parser", () => {
                     type: "SettingAssignment",
                     setting: maps("foo", { name: maps("foo"), targets: [] }),
                     value: maps(source, target)
+                }));
+            });
+
+            it("should parse nullary expression assignments", () => {
+                const { nodes, errors, maps } = parse(`foo = bar`);
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps(`foo = bar`, <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("bar", { name: maps("bar"), targets: [] })
+                }));
+            });
+
+            it("should parse binary expression assignments", () => {
+                const { nodes, errors, maps } = parse(`foo = bar + baz`);
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                expect(nodes[0]).toStrictEqual(maps(`foo = bar + baz`, <SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: maps("foo", { name: maps("foo"), targets: [] }),
+                    value: maps("bar + baz", {
+                        operator: maps("+"),
+                        args: [
+                            maps("bar", { name: maps("bar"), targets: [] }),
+                            maps("baz", { name: maps("baz"), targets: [] })
+                        ]
+                    })
                 }));
             });
         });

@@ -1,14 +1,16 @@
 import defaultSettings from "$lib/assets/default.json";
 import settingPrefixes from "$lib/core/domain/prefixes";
 import { settingType } from "$lib/core/domain/settings";
-import { compileCondition } from "./expressions";
-import { conjunction } from "./utils";
+import { compileCondition, compileSettingValue } from "./expressions";
+import { makeConditionalAssignmentNode } from "./normalize";
+import { conjunction, isConstantExpression } from "./utils";
 import { ParseError } from "../parser/model";
 import { withLocation } from "../parser/utils";
 
 import type { SourceTracked } from "../parser/source";
 import type * as Parser from "../parser/model";
 import type * as Compiler from "./model";
+import { checkType, validateExpression } from "./validate";
 
 function validateSettingPrefix(settingPrefix: SourceTracked<String>): string {
     const prefix = settingPrefixes[settingPrefix.valueOf()]?.prefix;
@@ -36,17 +38,6 @@ function validateSetting(settingName: SourceTracked<String>): string {
     }
 
     return settingName.valueOf();
-}
-
-function validateSettingValue(settingName: string, settingValue: SourceTracked<Parser.Constant>): string | number | boolean {
-    const expectedType = settingType(settingName);
-    const actualType = typeof settingValue.valueOf()
-
-    if (expectedType !== actualType) {
-        throw new ParseError(`Expected ${expectedType}, got ${actualType}`, settingValue.location);
-    }
-
-    return settingValue.valueOf();
 }
 
 function resolveTarget(prefix: string, suffix: SourceTracked<String>): SourceTracked<String> {
@@ -84,28 +75,45 @@ export function* compileSettingAssignment(
     node: Parser.SettingAssignment,
     scopeCondition?: SourceTracked<Parser.Expression>
 ): Generator<Compiler.SettingAssignment | Compiler.Override> {
+    const condition = conjunction(scopeCondition, node.condition);
+    const conditionLocation = node.condition?.location ?? scopeCondition?.location;
+    const trackedCondition = condition && withLocation(conditionLocation!, condition);
+
+    let expectedValueType: string;
+
     for (const [arg, settingNameNode] of unwrapTargets(node.setting)) {
         const settingName = validateSetting(settingNameNode);
-        const settingValue = validateSettingValue(settingName, node.value);
+        expectedValueType ??= settingType(settingName);
 
-        const condition = conjunction(scopeCondition, node.condition);
+        if (isConstantExpression(node.value)) {
+            checkType(typeof node.value.valueOf(), expectedValueType, node.value.location);
 
-        if (condition !== undefined) {
-            const conditionLocation = node.condition?.location ?? scopeCondition!.location;
-            const computedCondition = compileCondition(withLocation(conditionLocation, condition), arg);
+            if (trackedCondition !== undefined) {
+                yield {
+                    type: "Override",
+                    target: settingName,
+                    condition: compileCondition(trackedCondition, arg),
+                    value: node.value.valueOf()
+                };
+            }
+            else {
+                yield {
+                    type: "SettingAssignment",
+                    setting: settingName,
+                    value: node.value.valueOf()
+                };
+            }
+        }
+        else {
+            const value = makeConditionalAssignmentNode(node.value, trackedCondition, arg);
+            const valueType = validateExpression(value);
+            checkType(valueType, expectedValueType, value.location);
 
             yield {
                 type: "Override",
                 target: settingName,
-                condition: computedCondition,
-                value: settingValue
-            };
-        }
-        else {
-            yield {
-                type: "SettingAssignment",
-                setting: settingName,
-                value: settingValue
+                condition: compileSettingValue(value),
+                value: null
             };
         }
     }

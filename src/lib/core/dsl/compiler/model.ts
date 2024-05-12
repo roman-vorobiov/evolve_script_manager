@@ -1,6 +1,6 @@
 import type { ParseError } from "../parser/model";
 
-type Value = string | number | boolean;
+type Value = string | number | boolean | null;
 
 export type ExpressionArgument = {
     type: string,

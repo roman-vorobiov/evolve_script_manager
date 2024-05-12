@@ -1,4 +1,4 @@
-type Value = string | number | boolean;
+type Value = string | number | boolean | null;
 
 export type Override = {
     type1: string,

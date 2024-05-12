@@ -303,6 +303,37 @@ describe("Compiler", () => {
                 expect(errors[0].message).toBe("Wildcards are not allowed in conditions");
                 expect(errors[0].location).toStrictEqual(location);
             });
+
+            it("should pass condition to expression assignment", () => {
+                const node = withDummyLocation(<SettingAssignment> {
+                    type: "SettingAssignment",
+                    setting: makeSettingId("bld_m_interstellar-habitat"),
+                    value: withDummyLocation({
+                        name: withDummyLocation("BuildingCount"),
+                        targets: [withDummyLocation("interstellar-fusion")]
+                    }),
+                    condition: withDummyLocation({
+                        name: withDummyLocation("ResourceDemanded"),
+                        targets: [withDummyLocation("Lumber")]
+                    })
+                });
+
+                const { statements, errors } = compile([node]);
+
+                expect(errors).toStrictEqual([]);
+                expect(statements.length).toBe(1);
+
+                expect(statements[0]).toStrictEqual({
+                    type: "Override",
+                    target: "bld_m_interstellar-habitat",
+                    value: null,
+                    condition: {
+                        op: "A?B",
+                        left: { type: "ResourceDemanded", value: "Lumber" },
+                        right: { type: "BuildingCount", value: "interstellar-fusion" }
+                    }
+                });
+            });
         });
 
         describe("Unary", () => {

@@ -1,7 +1,7 @@
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { ParseError } from "../parser/model";
 import { normalizeExpression } from "./normalize";
-import { validateCondition } from "./validate";
+import { checkType, validateExpression } from "./validate";
 import { isBinaryExpression, isUnaryExpression, isIdentifier } from "./utils";
 
 import type { SourceTracked } from "../parser/source";
@@ -114,8 +114,25 @@ export function makeOverrideCondition(node: SourceTracked<Parser.Expression>): C
 
 export function compileCondition(node: SourceTracked<Parser.Expression>, context?: SourceTracked<String>): Compiler.OverrideCondition {
     node = normalizeExpression(node, context);
-
-    validateCondition(node);
+    const type = validateExpression(node);
+    checkType(type, "boolean", node.location);
 
     return makeOverrideCondition(node);
+}
+
+export function compileSettingValue(node: SourceTracked<Parser.Expression>): Compiler.OverrideCondition {
+    if (isBinaryExpression(node) && node.operator.valueOf() === "A?B") {
+        return {
+            op: "A?B",
+            left: makeExpressionArgument(node.args[0]),
+            right: makeExpressionArgument(node.args[1])
+        }
+    }
+    else {
+        return {
+            op: "A?B",
+            left: { type: "Boolean", value: true },
+            right: makeExpressionArgument(node)
+        }
+    }
 }

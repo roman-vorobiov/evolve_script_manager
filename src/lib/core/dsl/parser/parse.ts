@@ -115,7 +115,7 @@ class Visitor extends DSLVisitor<any> {
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
         const settingName = this.expressionGetter.visit(ctx.settingId()) as SourceTracked<Parser.Identifier>;
-        const settingValue = this.expressionGetter.visit(ctx.value()) as SourceTracked<Parser.Constant>;
+        const settingValue = this.expressionGetter.visit(ctx.settingValue()) as SourceTracked<Parser.Constant>;
 
         if (settingName.disjunction?.valueOf()) {
             throw new ParseError("Disjunction cannot be used in setting assignments", settingName.disjunction.location);

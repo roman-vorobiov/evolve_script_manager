@@ -1,6 +1,6 @@
 import { withLocation } from "../parser/utils";
 
-import type { Expression, EvaluatedExpression, Identifier } from "../parser/model";
+import type { Expression, EvaluatedExpression, Identifier, Constant } from "../parser/model";
 import type { SourceTracked } from "../parser/source";
 
 type ExpressionOpt = SourceTracked<Expression> | undefined;
@@ -48,4 +48,8 @@ export function isUnaryExpression(node: Expression): node is EvaluatedExpression
 
 export function isIdentifier(node: Expression): node is Identifier {
     return (node as any).name !== undefined;
+}
+
+export function isConstantExpression(node: Expression): node is Constant {
+    return node instanceof Boolean || node instanceof Number || node instanceof String;
 }

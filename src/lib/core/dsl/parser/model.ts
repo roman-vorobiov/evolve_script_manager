@@ -30,7 +30,7 @@ export type Expression = Constant | Identifier | EvaluatedExpression;
 export type SettingAssignment = {
     type: "SettingAssignment",
     setting: SourceTracked<Identifier>,
-    value: SourceTracked<Constant>,
+    value: SourceTracked<Expression>,
     condition?: SourceTracked<Expression>
 }
 

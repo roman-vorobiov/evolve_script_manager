@@ -36,11 +36,15 @@ conditionBlock
     ;
 
 settingAssignment
-    : settingId '=' value ('if' expression)?
+    : settingId '=' settingValue ('if' expression)?
     ;
 
 settingId
     : identifier
+    ;
+
+settingValue
+    : expression
     ;
 
 // Triggers

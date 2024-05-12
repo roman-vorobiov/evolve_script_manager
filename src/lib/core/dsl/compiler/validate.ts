@@ -47,7 +47,13 @@ function validateIdentifier(node: SourceTracked<Parser.Identifier>): string | nu
 }
 
 function validateEvaluatedExpression(node: SourceTracked<Parser.EvaluatedExpression>): string | null {
-    if (["==", "!="].indexOf(node.operator.valueOf()) !== -1) {
+    if (node.operator.valueOf() === "A?B") {
+        const lType = validateExpression(node.args[0]);
+        const rType = validateExpression(node.args[1]);
+        checkType(lType, "boolean", node.args[0].location);
+        return rType;
+    }
+    else if (["==", "!="].indexOf(node.operator.valueOf()) !== -1) {
         const lType = validateExpression(node.args[0]);
         const rType = validateExpression(node.args[1]);
         checkType(rType, lType, node.args[1].location);
@@ -70,7 +76,7 @@ function validateEvaluatedExpression(node: SourceTracked<Parser.EvaluatedExpress
     }
 }
 
-function validateExpression(node: SourceTracked<Parser.Expression>): string | null {
+export function validateExpression(node: SourceTracked<Parser.Expression>): string | null {
     if (isBinaryExpression(node) || isUnaryExpression(node)) {
         return validateEvaluatedExpression(node);
     }
@@ -80,9 +86,4 @@ function validateExpression(node: SourceTracked<Parser.Expression>): string | nu
     else {
         return typeof node.valueOf();
     }
-}
-
-export function validateCondition(node: SourceTracked<Parser.Expression>) {
-    const type = validateExpression(node);
-    checkType(type, "boolean", node.location);
 }
