@@ -21,10 +21,10 @@
 </script>
 
 <div class="flex flex-row h-full">
-    <div class="w-4/5 h-full">
+    <div class="w-3/5 h-full">
         <Editor bind:state={state} {errors}></Editor>
     </div>
-    <div class="grow h-full">
+    <div class="w-2/5 h-full">
         <p class="font-mono text-sm whitespace-pre-wrap p-6">{view}</p>
     </div>
 </div>
