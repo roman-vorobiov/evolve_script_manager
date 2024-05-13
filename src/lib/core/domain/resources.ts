@@ -64,14 +64,6 @@ export const advancedResources = {
     Soul_Gem: "Soul Gem",
 }
 
-export const alchemyResources = {
-    ...tradableResources,
-    ...galaxyTradableResources,
-    Water: "Water",
-    Infernite: "Infernite",
-    Orichalcum: "Orichalcum",
-}
-
 export const craftableResources = {
     Plywood: "Plywood",
     Brick: "Brick",
@@ -83,85 +75,6 @@ export const craftableResources = {
     Scarletite: "Scarletite",
     Quantium: "Quantium",
 }
-
-export const manufacturableResources = [
-    "Money",
-    "Furs",
-    "Alloy",
-    "Polymer",
-    "Nano_Tube",
-    "Stanene",
-]
-
-export const minableResources = [
-    "Adamantite",
-    "Aluminium",
-    "Uranium",
-    "Coal",
-]
-
-export const storableResources = [
-    "Orichalcum",
-    "Vitreloy",
-    "Bolognium",
-    "Stanene",
-    "Graphene",
-    "Adamantite",
-    "Iridium",
-    "Polymer",
-    "Alloy",
-    "Titanium",
-    "Steel",
-    "Coal",
-    "Cement",
-    "Aluminium",
-    "Iron",
-    "Copper",
-    "Furs",
-    "Crystal",
-    "Stone",
-    "Chrysotile",
-    "Lumber",
-    "Food",
-]
-
-export const ejectableResources = {
-    ...tradableResources,
-    ...galaxyTradableResources,
-    Water: "Water",
-    Infernite: "Infernite",
-    Orichalcum: "Orichalcum",
-    Unobtainium: "Unobtainium",
-    ...craftableResources
-}
-
-export const supplyResources = Object.keys(ejectableResources).filter(res => {
-    return res !== "Food" &&
-           res !== "Water" &&
-           res !== "Unobtanium" &&
-           res !== "Quantum"
-});
-
-export const naniteResources = [
-    "Uranium",
-    "Iridium",
-    "Polymer",
-    "Copper",
-    "Steel",
-    "Iron",
-    "Titanium",
-    "Alloy",
-    "Aluminium",
-    "Stone",
-    "Cement",
-    "Chrysotile",
-    "Furs",
-    "Coal",
-    "Lumber",
-    "Oil",
-    "Crystal",
-    "Helium_3",
-]
 
 export const specialResources = {
     Corrupt_Gem: "Corrupt Gem",

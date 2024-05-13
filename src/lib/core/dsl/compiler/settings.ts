@@ -1,6 +1,5 @@
 import defaultSettings from "$lib/assets/default.json";
-import settingPrefixes from "$lib/core/domain/prefixes";
-import { settingType } from "$lib/core/domain/settings";
+import { settingType, prefixes } from "$lib/core/domain/settings";
 import { compileCondition, compileSettingValue } from "./expressions";
 import { makeConditionalAssignmentNode } from "./normalize";
 import { conjunction, isConstantExpression } from "./utils";
@@ -13,7 +12,7 @@ import type * as Compiler from "./model";
 import { checkType, validateExpression } from "./validate";
 
 function validateSettingPrefix(settingPrefix: SourceTracked<String>): string {
-    const prefix = settingPrefixes[settingPrefix.valueOf()]?.prefix;
+    const prefix = prefixes[settingPrefix.valueOf()]?.prefix;
 
     if (prefix === undefined) {
         throw new ParseError(`Unknown setting prefix '${settingPrefix}'`, settingPrefix.location);
@@ -23,9 +22,9 @@ function validateSettingPrefix(settingPrefix: SourceTracked<String>): string {
 }
 
 function validateSettingSuffix(settingPrefix: string, settingSuffix: SourceTracked<String>): string {
-    const info = settingPrefixes[settingPrefix];
+    const info = prefixes[settingPrefix];
 
-    if (info.allowedValues.indexOf(settingSuffix.valueOf()) === -1) {
+    if (info.allowedSuffixes.indexOf(settingSuffix.valueOf()) === -1) {
         throw new ParseError(`Unknown ${info.valueDescription} '${settingSuffix}'`, settingSuffix.location);
     }
 
@@ -57,8 +56,8 @@ function unwrapTargets(node: SourceTracked<Parser.Identifier>): [SourceTracked<S
     else if (node.wildcard?.valueOf()) {
         const prefix = validateSettingPrefix(node.name);
 
-        const info = settingPrefixes[node.name.valueOf()];
-        return info.allowedValues
+        const info = prefixes[node.name.valueOf()];
+        return info.allowedSuffixes
             .map(target => withLocation(node.wildcard!.location, target))
             .map(target => [target, resolveTarget(prefix, target)]);
     }
