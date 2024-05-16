@@ -7,26 +7,62 @@ export class ParseError extends Error {
     }
 }
 
-export type Constant = String | Number | Boolean;
-
-export type Identifier = {
-    name: String,
-    targets: String[],
-    disjunction?: Boolean,
-    placeholder?: Boolean,
-    wildcard?: Boolean,
+export type Symbol = {
+    type: "Wildcard" | "Placeholder"
 }
 
-export type EvaluatedExpression = {
-    operator: String,
+export type StringLiteral = {
+    type: "String",
+    value: string
+}
+
+export type NumberLiteral = {
+    type: "Number",
+    value: number
+}
+
+export type BooleanLiteral = {
+    type: "Boolean",
+    value: boolean
+}
+
+export type EvalLiteral = {
+    type: "Eval",
+    value: string
+}
+
+export type Identifier = {
+    type: "Identifier",
+    value: string
+}
+
+export type List = {
+    type: "List",
+    values: Expression[],
+    fold?: string
+}
+
+export type Subscript = {
+    type: "Subscript",
+    base: Identifier,
+    key: Identifier | List | Symbol
+}
+
+export type CompoundExpression = {
+    type: "Expression",
+    operator: string,
     args: Expression[]
 }
 
-export type Expression = Constant | Identifier | EvaluatedExpression;
+export type Constant = StringLiteral | NumberLiteral | BooleanLiteral;
+
+export type SimpleExpression = Constant | EvalLiteral | Identifier;
+
+export type Expression = SimpleExpression | Subscript | CompoundExpression;
 
 export type SettingAssignment = {
     type: "SettingAssignment",
-    setting: Identifier,
+    setting: Expression,
     value: Expression,
     condition?: Expression
 }
@@ -41,9 +77,9 @@ export type ConditionPop = {
 }
 
 export type TriggerArgument = {
-    type: String,
-    id: String,
-    count?: Number
+    type: Identifier,
+    id: Identifier,
+    count?: NumberLiteral
 }
 
 export type Trigger = {
@@ -52,4 +88,4 @@ export type Trigger = {
     actions: TriggerArgument[]
 }
 
-export type Node = SettingAssignment | ConditionPush | ConditionPop | Trigger;
+export type Statement = SettingAssignment | ConditionPush | ConditionPop | Trigger;

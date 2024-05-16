@@ -50,8 +50,7 @@ export class SourceMap {
         return this.locations.get(object);
     }
 
-    addLocation<T extends object>(object: T, sourceEntity: SourceEntity): T {
+    addLocation<T extends object>(object: T, sourceEntity: SourceEntity) {
         this.locations.set(object, locationOf(sourceEntity));
-        return object;
     }
 }

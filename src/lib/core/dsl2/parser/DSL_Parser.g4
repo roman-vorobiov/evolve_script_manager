@@ -41,6 +41,7 @@ settingAssignment
 
 settingId
     : identifier
+    | subscriptExpression
     ;
 
 settingValue
@@ -79,47 +80,81 @@ expression
     | expression op=(EQ | NEQ) expression
     | expression op=AND expression
     | expression op=OR expression
-    | OpeningParen expression ClosingParen
+    | '(' expression ')'
     | unaryExpression
     ;
 
 unaryExpression
     : identifier
-    | eval
-    | value
+    | subscriptExpression
+    | literal
     ;
+
+// Identifiers
 
 identifier
-    : Identifier ('.' Identifier)?
-    | Identifier '[' Identifier (',' Identifier)* ']'
-    | Identifier '[' Identifier (',' Identifier)* 'and' Identifier ']'
-    | Identifier '[' Identifier (',' Identifier)* 'or' Identifier ']'
-    | Identifier '[' Ellipsis ']'
-    | Identifier '[' MUL ']'
+    : Identifier
     ;
 
-eval
+listContents
+    : listItem (',' listItem)+
+    | listItem (',' listItem)* fold=(AND | OR) listItem
+    ;
+
+listItem
+    : identifier
+    | constantLiteral
+    | subscriptExpression
+    ;
+
+subscriptExpression
+    : Identifier '.' identifier
+    | Identifier '[' subscript ']'
+    ;
+
+subscript
+    : identifier
+    | listContents
+    | placeholder
+    | wildcard
+    | subscriptExpression
+    ;
+
+placeholder
+    : Ellipsis
+    ;
+
+wildcard
+    : MUL
+    ;
+
+// Literals
+
+literal
+    : constantLiteral
+    | evalLiteral
+    ;
+
+evalLiteral
     : BigEval
     | SmallEval
     ;
 
-// Values
-
-value
-    : booleanValue
-    | stringValue
-    | numericValue
+constantLiteral
+    : booleanLiteral
+    | stringLiteral
+    | numberLiteral
     ;
 
-booleanValue
+booleanLiteral
     : ON
     | OFF
     ;
 
-stringValue
+stringLiteral
     : String
     ;
 
-numericValue
+numberLiteral
     : Number
     ;
