@@ -2,260 +2,452 @@ import { describe, it, expect } from "vitest";
 import { parseExpression as parse, valuesOf, sourceMapsOf } from "./fixture";
 
 describe("Parser", () => {
-    describe("Settings", () => {
-        describe("Setting values", () => {
-            describe("Constant literals", () => {
-                it.each([
-                    { source: '"123"', type: "String",  target: "123" },
-                    { source: "123",   type: "Number",  target: 123 },
-                    { source: "-123",  type: "Number",  target: -123 },
-                    { source: "1.23",  type: "Number",  target: 1.23 },
-                    { source: "-1.23", type: "Number",  target: -1.23 },
-                    { source: "ON",    type: "Boolean", target: true },
-                    { source: "OFF",   type: "Boolean", target: false },
-                ])("should parse constants: $source as $target", ({ source, target, type }) => {
-                    const { nodes, errors, maps } = parse(source);
+    describe("Expressions", () => {
+        describe("Literals", () => {
+            it.each([
+                { source: '"123"', type: "String",  target: "123" },
+                { source: "123",   type: "Number",  target: 123 },
+                { source: "-123",  type: "Number",  target: -123 },
+                { source: "1.23",  type: "Number",  target: 1.23 },
+                { source: "-1.23", type: "Number",  target: -1.23 },
+                { source: "ON",    type: "Boolean", target: true },
+                { source: "OFF",   type: "Boolean", target: false },
+            ])("should parse constants: $source as $target", ({ source, target, type }) => {
+                const { nodes, errors, maps } = parse(source);
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    const expectedNode = maps(source, { type, value: target })
+                const expectedNode = maps(source, { type, value: target })
 
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
-                });
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
             });
 
-            describe("Identifiers", () => {
-                it("should parse identifiers", () => {
-                    const { nodes, errors, maps } = parse("bar");
+            it("should parse small eval literals", () => {
+                const { nodes, errors, maps } = parse('{    aaa.bbb #   "    }');
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    const expectedNode = maps("bar", { type: "Identifier", value: "bar" });
-
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                const expectedNode = maps('{    aaa.bbb #   "    }', {
+                    type: "Eval",
+                    value: 'aaa.bbb #   "'
                 });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
             });
 
-            describe("Subscript", () => {
-                it("should parse 'identifier.identifier'", () => {
-                    const { nodes, errors, maps } = parse("bar.baz");
+            it("should parse big eval literals", () => {
+                const { nodes, errors, maps } = parse('{{ { a: "b" } == { c: "d" } }}');
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    const expectedNode = maps("bar.baz", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("baz", { type: "Identifier", value: "baz" })
-                    });
-
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                const expectedNode = maps('{{ { a: "b" } == { c: "d" } }}', {
+                    type: "Eval",
+                    value: '{ a: "b" } == { c: "d" }'
                 });
 
-                it("should parse 'identifier[identifier]'", () => {
-                    const { nodes, errors, maps } = parse("bar[baz]");
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+        });
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+        describe("Identifiers", () => {
+            it("should parse identifiers", () => {
+                const { nodes, errors, maps } = parse("bar");
 
-                    const expectedNode = maps("bar[baz]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("baz", { type: "Identifier", value: "baz" })
-                    });
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                const expectedNode = maps("bar", { type: "Identifier", value: "bar" });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+        });
+
+        describe("Subscript", () => {
+            it("should parse 'identifier.identifier'", () => {
+                const { nodes, errors, maps } = parse("bar.baz");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("bar.baz", {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps.identifier("baz")
                 });
 
-                it("should parse a list of identifiers", () => {
-                    const { nodes, errors, maps } = parse("bar[aaa, bbb, ccc]");
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+            it("should parse 'identifier[identifier]'", () => {
+                const { nodes, errors, maps } = parse("bar[baz]");
 
-                    const expectedNode = maps("bar[aaa, bbb, ccc]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("aaa, bbb, ccc", {
-                            type: "List",
-                            values: [
-                                maps("aaa", { type: "Identifier", value: "aaa" }),
-                                maps("bbb", { type: "Identifier", value: "bbb" }),
-                                maps("ccc", { type: "Identifier", value: "ccc" }),
-                            ]
-                        })
-                    });
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                const expectedNode = maps("bar[baz]", {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps.identifier("baz")
                 });
 
-                it("should parse a list of identifiers (disjunction)", () => {
-                    const { nodes, errors, maps } = parse("bar[aaa, bbb or ccc]");
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+            it("should parse a list of identifiers", () => {
+                const { nodes, errors, maps } = parse("bar[aaa, bbb, ccc]");
 
-                    const expectedNode = maps("bar[aaa, bbb or ccc]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("aaa, bbb or ccc", {
-                            type: "List",
-                            values: [
-                                maps("aaa", { type: "Identifier", value: "aaa" }),
-                                maps("bbb", { type: "Identifier", value: "bbb" }),
-                                maps("ccc", { type: "Identifier", value: "ccc" }),
-                            ],
-                            fold: "or"
-                        })
-                    });
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                const expectedNode = maps("bar[aaa, bbb, ccc]", {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps("aaa, bbb, ccc", {
+                        type: "List",
+                        values: [
+                            maps.identifier("aaa"),
+                            maps.identifier("bbb"),
+                            maps.identifier("ccc"),
+                        ]
+                    })
                 });
 
-                it("should parse a list of identifiers (conjunction)", () => {
-                    const { nodes, errors, maps } = parse("bar[aaa, bbb and ccc]");
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+            it.each([
+                { fold: "and" },
+                { fold: "or" }
+            ])("should parse a list of identifiers (folded with $fold)", ({ fold }) => {
+                const { nodes, errors, maps } = parse(`bar[aaa, bbb ${fold} ccc]`);
 
-                    const expectedNode = maps("bar[aaa, bbb and ccc]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("aaa, bbb and ccc", {
-                            type: "List",
-                            values: [
-                                maps("aaa", { type: "Identifier", value: "aaa" }),
-                                maps("bbb", { type: "Identifier", value: "bbb" }),
-                                maps("ccc", { type: "Identifier", value: "ccc" }),
-                            ],
-                            fold: "and"
-                        })
-                    });
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
 
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                const expectedNode = maps(`bar[aaa, bbb ${fold} ccc]`, {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps(`aaa, bbb ${fold} ccc`, {
+                        type: "List",
+                        values: [
+                            maps.identifier("aaa"),
+                            maps.identifier("bbb"),
+                            maps.identifier("ccc"),
+                        ],
+                        fold: fold
+                    })
                 });
 
-                it("should parse nested subscripts", () => {
-                    const { nodes, errors, maps } = parse("aaa[bbb[ccc.ddd]]");
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
 
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
+            it("should parse nested subscripts", () => {
+                const { nodes, errors, maps } = parse("aaa[bbb[ccc.ddd]]");
 
-                    const expectedNode = maps("aaa[bbb[ccc.ddd]]", {
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("aaa[bbb[ccc.ddd]]", {
+                    type: "Subscript",
+                    base: maps.identifier("aaa"),
+                    key: maps("bbb[ccc.ddd]", {
                         type: "Subscript",
-                        base: maps("aaa", { type: "Identifier", value: "aaa" }),
-                        key: maps("bbb[ccc.ddd]", {
+                        base: maps.identifier("bbb"),
+                        key: maps("ccc.ddd", {
                             type: "Subscript",
-                            base: maps("bbb", { type: "Identifier", value: "bbb" }),
-                            key: maps("ccc.ddd", {
-                                type: "Subscript",
-                                base: maps("ccc", { type: "Identifier", value: "ccc" }),
-                                key: maps("ddd", { type: "Identifier", value: "ddd" })
-                            })
+                            base: maps.identifier("ccc"),
+                            key: maps.identifier("ddd")
                         })
-                    });
-
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                    })
                 });
 
-                it("should parse a list of nested subscripts", () => {
-                    const { nodes, errors, maps } = parse("bar[aaa.bbb, ccc[ddd, eee]]");
-
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
-
-                    const expectedNode = maps("bar[aaa.bbb, ccc[ddd, eee]]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("aaa.bbb, ccc[ddd, eee]", {
-                            type: "List",
-                            values: [
-                                maps("aaa.bbb", {
-                                    type: "Subscript",
-                                    base: maps("aaa", { type: "Identifier", value: "aaa" }),
-                                    key: maps("bbb", { type: "Identifier", value: "bbb" })
-                                }),
-                                maps("ccc[ddd, eee]", {
-                                    type: "Subscript",
-                                    base: maps("ccc", { type: "Identifier", value: "ccc" }),
-                                    key: maps("ddd, eee", {
-                                        type: "List",
-                                        values: [
-                                            maps("ddd", { type: "Identifier", value: "ddd" }),
-                                            maps("eee", { type: "Identifier", value: "eee" })
-                                        ]
-                                    })
-                                })
-                            ]
-                        })
-                    });
-
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
-                });
-
-                it("should parse placeholders", () => {
-                    const { nodes, errors, maps } = parse("bar[...]");
-
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
-
-                    const expectedNode = maps("bar[...]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("...", { type: "Placeholder" })
-                    });
-
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
-                });
-
-                it("should parse wildcards", () => {
-                    const { nodes, errors, maps } = parse("bar[*]");
-
-                    expect(errors).toStrictEqual([]);
-                    expect(nodes.length).toBe(1);
-
-                    const expectedNode = maps("bar[*]", {
-                        type: "Subscript",
-                        base: maps("bar", { type: "Identifier", value: "bar" }),
-                        key: maps("*", { type: "Wildcard" })
-                    });
-
-                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
-                });
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
             });
 
-            describe("Expressions", () => {
-                it("should parse expression", () => {
-                    const { nodes, errors, maps } = parse("bar + baz");
+            it("should parse a list of nested subscripts", () => {
+                const { nodes, errors, maps } = parse("bar[aaa.bbb, ccc[ddd, eee]]");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("bar[aaa.bbb, ccc[ddd, eee]]", {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps("aaa.bbb, ccc[ddd, eee]", {
+                        type: "List",
+                        values: [
+                            maps("aaa.bbb", {
+                                type: "Subscript",
+                                base: maps.identifier("aaa"),
+                                key: maps.identifier("bbb")
+                            }),
+                            maps("ccc[ddd, eee]", {
+                                type: "Subscript",
+                                base: maps.identifier("ccc"),
+                                key: maps("ddd, eee", {
+                                    type: "List",
+                                    values: [
+                                        maps.identifier("ddd"),
+                                        maps.identifier("eee")
+                                    ]
+                                })
+                            })
+                        ]
+                    })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            it("should parse placeholders", () => {
+                const { nodes, errors, maps } = parse("bar[...]");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("bar[...]", {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps("...", { type: "Placeholder" })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            it("should parse wildcards", () => {
+                const { nodes, errors, maps } = parse("bar[*]");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("bar[*]", {
+                    type: "Subscript",
+                    base: maps.identifier("bar"),
+                    key: maps("*", { type: "Wildcard" })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+        });
+
+        describe("Compound expressions", () => {
+            it("should parse unary expressions", () => {
+                const { nodes, errors, maps } = parse("not foo");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("not foo", {
+                    type: "Expression",
+                    operator: "not",
+                    args: [
+                        maps.identifier("foo")
+                    ]
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            it("should parse binary expressions", () => {
+                const { nodes, errors, maps } = parse("foo < bar");
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("foo < bar", {
+                    type: "Expression",
+                    operator: "<",
+                    args: [
+                        maps.identifier("foo"),
+                        maps.identifier("bar")
+                    ]
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            describe("Operator precedence", () => {
+                it("should put quotes before anything else", () => {
+                    const { nodes, errors, maps } = parse("not (aaa or bbb)");
 
                     expect(errors).toStrictEqual([]);
                     expect(nodes.length).toBe(1);
 
-                    const expectedNode = maps("bar + baz", {
+                    const expectedNode = maps("not (aaa or bbb)", {
                         type: "Expression",
-                        operator: "+",
+                        operator: "not",
                         args: [
-                            maps("bar", { type: "Identifier", value: "bar" }),
-                            maps("baz", { type: "Identifier", value: "baz" })
+                            maps("aaa or bbb", {
+                                type: "Expression",
+                                operator: "or",
+                                args: [
+                                    maps.identifier("aaa"),
+                                    maps.identifier("bbb")
+                                ]
+                            })
                         ]
                     });
 
                     expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
                     expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
                 });
+
+                it("should put 'not' before '*'", () => {
+                    const { nodes, errors, maps } = parse("not aaa * bbb");
+
+                    expect(errors).toStrictEqual([]);
+                    expect(nodes.length).toBe(1);
+
+                    const expectedNode = maps("not aaa * bbb", {
+                        type: "Expression",
+                        operator: "*",
+                        args: [
+                            maps("not aaa", {
+                                type: "Expression",
+                                operator: "not",
+                                args: [
+                                    maps.identifier("aaa")
+                                ]
+                            }),
+                            maps.identifier("bbb")
+                        ]
+                    });
+
+                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                });
+
+                describe.each([
+                    { first: "*", second: "+" },
+                    { first: "+", second: ">" },
+                    { first: ">", second: "==" },
+                    { first: "==", second: "and" },
+                    { first: "and", second: "or" },
+                ])("should put $first before $second", ({first, second}) => {
+                    it(`a ${second} b ${first} c ${second} d`, () => {
+                        const { nodes, errors, maps } = parse(`aaa ${second} bbb ${first} ccc ${second} ddd`);
+
+                        expect(errors).toStrictEqual([]);
+                        expect(nodes.length).toBe(1);
+
+                        const expectedNode = maps(`aaa ${second} bbb ${first} ccc ${second} ddd`, {
+                            type: "Expression",
+                            operator: second,
+                            args: [
+                                maps(`aaa ${second} bbb ${first} ccc`, {
+                                    type: "Expression",
+                                    operator: second,
+                                    args: [
+                                        maps.identifier("aaa"),
+                                        maps(`bbb ${first} ccc`, {
+                                            type: "Expression",
+                                            operator: first,
+                                            args: [
+                                                maps.identifier("bbb"),
+                                                maps.identifier("ccc")
+                                            ]
+                                        })
+                                    ]
+                                }),
+                                maps.identifier("ddd")
+                            ]
+                        });
+
+                        expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                        expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                    });
+
+                    it(`a ${first} b ${second} c ${first} d`, () => {
+                        const { nodes, errors, maps } = parse(`aaa ${first} bbb ${second} ccc ${first} ddd`);
+
+                        expect(errors).toStrictEqual([]);
+                        expect(nodes.length).toBe(1);
+
+                        const expectedNode = maps(`aaa ${first} bbb ${second} ccc ${first} ddd`, {
+                            type: "Expression",
+                            operator: second,
+                            args: [
+                                maps(`aaa ${first} bbb`, {
+                                    type: "Expression",
+                                    operator: first,
+                                    args: [
+                                        maps.identifier("aaa"),
+                                        maps.identifier("bbb")
+                                    ]
+                                }),
+                                maps(`ccc ${first} ddd`, {
+                                    type: "Expression",
+                                    operator: first,
+                                    args: [
+                                        maps.identifier("ccc"),
+                                        maps.identifier("ddd")
+                                    ]
+                                })
+                            ]
+                        });
+
+                        expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                        expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+                    });
+                });
+
+                it.each([
+                    { first: "+", second: "-" },
+                    { first: "*", second: "/" },
+                    { first: "<", second: "<=" },
+                    { first: "<=", second: ">" },
+                    { first: ">", second: ">=" },
+                    { first: ">=", second: "<" },
+                    { first: "==", second: "!=" },
+                ])("should treat $first and $second equally", ({ first, second }) => {
+                    const { nodes, errors, maps } = parse(`aaa ${first} bbb ${second} ccc ${first} ddd`);
+
+                    expect(errors).toStrictEqual([]);
+                    expect(nodes.length).toBe(1);
+
+                    const expectedNode = maps(`aaa ${first} bbb ${second} ccc ${first} ddd`, {
+                        type: "Expression",
+                        operator: first,
+                        args: [
+                            maps(`aaa ${first} bbb ${second} ccc`, {
+                                type: "Expression",
+                                operator: second,
+                                args: [
+                                    maps(`aaa ${first} bbb`, {
+                                        type: "Expression",
+                                        operator: first,
+                                        args: [
+                                            maps.identifier("aaa"),
+                                            maps.identifier("bbb")
+                                        ]
+                                    }),
+                                    maps.identifier("ccc")
+                                ]
+                            }),
+                            maps.identifier("ddd")
+                        ]
+                    });
+
+                    expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                    expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+               });
             });
         });
     });

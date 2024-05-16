@@ -123,10 +123,12 @@ class ExpressionGetter extends DSLVisitor<any> {
 }
 
 class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
+    private sourceMap: SourceMap;
     private nodeFactory: NodeFactory;
 
     constructor(sourceMap: SourceMap) {
         super();
+        this.sourceMap = sourceMap;
         this.nodeFactory = new NodeFactory(sourceMap);
     }
 
@@ -143,6 +145,7 @@ class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
             node.count = this.nodeFactory.number(Number(count.getText()), count.getSymbol());
         }
 
+        this.sourceMap.addLocation(node, ctx);
         return node;
     }
 }
@@ -199,18 +202,24 @@ class Visitor extends DSLVisitor<void> {
     }
 
     visitConditionBlock = (ctx: Context.ConditionBlockContext) => {
-        this.nodes.push({
+        const pushNode: Parser.ConditionPush = {
             type: "ConditionPush",
             condition: this.expressionGetter.visit(ctx.expression())!
-        });
+        };
+
+        const popNode: Parser.ConditionPop = {
+            type: "ConditionPop",
+        };
+
+        this.sourceMap.addLocation(pushNode, ctx);
+        this.nodes.push(pushNode);
 
         try {
             ctx.settingStatement().forEach(s => this.visit(s));
         }
         finally {
-            this.nodes.push({
-                type: "ConditionPop",
-            });
+            this.sourceMap.addLocation(popNode, ctx);
+            this.nodes.push(popNode);
         }
     }
 

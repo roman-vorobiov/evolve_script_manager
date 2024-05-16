@@ -1,5 +1,4 @@
 import * as Parser from "$lib/core/dsl2/parser/parser";
-import { toObject } from "$lib/core/utils";
 
 import type { Position, SourceLocation } from "$lib/core/dsl2/parser/source";
 
@@ -45,8 +44,20 @@ function parse(source: string, impl: (source: string) => Parser.ParseResult) {
 
     function sourceOf(location: SourceLocation | undefined) {
         if (location !== undefined) {
-            // Assume it's a one-liner
-            return lines[location.start.line - 1].slice(location.start.column - 1, location.stop.column - 1);
+            if (location.start.line === location.stop.line) {
+                return lines[location.start.line - 1].slice(location.start.column - 1, location.stop.column - 1);
+            }
+            else {
+                let sourceLines: string[] = [];
+
+                sourceLines.push(lines[location.start.line - 1].slice(location.start.column - 1));
+                for (let i = location.start.line; i != location.stop.line - 1; ++i) {
+                    sourceLines.push(lines[i]);
+                }
+                sourceLines.push(lines[location.stop.line - 1].slice(0, location.stop.column - 1));
+
+                return sourceLines.join("\n");
+            }
         }
     }
 
@@ -57,10 +68,13 @@ function parse(source: string, impl: (source: string) => Parser.ParseResult) {
         }
     }
 
-    function maps(from: string | [number, number], to: any = from) {
-        const obj = toObject(to);
-        obj.$source = Array.isArray(from) ? sourceOf(between(...from)) : from;
-        return obj;
+    function maps<T extends object>(from: string | [number, number], to: T): T {
+        (to as any).$source = Array.isArray(from) ? sourceOf(between(...from)) : from;
+        return to;
+    }
+
+    maps.identifier = (value: string) => {
+        return maps(value, { type: "Identifier", value });
     }
 
     return { nodes, errors, maps }
