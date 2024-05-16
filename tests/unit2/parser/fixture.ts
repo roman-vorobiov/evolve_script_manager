@@ -1,9 +1,9 @@
-import { ParserModel } from "$lib/core/dsl2/parser/parser";
+import * as Parser from "$lib/core/dsl2/parser/parser";
 import { toObject } from "$lib/core/utils";
 
 import type { Position, SourceLocation } from "$lib/core/dsl2/parser/source";
 
-export function parse(source: string) {
+function parse(source: string, impl: (source: string) => Parser.ParseResult) {
     const MAX_POSITION_LITERALS = 20;
 
     const positions: { [key: number]: Position } = {};
@@ -25,13 +25,12 @@ export function parse(source: string) {
 
     source = lines.join("\n");
 
-    const parser = new ParserModel();
-    parser.update(source);
+    const { sourceMap, nodes, errors } = impl(source);
 
-    parser.nodes.forEach(decorateWithSourceMap);
+    nodes.forEach(decorateWithSourceMap);
 
     function decorateWithSourceMap(obj: any) {
-        const location = parser.sourceMap.findLocation(obj);
+        const location = sourceMap.findLocation(obj);
         if (location !== undefined) {
             obj.$source = sourceOf(location);
         }
@@ -64,18 +63,19 @@ export function parse(source: string) {
         return obj;
     }
 
-    return {
-        nodes: parser.nodes,
-        errors: parser.errors,
-        maps
-    }
+    return { nodes, errors, maps }
+}
+
+export function parseSource(source: string) {
+    return parse(source, Parser.parseSource);
+}
+
+export function parseExpression(source: string) {
+    return parse(source, Parser.parseExpression);
 }
 
 export function valuesOf(obj: any): any {
-    if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
-        return obj.valueOf();
-    }
-    else if (Array.isArray(obj)) {
+    if (Array.isArray(obj)) {
         return obj.map(valuesOf);
     }
     else if (obj instanceof Object) {
@@ -91,10 +91,7 @@ export function valuesOf(obj: any): any {
 }
 
 export function sourceMapsOf(obj: any): any {
-    if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
-        return (obj as any).$source;
-    }
-    else if (Array.isArray(obj)) {
+    if (Array.isArray(obj)) {
         const childSourceMaps = obj.map(sourceMapsOf);
         if (childSourceMaps.length !== 0) {
             return childSourceMaps;

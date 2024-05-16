@@ -237,57 +237,65 @@ class Visitor extends DSLVisitor<void> {
     }
 }
 
-export class ParserModel {
-    sourceMap = new SourceMap();
-    nodes: Parser.Statement[] = [];
-    errors: Parser.ParseError[] = [];
+function prepareParser(source: string, errors: ParseError[]) {
+    const chars = CharStream.fromString(source);
+    const lexer = new DSLLexer(chars);
+    const tokens = new CommonTokenStream(lexer);
+    const parser = new DSLParser(tokens);
 
-    update(source: string): boolean {
-        this.reset();
+    const errorStrategy = new ErrorStrategy();
+    const errorListener = new ErrorListener(errors);
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(errorListener);
+    parser.removeErrorListeners();
+    parser.addErrorListener(errorListener);
+    parser.errorHandler = errorStrategy;
 
-        const parseTree = this.parse(source);
-        if (this.errors.length !== 0) {
-            return false;
+    return parser;
+}
+
+export type ParseResult = {
+    sourceMap: SourceMap,
+    nodes: Parser.Statement[],
+    errors: Parser.ParseError[],
+}
+
+export function parseSource(source: string): ParseResult {
+    const sourceMap = new SourceMap();
+    const nodes: Parser.Statement[] = [];
+    const errors: Parser.ParseError[] = [];
+
+    const parser = prepareParser(source, errors);
+    const root = parser.root();
+    if (errors.length === 0) {
+        const visitor = new Visitor(sourceMap, nodes, errors);
+        visitor.visit(root);
+    }
+
+    return { sourceMap, nodes, errors };
+}
+
+export function parseExpression(source: string): ParseResult {
+    const sourceMap = new SourceMap();
+    const errors: Parser.ParseError[] = [];
+
+    const parser = prepareParser(source, errors);
+    const root = parser.expression();
+    if (errors.length !== 0) {
+        return { sourceMap, nodes: [], errors };
+    }
+
+    try {
+        const visitor = new ExpressionGetter(sourceMap);
+        const node = visitor.visit(root);
+
+        return { sourceMap, nodes: [node], errors: [] };
+    }
+    catch (e) {
+        if (e instanceof ParseError) {
+            return { sourceMap, nodes: [], errors: [e] };
         }
 
-        const nodes = this.postProcess(parseTree);
-        if (this.errors.length !== 0) {
-            return false;
-        }
-
-        this.nodes = nodes;
-        return true;
-    }
-
-    reset() {
-        this.sourceMap = new SourceMap();
-        this.nodes = [];
-        this.errors = [];
-    }
-
-    private parse(source: string): Context.RootContext {
-        const chars = CharStream.fromString(source);
-        const lexer = new DSLLexer(chars);
-        const tokens = new CommonTokenStream(lexer);
-        const parser = new DSLParser(tokens);
-
-        const errorStrategy = new ErrorStrategy();
-        const errorListener = new ErrorListener(this.errors);
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(errorListener);
-        parser.removeErrorListeners();
-        parser.addErrorListener(errorListener);
-        parser.errorHandler = errorStrategy;
-
-        return parser.root();
-    }
-
-    private postProcess(parseTree: Context.RootContext): Parser.Statement[] {
-        const nodes: Parser.Statement[] = [];
-
-        const visitor = new Visitor(this.sourceMap, nodes, this.errors);
-        visitor.visit(parseTree);
-
-        return nodes;
+        throw e;
     }
 }
