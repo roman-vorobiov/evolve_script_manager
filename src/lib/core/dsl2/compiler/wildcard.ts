@@ -1,8 +1,8 @@
 import { prefixes } from "$lib/core/domain/settings";
-import { ParseError } from "../parser/model";
+import { ParseError } from "../model";
 
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../parser/model";
+import type * as Parser from "../model";
 
 export function resolveWildcards(statements: Parser.Statement[], sourceMap: SourceMap) {
     function deriveLocation<T1 extends object, T2 extends object>(original: T1, node: T2): T2 {

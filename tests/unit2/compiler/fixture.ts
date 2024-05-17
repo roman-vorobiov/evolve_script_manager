@@ -2,7 +2,7 @@ import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl2/compile
 import { SourceMap } from "$lib/core/dsl2/parser/source";
 import { flattenObject, invertMap } from "$lib/core/utils"
 
-import type * as Parser from "$lib/core/dsl2/parser/model";
+import type * as Parser from "$lib/core/dsl2/model";
 
 class MockSourceMap extends SourceMap {
     private originsMap: WeakMap<WeakKey, any>;

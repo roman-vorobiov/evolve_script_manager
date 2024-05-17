@@ -4,10 +4,10 @@ import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
 import { ErrorStrategy, ErrorListener } from "./errors";
 import { SourceMap, type SourceEntity } from "./source";
-import { ParseError } from "./model";
+import { ParseError } from "../model";
 
 import type * as Context from "./.antlr/DSLParser";
-import * as Parser from "./model";
+import * as Parser from "../model";
 
 function stringContents<T extends { getText(): string }>(token: T | null, quoteLength: number = 1): string | undefined {
     return token?.getText().slice(quoteLength, -quoteLength);

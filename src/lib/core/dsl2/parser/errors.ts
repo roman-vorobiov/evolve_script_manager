@@ -7,7 +7,7 @@ import {
     NoViableAltException
 } from "antlr4ng";
 
-import { ParseError } from "./model";
+import { ParseError } from "../model";
 
 export class ErrorStrategy extends DefaultErrorStrategy {
     private dispatch(recognizer: Parser, error: ParseError) {

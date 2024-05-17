@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { resolveWildcards, valuesOf, originsOf } from "./fixture";
 
-import * as Parser from "$lib/core/dsl2/parser/model";
+import * as Parser from "$lib/core/dsl2/model";
 
 describe("Compiler", () => {
     describe("Wildcards", () => {

@@ -1,4 +1,4 @@
-import type * as Parser from "../parser/model";
+import type * as Parser from "../model";
 import type * as Domain from "$lib/core/domain/model";
 
 export type CompileResult = {

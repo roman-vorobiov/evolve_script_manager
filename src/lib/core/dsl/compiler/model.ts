@@ -1,6 +1,6 @@
 import type { ParseError } from "../parser/model";
 
-type Value = string | number | boolean | null;
+type Value = string | number | boolean;
 
 export type ExpressionArgument = {
     type: string,
@@ -17,7 +17,7 @@ export type Override = {
     type: "Override",
     target: string,
     condition: OverrideCondition,
-    value: Value
+    value: Value | null
 }
 
 export type SettingAssignment = {
