@@ -53,4 +53,11 @@ export class SourceMap {
     addLocation<T extends object>(object: T, sourceEntity: SourceEntity) {
         this.locations.set(object, locationOf(sourceEntity));
     }
+
+    deriveLocation<T extends object, T2 extends object>(original: T, object: T2) {
+        const location = this.findLocation(original);
+        if (location !== undefined) {
+            this.addLocation(object, location);
+        }
+    }
 }

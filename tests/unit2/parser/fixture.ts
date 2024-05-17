@@ -88,34 +88,4 @@ export function parseExpression(source: string) {
     return parse(source, Parser.parseExpression);
 }
 
-export function valuesOf(obj: any): any {
-    if (Array.isArray(obj)) {
-        return obj.map(valuesOf);
-    }
-    else if (obj instanceof Object) {
-        return Object.fromEntries(
-            Object.entries(obj)
-                .filter(([key]) => !key.startsWith("$"))
-                .map(([key, value]) => [key, valuesOf(value)])
-        );
-    }
-    else {
-        return obj;
-    }
-}
-
-export function sourceMapsOf(obj: any): any {
-    if (Array.isArray(obj)) {
-        const childSourceMaps = obj.map(sourceMapsOf);
-        if (childSourceMaps.length !== 0) {
-            return childSourceMaps;
-        }
-    }
-    else if (obj instanceof Object) {
-        return Object.fromEntries(
-            Object.entries(obj)
-                .map(([key, value]) => [key, key.startsWith("$") ? value : sourceMapsOf(value)])
-                .filter(([key, value]) => value !== undefined)
-        );
-    }
-}
+export { valuesOf, decoratorsOf as sourceMapsOf } from "../fixture";

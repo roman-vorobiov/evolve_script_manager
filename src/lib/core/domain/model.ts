@@ -1,4 +1,4 @@
-type Value = string | number | boolean | null;
+type Value = string | number | boolean;
 
 export type Override = {
     type1: string,
@@ -6,7 +6,7 @@ export type Override = {
     cmp: string,
     type2: string,
     arg2: Value,
-    ret: Value
+    ret: Value | null
 }
 
 export type Trigger = {
