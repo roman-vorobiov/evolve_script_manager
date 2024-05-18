@@ -37,4 +37,4 @@ export function resolveWildcards(node: Parser.Statement) {
     return { node: result, from };
 }
 
-export { valuesOf, decoratorsOf as originsOf } from "../fixture";
+export { getExcepion, valuesOf, decoratorsOf as originsOf } from "../fixture";

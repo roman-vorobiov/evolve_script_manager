@@ -29,3 +29,12 @@ export function decoratorsOf(obj: any): any {
         );
     }
 }
+
+export function getExcepion(fn: () => any): Error | undefined {
+    try {
+        fn();
+    }
+    catch (e) {
+        return e as Error;
+    }
+}

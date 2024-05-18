@@ -32,6 +32,11 @@ function fillAllowedSuffixes(definitions: Record<string, Record<string, string>>
     const entries = Object.values(result).sort((l, r) => r.prefix.length - l.prefix.length);
 
     for (const setting of settings) {
+        // Don't match this one with the 'Log' prefix
+        if (setting === "log_prestige_format") {
+            continue;
+        }
+
         for (let entry of entries) {
             if (setting.startsWith(entry.prefix)) {
                 const suffix = setting.slice(entry.prefix.length);
