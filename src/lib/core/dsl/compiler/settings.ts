@@ -82,7 +82,7 @@ export function* compileSettingAssignment(
 
     for (const [arg, settingNameNode] of unwrapTargets(node.setting)) {
         const settingName = validateSetting(settingNameNode);
-        expectedValueType ??= settingType(settingName);
+        expectedValueType ??= settingType(settingName)!;
 
         if (isConstantExpression(node.value)) {
             checkType(typeof node.value.valueOf(), expectedValueType, node.value.location);

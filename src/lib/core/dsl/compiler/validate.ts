@@ -39,7 +39,7 @@ function validateIdentifier(node: SourceTracked<Parser.Identifier>): string | nu
         }
 
         if (info.valueDescription === "setting") {
-            return settingType(node.targets[0].valueOf());
+            return settingType(node.targets[0].valueOf())!;
         }
 
         return info.type;
