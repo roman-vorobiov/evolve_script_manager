@@ -45,7 +45,7 @@ export type List = {
 export type Subscript = {
     type: "Subscript",
     base: Identifier,
-    key: Identifier | List | Symbol
+    key: Expression | Symbol
 }
 
 export type CompoundExpression = {
@@ -58,7 +58,7 @@ export type Constant = StringLiteral | NumberLiteral | BooleanLiteral;
 
 export type SimpleExpression = Constant | EvalLiteral | Identifier;
 
-export type Expression = SimpleExpression | Subscript | CompoundExpression;
+export type Expression = SimpleExpression | Subscript | List | CompoundExpression;
 
 export type SettingAssignment = {
     type: "SettingAssignment",

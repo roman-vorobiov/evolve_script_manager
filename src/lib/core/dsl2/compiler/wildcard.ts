@@ -1,76 +1,87 @@
 import { prefixes } from "$lib/core/domain/settings";
 import { ParseError } from "../model";
+import { BasePostProcessor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Parser from "../model";
 
-export function resolveWildcards(statements: Parser.Statement[], sourceMap: SourceMap) {
-    function deriveLocation<T1 extends object, T2 extends object>(original: T1, node: T2): T2 {
-        sourceMap.deriveLocation(original, node);
-        return node;
+export class WildcardResolver extends BasePostProcessor {
+    constructor(sourceMap: SourceMap) {
+        super(sourceMap);
     }
 
-    function derived<T extends object>(original: T, overrides: Partial<T>): T {
-        return deriveLocation(original, { ...original, ...overrides });
-    }
-
-    function makeIdentifierList(values: string[], originalNode: Parser.Symbol): Parser.List {
-        return deriveLocation(originalNode, {
-            type: "List",
-            values: values.map(suffix => deriveLocation(originalNode, <Parser.Identifier> { type: "Identifier", value: suffix }))
-        });
-    }
-
-    function processSubscript(expression: Parser.Subscript): Parser.Subscript | undefined {
-        if (expression.key.type === "Wildcard") {
-            const prefixInfo = prefixes[expression.base.value];
-            if (prefixInfo === undefined) {
-                throw new ParseError("Wildcards are only supported for setting prefixes", expression.key);
-            }
-
-            const newKey = makeIdentifierList(prefixInfo.allowedSuffixes, expression.key);
-
-            return derived(expression, { key: newKey });
-        }
-        else if (expression.key.type === "List") {
-            const newKey = processList(expression.key);
-
-            if (newKey !== undefined) {
-                return derived(expression, { key: newKey });
-            }
-        }
-    }
-
-    function processList(list: Parser.List): Parser.List | undefined {
-        const newValues = list.values.map(value => processExpression(value) ?? value);
-
-        if (newValues.some((value, i) => value !== list.values[i])) {
-            return derived(list, { values: newValues });
-        }
-    }
-
-    function processExpression(expression: Parser.Expression): Parser.Expression | undefined {
+    override processExpression(expression: Parser.Expression): Parser.Expression {
         if (expression.type === "Subscript") {
-            return processSubscript(expression);
+            return this.processSubscript(expression);
         }
         else if (expression.type === "Expression") {
-            const newArgs = expression.args.map(arg => processExpression(arg) ?? arg);
+            const newArgs = expression.args.map(arg => this.processExpression(arg) ?? arg);
 
             if (newArgs.some((arg, i) => arg !== expression.args[i])) {
-                return derived(expression, { args: newArgs });
+                return this.derived(expression, { args: newArgs });
             }
         }
 
         return expression;
     }
 
+    private processSubscript(expression: Parser.Subscript): Parser.Subscript {
+        if (expression.key.type === "Wildcard") {
+            const prefixInfo = prefixes[expression.base.value];
+            if (prefixInfo === undefined) {
+                throw new ParseError("Wildcards are only supported for setting prefixes", expression.key);
+            }
+
+            const newKey = this.makeIdentifierList(prefixInfo.allowedSuffixes, expression.key);
+
+            return this.derived(expression, { key: newKey });
+        }
+        else if (expression.key.type === "List") {
+            const newKey = this.processList(expression.key);
+
+            if (newKey !== undefined) {
+                return this.derived(expression, { key: newKey });
+            }
+        }
+
+        return expression;
+    }
+
+    private processList(list: Parser.List): Parser.List {
+        const newValues = list.values.map(value => this.processExpression(value) ?? value);
+
+        if (newValues.some((value, i) => value !== list.values[i])) {
+            return this.derived(list, { values: newValues });
+        }
+
+        return list;
+    }
+
+    private makeIdentifierList(values: string[], originalNode: Parser.Symbol): Parser.List {
+        return this.deriveLocation(originalNode, {
+            type: "List",
+            values: values.map(suffix => this.deriveLocation(originalNode, { type: "Identifier", value: suffix }))
+        });
+    }
+}
+
+export function resolveWildcards(statements: Parser.Statement[], sourceMap: SourceMap) {
+    const impl = new WildcardResolver(sourceMap);
+
+    function processExpressionIfNeeded(expression: Parser.Expression) {
+        const newExpression = impl.processExpression(expression);
+        if (newExpression !== expression) {
+            return newExpression;
+        }
+    }
+
     function processSettingAssignment(statement: Parser.SettingAssignment): Parser.SettingAssignment {
-        const newSetting = processExpression(statement.setting);
-        const newValue = processExpression(statement.value);
-        const newCondition = statement.condition && processExpression(statement.condition);
+        const newSetting = processExpressionIfNeeded(statement.setting);
+        const newValue = processExpressionIfNeeded(statement.value);
+        const newCondition = statement.condition && processExpressionIfNeeded(statement.condition);
 
         if (newSetting || newValue || newCondition) {
-            return derived(statement, {
+            return impl.derived(statement, {
                 setting: newSetting ?? statement.setting,
                 value: newValue ?? statement.value,
                 condition: newCondition ?? statement.condition
@@ -82,10 +93,10 @@ export function resolveWildcards(statements: Parser.Statement[], sourceMap: Sour
     }
 
     function processConditionPush(statement: Parser.ConditionPush): Parser.ConditionPush {
-        const newCondition = processExpression(statement.condition);
+        const newCondition = processExpressionIfNeeded(statement.condition);
 
         if (newCondition) {
-            return derived(statement, { condition: newCondition });
+            return impl.derived(statement, { condition: newCondition });
         }
         else {
             return statement;

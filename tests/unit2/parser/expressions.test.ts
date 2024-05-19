@@ -125,10 +125,7 @@ describe("Parser", () => {
                 expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
             });
 
-            it.each([
-                { fold: "and" },
-                { fold: "or" }
-            ])("should parse a list of identifiers (folded with $fold)", ({ fold }) => {
+            it.each(["and", "or"])("should parse a list of identifiers (folded with '%s')", (fold) => {
                 const { nodes, errors, maps } = parse(`bar[aaa, bbb ${fold} ccc]`);
 
                 expect(errors).toStrictEqual([]);

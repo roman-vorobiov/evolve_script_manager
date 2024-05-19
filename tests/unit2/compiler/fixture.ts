@@ -1,5 +1,5 @@
-import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl2/compiler/wildcard";
 import { SourceMap } from "$lib/core/dsl2/parser/source";
+import { BasePostProcessor } from "$lib/core/dsl2/compiler/utils";
 import { flattenObject, invertMap } from "$lib/core/utils"
 
 import type * as Parser from "$lib/core/dsl2/model";
@@ -18,23 +18,42 @@ class MockSourceMap extends SourceMap {
     override deriveLocation<T extends object, T2 extends object>(original: T, object: T2) {
         super.deriveLocation(original, object);
 
-        this.originsMap.set(object, original);
+        const parent = this.originsMap.get(original) ?? original;
 
-        (object as any).$origin = this.objectToUriMap.get(original);
+        this.originsMap.set(object, parent);
+
+        (object as any).$origin = this.objectToUriMap.get(parent);
     }
 }
 
-export function resolveWildcards(node: Parser.Statement) {
-    const objectToUriMap = invertMap(flattenObject(node));
-
-    const sourceMap = new MockSourceMap(objectToUriMap);
-    const [result] = resolveWildcardsImpl([node], sourceMap);
-
-    function from<T1 extends object, T2 extends object>(original: T1, overrides: T2): T1 & T2 {
-        return { ...original, ...overrides, $origin: objectToUriMap.get(original) };
+function fromFactory(objectToUriMap: WeakMap<WeakKey, string>) {
+    return function<T1 extends object, T2 extends object>(original: T1, overrides: T2): T1 | T2 {
+        if ((overrides as any).type === undefined) {
+            return { ...original, ...overrides, $origin: objectToUriMap.get(original) };
+        }
+        else {
+            return { ...overrides, $origin: objectToUriMap.get(original) };
+        }
     }
+}
 
-    return { node: result, from };
+export function processExpression(node: Parser.Expression, factory: (sm: SourceMap) => BasePostProcessor) {
+    const objectToUriMap = invertMap(flattenObject(node));
+    const sourceMap = new MockSourceMap(objectToUriMap);
+    const processor = factory(sourceMap);
+
+    const result = processor.processExpression(node);
+
+    return { node: result, from: fromFactory(objectToUriMap) };
+}
+
+export function processNode(node: Parser.Statement, processor: (s: Parser.Statement[], sm: SourceMap) => Parser.Statement[]) {
+    const objectToUriMap = invertMap(flattenObject(node));
+    const sourceMap = new MockSourceMap(objectToUriMap);
+
+    const results = processor([node], sourceMap);
+
+    return { nodes: results, from: fromFactory(objectToUriMap) };
 }
 
 export { getExcepion, valuesOf, decoratorsOf as originsOf } from "../fixture";

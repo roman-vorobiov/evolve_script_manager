@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { resolveWildcards, valuesOf, originsOf, getExcepion } from "./fixture";
+import { processNode, valuesOf, originsOf, getExcepion } from "./fixture";
+import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl2/compiler/wildcard";
 import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model";
+
+const resolveWildcards = (node: Parser.Statement) => processNode(node, resolveWildcardsImpl);
 
 describe("Compiler", () => {
     describe("Wildcards", () => {
@@ -17,7 +20,7 @@ describe("Compiler", () => {
                 value: { type: "Number", value: 123 }
             };
 
-            const { node, from } = resolveWildcards(originalNode as Parser.SettingAssignment);
+            const { nodes, from } = resolveWildcards(originalNode as Parser.SettingAssignment);
 
             const expectedNode = from(originalNode, {
                 setting: from(originalNode.setting, {
@@ -33,8 +36,9 @@ describe("Compiler", () => {
                 })
             });
 
-            expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-            expect(originsOf(node)).toEqual(originsOf(expectedNode));
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
         it("should resolve wildcards in setting prefixes inside values", () => {
@@ -48,7 +52,7 @@ describe("Compiler", () => {
                 }
             };
 
-            const { node, from } = resolveWildcards(originalNode as Parser.SettingAssignment);
+            const { nodes, from } = resolveWildcards(originalNode as Parser.SettingAssignment);
 
             const expectedNode = from(originalNode, {
                 value: from(originalNode.value, {
@@ -64,8 +68,9 @@ describe("Compiler", () => {
                 })
             });
 
-            expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-            expect(originsOf(node)).toEqual(originsOf(expectedNode));
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
         it.each([
@@ -92,7 +97,7 @@ describe("Compiler", () => {
                 }
             };
 
-            const { node, from } = resolveWildcards(originalNode as Parser.Statement);
+            const { nodes, from } = resolveWildcards(originalNode as Parser.Statement);
 
             const expectedNode = from(originalNode, {
                 condition: from(originalNode.condition, {
@@ -123,8 +128,9 @@ describe("Compiler", () => {
                 })
             });
 
-            expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-            expect(originsOf(node)).toEqual(originsOf(expectedNode));
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
         it("should resolve wildcards in nested setting prefixes", () => {
@@ -153,7 +159,7 @@ describe("Compiler", () => {
                 }
             };
 
-            const { node, from } = resolveWildcards(originalNode as Parser.SettingAssignment);
+            const { nodes, from } = resolveWildcards(originalNode as Parser.SettingAssignment);
 
             const expectedNode = from(originalNode, {
                 condition: from(originalNode.condition, {
@@ -186,8 +192,9 @@ describe("Compiler", () => {
                 })
             });
 
-            expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-            expect(originsOf(node)).toEqual(originsOf(expectedNode));
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
         it("should throw on wildcards in override expressions", () => {

@@ -9,12 +9,16 @@ export const settings = Object.keys(defaultSettings).filter(id => {
         && id !== "researchIgnore";
 });
 
-export function settingType(id: string) {
-    return typeof defaultSettings[id as keyof typeof defaultSettings];
+export function settingType(id: string): string | undefined {
+    const defaultValue = defaultSettings[id as keyof typeof defaultSettings];
+    if (defaultValue !== undefined) {
+        return typeof defaultValue;
+    }
 }
 
 type PrefixDefinition = {
     prefix: string,
+    type: "string" | "number" | "boolean",
     valueDescription: string,
     allowedSuffixes: string[]
 }
@@ -24,7 +28,7 @@ function fillAllowedSuffixes(definitions: Record<string, Record<string, string>>
 
     for (const [category, prefixes] of Object.entries(definitions)) {
         for (const [name, prefix] of Object.entries(prefixes)) {
-            result[name] = { prefix, valueDescription: category, allowedSuffixes: [] }
+            result[name] = { prefix, type: null as any, valueDescription: category, allowedSuffixes: [] }
         }
     }
 
@@ -45,6 +49,8 @@ function fillAllowedSuffixes(definitions: Record<string, Record<string, string>>
                 if (entry.prefix === "job_") {
                     entry = (craftables as any)[suffix] !== undefined ? result.AutoCraftsman : result.AutoJob;
                 }
+
+                entry.type = settingType(setting) as PrefixDefinition["type"];
 
                 entry.allowedSuffixes.push(suffix);
 
