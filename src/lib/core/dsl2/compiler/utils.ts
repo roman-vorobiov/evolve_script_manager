@@ -1,7 +1,7 @@
+import type { Modify } from "$lib/core/utils/typeUtils";
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../model";
 
-export abstract class BasePostProcessor {
+export abstract class BasePostProcessor<BeforeT, AfterT> {
     constructor(private sourceMap: SourceMap) {}
 
     deriveLocation<T1 extends object, T2 extends object>(original: T1, node: T2): T2 {
@@ -9,9 +9,9 @@ export abstract class BasePostProcessor {
         return node;
     }
 
-    derived<T extends object>(original: T, overrides: Partial<T>): T {
+    derived<T1 extends object, T2 extends object>(original: T1, overrides: T2): Modify<T1, T2> {
         return this.deriveLocation(original, { ...original, ...overrides });
     }
 
-    abstract processExpression(expression: Parser.Expression): Parser.Expression;
+    abstract processExpression(expression: BeforeT): AfterT;
 }

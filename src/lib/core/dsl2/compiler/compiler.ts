@@ -1,9 +1,11 @@
-import type * as Parser from "../model";
+import { ParseError } from "../model";
+
+import type * as Parser from "../model/1";
 import type * as Domain from "$lib/core/domain/model";
 
 export type CompileResult = {
     config: Domain.Config,
-    errors: Parser.ParseError[],
+    errors: ParseError[],
 }
 
 export function compile(statements: Parser.Statement[]): CompileResult {

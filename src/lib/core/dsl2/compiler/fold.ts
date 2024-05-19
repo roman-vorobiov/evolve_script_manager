@@ -5,13 +5,14 @@ import { ParseError } from "../model";
 import { BasePostProcessor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../model";
+import type * as Before from "../model/2";
+import * as After from "../model/3";
 
 function isBooleanOperator(operator: string) {
     return !["+", "-", "*", "/"].includes(operator);
 }
 
-function isBooleanExpression(base: Parser.Identifier, keys: Parser.List): boolean {
+function isBooleanExpression(base: Before.Identifier, keys: Before.List): boolean {
     const expressionInfo = expressions[base.value] ?? otherExpressions[base.value];
     if (expressionInfo === undefined) {
         return false;
@@ -22,14 +23,14 @@ function isBooleanExpression(base: Parser.Identifier, keys: Parser.List): boolea
     return type === "boolean";
 }
 
-function validateExpressionResolved(expression: Parser.Expression) {
+function validateExpressionResolved(expression: Before.Expression): asserts expression is After.Expression {
     if (expression.type === "List") {
         throw new ParseError("Fold expression detected outside of a boolean expression", expression);
     }
 }
 
-function getCommonSettingsType(settings: Parser.List): string {
-    function getSettingType(setting: Parser.Expression): string | undefined {
+function getCommonSettingsType(settings: Before.List): string {
+    function getSettingType(setting: Before.Expression): string | undefined {
         if (setting.type === "Identifier") {
             const type = settingType(setting.value);
             if (type === undefined) {
@@ -54,12 +55,12 @@ function getCommonSettingsType(settings: Parser.List): string {
     return types.values().next().value;
 }
 
-export class FoldResolver extends BasePostProcessor {
+export class FoldResolver extends BasePostProcessor<Before.Expression, Before.Expression> {
     constructor(sourceMap: SourceMap) {
         super(sourceMap);
     }
 
-    override processExpression(expression: Parser.Expression): Parser.Expression {
+    override processExpression(expression: Before.Expression): Before.Expression {
         if (expression.type === "List") {
             return this.processList(expression);
         }
@@ -74,7 +75,7 @@ export class FoldResolver extends BasePostProcessor {
         }
     }
 
-    private processList(list: Parser.List): Parser.List {
+    private processList(list: Before.List): Before.List {
         const newValues = list.values.map(value => this.processExpression(value));
 
         // Throw on nested lists
@@ -89,12 +90,12 @@ export class FoldResolver extends BasePostProcessor {
         return list;
     }
 
-    private processSubscript(expression: Parser.Subscript): Parser.Expression {
+    private processSubscript(expression: Before.Subscript): Before.Expression {
         if (expression.key.type === "Placeholder") {
             return expression;
         }
 
-        assert<Parser.Expression>(expression.key);
+        assert<Before.Expression>(expression.key);
 
         const newKey = this.processExpression(expression.key);
 
@@ -116,7 +117,7 @@ export class FoldResolver extends BasePostProcessor {
         return expression;
     }
 
-    private processCompoundExpression(expression: Parser.CompoundExpression): Parser.Expression {
+    private processCompoundExpression(expression: Before.CompoundExpression): Before.Expression {
         const args = expression.args.map(arg => this.processExpression(arg));
 
         const numberOfFolds = args.filter(arg => arg.type === "List").length;
@@ -136,10 +137,10 @@ export class FoldResolver extends BasePostProcessor {
         }
         else if (args.length === 1) {
             // This means the argument of 'not' is not boolean, but it's not this component's job to guard against that
-            return this.derived(expression, { args: [this.foldLeft(args[0] as Parser.List)] });
+            return this.derived(expression, { args: [this.foldLeft(args[0] as Before.List)] });
         }
         else {
-            let node: Parser.List;
+            let node: Before.List;
             if (args[0].type === "List") {
                 // foo[a, b] / 2 -> [foo.a / 2, foo.b / 2]
                 node = this.derived(args[0], {
@@ -158,13 +159,13 @@ export class FoldResolver extends BasePostProcessor {
         }
     }
 
-    private foldLeft(expresson: Parser.List): Parser.Expression {
+    private foldLeft(expresson: Before.List): Before.Expression {
         if (expresson.fold === undefined) {
             throw new ParseError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma", expresson);
         }
 
         return expresson.values.reduce((l, r) => {
-            return this.deriveLocation(expresson, <Parser.Expression> {
+            return this.deriveLocation(expresson, <Before.Expression> {
                 type: "Expression",
                 operator: expresson.fold,
                 args: [l, r]
@@ -173,64 +174,60 @@ export class FoldResolver extends BasePostProcessor {
     }
 }
 
-export function resolveFolds(statements: Parser.Statement[], sourceMap: SourceMap) {
+export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new FoldResolver(sourceMap);
 
-    function processExpressionIfNeeded(expression: Parser.Expression) {
-        const newExpression = impl.processExpression(expression);
-        if (newExpression !== expression) {
-            return newExpression;
-        }
-    }
+    function* processConditionPush(statement: Before.ConditionPush): IterableIterator<After.ConditionPush> {
+        const newCondition = impl.processExpression(statement.condition);
 
-    function* processConditionPush(statement: Parser.ConditionPush): IterableIterator<Parser.ConditionPush> {
-        const newCondition = processExpressionIfNeeded(statement.condition);
-
-        if (newCondition) {
+        if (newCondition !== statement.condition) {
             validateExpressionResolved(newCondition);
             yield impl.derived(statement, { condition: newCondition });
         }
         else {
-            yield statement;
+            yield statement as After.ConditionPush;
         }
     }
 
-    function* processSettingAssignment(statement: Parser.SettingAssignment): IterableIterator<Parser.SettingAssignment> {
-        const newSetting = processExpressionIfNeeded(statement.setting);
-        const newValue = processExpressionIfNeeded(statement.value);
-        const newCondition = statement.condition && processExpressionIfNeeded(statement.condition);
+    function* processSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
+        const newSetting = impl.processExpression(statement.setting);
+        const newValue = impl.processExpression(statement.value);
+        const newCondition = statement.condition && impl.processExpression(statement.condition);
 
-        if (newSetting || newCondition || newValue) {
-            newValue && validateExpressionResolved(newValue);
-            newCondition && validateExpressionResolved(newCondition);
+        if (newSetting !== statement.setting || newCondition !== statement.condition || newValue !== statement.value) {
+            validateExpressionResolved(newValue);
 
-            if (newSetting?.type === "List") {
+            if (newCondition) {
+                validateExpressionResolved(newCondition);
+            }
+
+            if (newSetting.type === "List") {
                 if (newSetting.fold === "or") {
                     throw new ParseError("Disjunction is not allowed in setting targets", newSetting);
                 }
 
                 for (const setting of newSetting.values) {
                     yield impl.derived(statement, {
-                        setting,
-                        value: newValue ?? statement.value,
-                        condition: newCondition ?? statement.condition
+                        setting: setting as After.Expression,
+                        value: newValue,
+                        condition: newCondition
                     });
                 }
             }
             else {
                 yield impl.derived(statement, {
-                    setting: newSetting ?? statement.setting,
-                    value: newValue ?? statement.value,
-                    condition: newCondition ?? statement.condition
+                    setting: newSetting as After.Expression,
+                    value: newValue,
+                    condition: newCondition
                 });
             }
         }
         else {
-            yield statement;
+            yield statement as After.SettingAssignment;
         }
     }
 
-    function* processStatement(statement: Parser.Statement): IterableIterator<Parser.Statement> {
+    function* processStatement(statement: Before.Statement): IterableIterator<After.Statement> {
         if (statement.type === "SettingAssignment") {
             yield* processSettingAssignment(statement);
         }
@@ -242,7 +239,7 @@ export function resolveFolds(statements: Parser.Statement[], sourceMap: SourceMa
         }
     }
 
-    function* processStatements(statements: Parser.Statement[]): IterableIterator<Parser.Statement> {
+    function* processStatements(statements: Before.Statement[]): IterableIterator<After.Statement> {
         for (const statement of statements) {
             yield* processStatement(statement);
         }

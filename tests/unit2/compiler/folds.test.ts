@@ -3,7 +3,7 @@ import { processExpression as processExpressionImpl, processNode, valuesOf, orig
 import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl2/compiler/fold";
 import { ParseError } from "$lib/core/dsl2/model";
 
-import type * as Parser from "$lib/core/dsl2/model";
+import type * as Parser from "$lib/core/dsl2/model/2";
 
 const processExpression = (node: Parser.Expression) => {
     return processExpressionImpl(node, (sourceMap) => new FoldResolver(sourceMap));

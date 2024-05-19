@@ -3,7 +3,7 @@ import { processNode, valuesOf, originsOf, getExcepion } from "./fixture";
 import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl2/compiler/wildcard";
 import { ParseError } from "$lib/core/dsl2/model";
 
-import type * as Parser from "$lib/core/dsl2/model";
+import type * as Parser from "$lib/core/dsl2/model/1";
 
 const resolveWildcards = (node: Parser.Statement) => processNode(node, resolveWildcardsImpl);
 

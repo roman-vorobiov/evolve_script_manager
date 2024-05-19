@@ -37,7 +37,7 @@ function fromFactory(objectToUriMap: WeakMap<WeakKey, string>) {
     }
 }
 
-export function processExpression(node: Parser.Expression, factory: (sm: SourceMap) => BasePostProcessor) {
+export function processExpression<T1 extends object, T2 extends object>(node: T1, factory: (sm: SourceMap) => BasePostProcessor<T1, T2>) {
     const objectToUriMap = invertMap(flattenObject(node));
     const sourceMap = new MockSourceMap(objectToUriMap);
     const processor = factory(sourceMap);
@@ -47,7 +47,7 @@ export function processExpression(node: Parser.Expression, factory: (sm: SourceM
     return { node: result, from: fromFactory(objectToUriMap) };
 }
 
-export function processNode(node: Parser.Statement, processor: (s: Parser.Statement[], sm: SourceMap) => Parser.Statement[]) {
+export function processNode<T1 extends object, T2 extends object>(node: T1, processor: (s: T1[], sm: SourceMap) => T2[]) {
     const objectToUriMap = invertMap(flattenObject(node));
     const sourceMap = new MockSourceMap(objectToUriMap);
 

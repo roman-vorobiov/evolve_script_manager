@@ -1,12 +1,3 @@
-export class ParseError extends Error {
-    offendingEntity: any;
-
-    constructor(message: string, offendingEntity: any) {
-        super(message);
-        this.offendingEntity = offendingEntity;
-    }
-}
-
 export type Symbol = {
     type: "Wildcard" | "Placeholder"
 }
@@ -60,16 +51,16 @@ export type SimpleExpression = Constant | EvalLiteral | Identifier;
 
 export type Expression = SimpleExpression | Subscript | List | CompoundExpression;
 
-export type SettingAssignment = {
+export type SettingAssignment<T = Expression> = {
     type: "SettingAssignment",
-    setting: Expression,
-    value: Expression,
-    condition?: Expression
+    setting: T,
+    value: T,
+    condition?: T
 }
 
-export type ConditionPush = {
+export type ConditionPush<T = Expression> = {
     type: "ConditionPush",
-    condition: Expression
+    condition: T
 }
 
 export type ConditionPop = {

@@ -7,7 +7,7 @@ import { SourceMap, type SourceEntity } from "./source";
 import { ParseError } from "../model";
 
 import type * as Context from "./.antlr/DSLParser";
-import * as Parser from "../model";
+import type { Initial as Parser } from "../model";
 
 function stringContents<T extends { getText(): string }>(token: T | null, quoteLength: number = 1): string | undefined {
     return token?.getText().slice(quoteLength, -quoteLength);
@@ -156,9 +156,9 @@ class Visitor extends DSLVisitor<void> {
     private triggerGetter: TriggerGetter;
 
     private nodes: Parser.Statement[];
-    private errors: Parser.ParseError[];
+    private errors: ParseError[];
 
-    constructor(sourceMap: SourceMap, nodes: Parser.Statement[], errors: Parser.ParseError[]) {
+    constructor(sourceMap: SourceMap, nodes: Parser.Statement[], errors: ParseError[]) {
         super();
         this.sourceMap = sourceMap;
         this.expressionGetter = new ExpressionGetter(sourceMap);
@@ -266,13 +266,13 @@ function prepareParser(source: string, errors: ParseError[]) {
 export type ParseResult = {
     sourceMap: SourceMap,
     nodes: Parser.Statement[],
-    errors: Parser.ParseError[],
+    errors: ParseError[],
 }
 
 export function parseSource(source: string): ParseResult {
     const sourceMap = new SourceMap();
     const nodes: Parser.Statement[] = [];
-    const errors: Parser.ParseError[] = [];
+    const errors: ParseError[] = [];
 
     const parser = prepareParser(source, errors);
     const root = parser.root();
@@ -286,7 +286,7 @@ export function parseSource(source: string): ParseResult {
 
 export function parseExpression(source: string): ParseResult {
     const sourceMap = new SourceMap();
-    const errors: Parser.ParseError[] = [];
+    const errors: ParseError[] = [];
 
     const parser = prepareParser(source, errors);
     const root = parser.expression();

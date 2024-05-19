@@ -3,14 +3,15 @@ import { ParseError } from "../model";
 import { BasePostProcessor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../model";
+import type * as Before from "../model/1";
+import type * as After from "../model/2";
 
-export class WildcardResolver extends BasePostProcessor {
+export class WildcardResolver extends BasePostProcessor<Before.Expression, After.Expression> {
     constructor(sourceMap: SourceMap) {
         super(sourceMap);
     }
 
-    override processExpression(expression: Parser.Expression): Parser.Expression {
+    override processExpression(expression: Before.Expression): After.Expression {
         if (expression.type === "Subscript") {
             return this.processSubscript(expression);
         }
@@ -22,10 +23,10 @@ export class WildcardResolver extends BasePostProcessor {
             }
         }
 
-        return expression;
+        return expression as After.Expression;
     }
 
-    private processSubscript(expression: Parser.Subscript): Parser.Subscript {
+    private processSubscript(expression: Before.Subscript): After.Subscript {
         if (expression.key.type === "Wildcard") {
             const prefixInfo = prefixes[expression.base.value];
             if (prefixInfo === undefined) {
@@ -44,20 +45,20 @@ export class WildcardResolver extends BasePostProcessor {
             }
         }
 
-        return expression;
+        return expression as After.Subscript;
     }
 
-    private processList(list: Parser.List): Parser.List {
+    private processList(list: Before.List): After.List {
         const newValues = list.values.map(value => this.processExpression(value) ?? value);
 
         if (newValues.some((value, i) => value !== list.values[i])) {
             return this.derived(list, { values: newValues });
         }
 
-        return list;
+        return list as After.List;
     }
 
-    private makeIdentifierList(values: string[], originalNode: Parser.Symbol): Parser.List {
+    private makeIdentifierList(values: string[], originalNode: Before.Symbol): After.List {
         return this.deriveLocation(originalNode, {
             type: "List",
             values: values.map(suffix => this.deriveLocation(originalNode, { type: "Identifier", value: suffix }))
@@ -65,45 +66,38 @@ export class WildcardResolver extends BasePostProcessor {
     }
 }
 
-export function resolveWildcards(statements: Parser.Statement[], sourceMap: SourceMap) {
+export function resolveWildcards(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new WildcardResolver(sourceMap);
 
-    function processExpressionIfNeeded(expression: Parser.Expression) {
-        const newExpression = impl.processExpression(expression);
-        if (newExpression !== expression) {
-            return newExpression;
-        }
-    }
+    function processSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
+        const newSetting = impl.processExpression(statement.setting);
+        const newValue = impl.processExpression(statement.value);
+        const newCondition = statement.condition && impl.processExpression(statement.condition);
 
-    function processSettingAssignment(statement: Parser.SettingAssignment): Parser.SettingAssignment {
-        const newSetting = processExpressionIfNeeded(statement.setting);
-        const newValue = processExpressionIfNeeded(statement.value);
-        const newCondition = statement.condition && processExpressionIfNeeded(statement.condition);
-
-        if (newSetting || newValue || newCondition) {
+        if (newSetting !== statement.setting || newValue !== statement.value || newCondition !== statement.condition) {
             return impl.derived(statement, {
-                setting: newSetting ?? statement.setting,
-                value: newValue ?? statement.value,
-                condition: newCondition ?? statement.condition
+                setting: newSetting,
+                value: newValue,
+                condition: newCondition
             });
         }
         else {
-            return statement;
+            return statement as After.SettingAssignment;
         }
     }
 
-    function processConditionPush(statement: Parser.ConditionPush): Parser.ConditionPush {
-        const newCondition = processExpressionIfNeeded(statement.condition);
+    function processConditionPush(statement: Before.ConditionPush): After.ConditionPush {
+        const newCondition = impl.processExpression(statement.condition);
 
-        if (newCondition) {
+        if (newCondition !== statement.condition) {
             return impl.derived(statement, { condition: newCondition });
         }
         else {
-            return statement;
+            return statement as After.ConditionPush;
         }
     }
 
-    function processStatement(statement: Parser.Statement): Parser.Statement {
+    function processStatement(statement: Before.Statement): After.Statement {
         if (statement.type === "SettingAssignment") {
             return processSettingAssignment(statement);
         }
