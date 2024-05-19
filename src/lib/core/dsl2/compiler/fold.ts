@@ -55,11 +55,7 @@ function getCommonSettingsType(settings: Before.List): string {
     return types.values().next().value;
 }
 
-export class FoldResolver extends BasePostProcessor<Before.Expression, Before.Expression> {
-    constructor(sourceMap: SourceMap) {
-        super(sourceMap);
-    }
-
+export class FoldResolver extends BasePostProcessor {
     override processExpression(expression: Before.Expression): Before.Expression {
         if (expression.type === "List") {
             return this.processList(expression);
@@ -102,7 +98,7 @@ export class FoldResolver extends BasePostProcessor<Before.Expression, Before.Ex
         if (newKey.type === "List") {
             // Transform each element as the subscript of `expression.base`
             const node = this.derived(newKey, {
-                values: newKey.values.map(key => this.derived(expression, { key }))
+                values: newKey.values.map(key => this.derived(expression, <After.Subscript> { key }))
             });
 
             // If the base is a boolean setting prefix or condition expression, fold the list
@@ -159,18 +155,18 @@ export class FoldResolver extends BasePostProcessor<Before.Expression, Before.Ex
         }
     }
 
-    private foldLeft(expresson: Before.List): Before.Expression {
+    private foldLeft(expresson: Before.List): After.Expression {
         if (expresson.fold === undefined) {
             throw new ParseError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma", expresson);
         }
 
         return expresson.values.reduce((l, r) => {
-            return this.deriveLocation(expresson, <Before.Expression> {
+            return this.deriveLocation(expresson, <After.Expression> {
                 type: "Expression",
                 operator: expresson.fold,
                 args: [l, r]
             });
-        });
+        }) as After.Expression;
     }
 }
 
@@ -208,7 +204,7 @@ export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMa
 
                 for (const setting of newSetting.values) {
                     yield impl.derived(statement, {
-                        setting: setting as After.Expression,
+                        setting: setting as After.SettingAssignment["setting"],
                         value: newValue,
                         condition: newCondition
                     });
@@ -216,7 +212,7 @@ export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMa
             }
             else {
                 yield impl.derived(statement, {
-                    setting: newSetting as After.Expression,
+                    setting: newSetting as After.SettingAssignment["setting"],
                     value: newValue,
                     condition: newCondition
                 });

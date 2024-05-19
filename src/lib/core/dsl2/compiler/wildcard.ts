@@ -6,11 +6,7 @@ import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/1";
 import type * as After from "../model/2";
 
-export class WildcardResolver extends BasePostProcessor<Before.Expression, After.Expression> {
-    constructor(sourceMap: SourceMap) {
-        super(sourceMap);
-    }
-
+export class WildcardResolver extends BasePostProcessor {
     override processExpression(expression: Before.Expression): After.Expression {
         if (expression.type === "Subscript") {
             return this.processSubscript(expression);
@@ -70,7 +66,7 @@ export function resolveWildcards(statements: Before.Statement[], sourceMap: Sour
     const impl = new WildcardResolver(sourceMap);
 
     function processSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
-        const newSetting = impl.processExpression(statement.setting);
+        const newSetting = impl.processExpression(statement.setting) as After.SettingAssignment["setting"];
         const newValue = impl.processExpression(statement.value);
         const newCondition = statement.condition && impl.processExpression(statement.condition);
 

@@ -1,5 +1,5 @@
 import type { Modify } from "$lib/core/utils/typeUtils"
-import * as Previous from "./2";
+import type * as Previous from "./2";
 
 export type Symbol = Previous.Symbol;
 export type StringLiteral = Previous.StringLiteral;
@@ -11,7 +11,7 @@ export type Constant = Previous.Constant;
 export type SimpleExpression = Previous.SimpleExpression;
 
 export type Subscript = Modify<Previous.Subscript, {
-    key: Expression | Symbol
+    key: Identifier | Symbol | Subscript
 }>
 
 export type CompoundExpression = Modify<Previous.CompoundExpression, {
@@ -20,8 +20,18 @@ export type CompoundExpression = Modify<Previous.CompoundExpression, {
 
 export type Expression = SimpleExpression | Subscript | CompoundExpression;
 
-export type SettingAssignment<T = Expression> = Previous.SettingAssignment<T>;
-export type ConditionPush<T = Expression> = Previous.ConditionPush<T>;
+export type SettingAssignment = {
+    type: "SettingAssignment",
+    setting: Identifier | Subscript,
+    value: Expression,
+    condition?: Expression
+}
+
+export type ConditionPush = {
+    type: "ConditionPush",
+    condition: Expression
+}
+
 export type ConditionPop = Previous.ConditionPop;
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { processExpression as processExpressionImpl, processNode, valuesOf, originsOf, getExcepion } from "./fixture";
+import { processExpression as processExpressionImpl, processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
 import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl2/compiler/fold";
 import { ParseError } from "$lib/core/dsl2/model";
 
@@ -10,7 +10,7 @@ const processExpression = (node: Parser.Expression) => {
 }
 
 const resolveFolds = (node: Parser.Statement) => {
-    return processNode(node, resolveFoldsImpl);
+    return processStatement(node, resolveFoldsImpl);
 }
 
 describe("Compiler", () => {

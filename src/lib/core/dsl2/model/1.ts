@@ -36,7 +36,7 @@ export type List = {
 export type Subscript = {
     type: "Subscript",
     base: Identifier,
-    key: Expression | Symbol
+    key: Identifier | Symbol | Subscript | List
 }
 
 export type CompoundExpression = {
@@ -51,16 +51,16 @@ export type SimpleExpression = Constant | EvalLiteral | Identifier;
 
 export type Expression = SimpleExpression | Subscript | List | CompoundExpression;
 
-export type SettingAssignment<T = Expression> = {
+export type SettingAssignment = {
     type: "SettingAssignment",
-    setting: T,
-    value: T,
-    condition?: T
+    setting: Identifier | Subscript,
+    value: Expression,
+    condition?: Expression
 }
 
-export type ConditionPush<T = Expression> = {
+export type ConditionPush = {
     type: "ConditionPush",
-    condition: T
+    condition: Expression
 }
 
 export type ConditionPop = {
