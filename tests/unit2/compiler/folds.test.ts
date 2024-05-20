@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { processExpression as processExpressionImpl, processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl2/compiler/fold";
+import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl2/compiler/folds";
 import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/2";
