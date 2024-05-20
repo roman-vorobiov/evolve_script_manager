@@ -1,5 +1,5 @@
 import { ParseError } from "../model";
-import { BasePostProcessor } from "./utils";
+import { ExpressionVisitor, StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/3";
@@ -14,7 +14,7 @@ function throwOnPlaceholder(placeholder: Before.Symbol): never {
 function makeReferenceGetter(node: Before.Identifier | Before.Subscript): ReferenceGetter {
     if (node.type === "Subscript") {
         if (node.key.type === "Identifier") {
-            return (placeholder: Before.Symbol) => node.key as After.Identifier;
+            return () => node.key as After.Identifier;
         }
         else if (node.key.type === "Placeholder") {
             throwOnPlaceholder(node.key);
@@ -27,81 +27,46 @@ function makeReferenceGetter(node: Before.Identifier | Before.Subscript): Refere
     return throwOnPlaceholder;
 }
 
-export class PlaceholderResolver extends BasePostProcessor {
+export class PlaceholderResolver extends ExpressionVisitor {
     constructor(sourceMap: SourceMap, private getter: ReferenceGetter) {
         super(sourceMap);
     }
 
-    override processExpression(expression: Before.Expression): After.Expression {
-        if (expression.type === "Subscript") {
-            return this.processSubscript(expression);
-        }
-        else if (expression.type === "Expression") {
-            const newArgs = expression.args.map(arg => this.processExpression(arg));
+    onPlaceholder(node: Before.Symbol): After.Identifier {
+        return this.getter(node);
+    }
+}
 
-            if (newArgs.some((arg, i) => arg !== expression.args[i])) {
-                return this.derived(expression, { args: newArgs });
-            }
-        }
-
-        return expression as After.Expression;
+class Impl extends StatementVisitor {
+    constructor(sourceMap: SourceMap) {
+        super(sourceMap);
     }
 
-    private processSubscript(expression: Before.Subscript): After.Subscript {
-        if (expression.key.type === "Placeholder") {
-            return this.derived(expression, { key: this.getter(expression.key) });
-        }
-        else if (expression.key.type === "Subscript") {
-            const newKey = this.processSubscript(expression.key);
+    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | undefined {
+        const getter = makeReferenceGetter(statement.setting);
+        const visitor = new PlaceholderResolver(this.sourceMap, getter);
 
-            if (newKey !== expression.key) {
-                return this.derived(expression, { key: newKey });
-            }
-        }
+        const value = visitor.visit(statement.value);
+        const condition = statement.condition && visitor.visit(statement.condition);
 
-        return expression as After.Subscript;
+        if (value !== statement.value || condition !== statement.condition) {
+            return this.derived(statement, { value, condition }) as After.SettingAssignment;
+        }
+    }
+
+    onConditionPush(statement: Before.ConditionPush): After.ConditionPush | undefined {
+        const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
+
+        const condition = visitor.visit(statement.condition);
+
+        if (condition !== statement.condition) {
+            return this.derived(statement, { condition }) as After.ConditionPush;
+        }
     }
 }
 
 export function resolvePlaceholders(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    function processSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
-        const getter = makeReferenceGetter(statement.setting);
-        const impl = new PlaceholderResolver(sourceMap, getter);
+    const impl = new Impl(sourceMap);
 
-        const newValue = impl.processExpression(statement.value);
-        const newCondition = statement.condition && impl.processExpression(statement.condition);
-
-        if (newValue !== statement.value || newCondition !== statement.condition) {
-            return impl.derived(statement, {
-                setting: statement.setting as After.SettingAssignment["setting"],
-                value: newValue,
-                condition: newCondition
-            });
-        }
-        else {
-            return statement as After.SettingAssignment;
-        }
-    }
-
-    function processConditionPush(statement: Before.ConditionPush): After.ConditionPush {
-        const impl = new PlaceholderResolver(sourceMap, throwOnPlaceholder);
-
-        impl.processExpression(statement.condition);
-
-        return statement as After.ConditionPush;
-    }
-
-    function processStatement(statement: Before.Statement): After.Statement {
-        if (statement.type === "SettingAssignment") {
-            return processSettingAssignment(statement);
-        }
-        else if (statement.type === "ConditionPush") {
-            return processConditionPush(statement);
-        }
-        else {
-            return statement;
-        }
-    }
-
-    return statements.map(processStatement);
+    return impl.visitAll(statements) as After.Statement[];
 }

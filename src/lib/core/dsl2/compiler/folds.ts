@@ -1,12 +1,12 @@
 import { settingType, prefixes } from "$lib/core/domain/settings";
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
-import { assume, assert } from "$lib/core/utils/typeUtils";
+import { assume } from "$lib/core/utils/typeUtils";
 import { ParseError } from "../model";
-import { BasePostProcessor } from "./utils";
+import { ExpressionVisitor, StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/2";
-import * as After from "../model/3";
+import type * as After from "../model/3";
 
 function isBooleanOperator(operator: string) {
     return !["+", "-", "*", "/"].includes(operator);
@@ -23,7 +23,7 @@ function isBooleanExpression(base: Before.Identifier, keys: Before.List): boolea
     return type === "boolean";
 }
 
-function validateExpressionResolved(expression: Before.Expression): asserts expression is After.Expression {
+function validateExpressionResolved(expression: any): asserts expression is After.Expression {
     if (expression.type === "List") {
         throw new ParseError("Fold expression detected outside of a boolean expression", expression);
     }
@@ -55,67 +55,33 @@ function getCommonSettingsType(settings: Before.List): string {
     return types.values().next().value;
 }
 
-export class FoldResolver extends BasePostProcessor {
-    override processExpression(expression: Before.Expression): Before.Expression {
-        if (expression.type === "List") {
-            return this.processList(expression);
-        }
-        else if (expression.type === "Subscript") {
-            return this.processSubscript(expression);
-        }
-        else if (expression.type === "Expression") {
-            return this.processCompoundExpression(expression);
-        }
-        else {
-            return expression;
-        }
-    }
-
-    private processList(list: Before.List): Before.List {
-        const newValues = list.values.map(value => this.processExpression(value));
-
+export class FoldResolver extends ExpressionVisitor {
+    onList(list: Before.List, values: Before.List["values"], parent?: Before.Expression): Before.Expression | undefined {
         // Throw on nested lists
-        if (newValues.some(value => value.type === "List")) {
+        if (values.some(value => value.type === "List")) {
             throw new ParseError("Only one fold subexpression is allowed", list);
         }
 
-        if (newValues.some((value, i) => value !== list.values[i])) {
-            return this.derived(list, { values: newValues });
-        }
-
-        return list;
+        return super.onList(list, values, parent) as Before.Expression;
     }
 
-    private processSubscript(expression: Before.Subscript): Before.Expression {
-        if (expression.key.type === "Placeholder") {
-            return expression;
+    onSubscript(expression: Before.Subscript, key: Before.Subscript["key"]): Before.Expression | undefined {
+        if (key.type === "Placeholder") {
+            return;
         }
 
-        assert<Before.Expression>(expression.key);
-
-        const newKey = this.processExpression(expression.key);
-
-        if (newKey.type === "List") {
+        if (key.type === "List") {
             // Transform each element as the subscript of `expression.base`
-            const node = this.derived(newKey, {
-                values: newKey.values.map(key => this.derived(expression, <After.Subscript> { key }))
+            const node = this.derived(key, {
+                values: key.values.map(value => this.derived(expression, <After.Subscript> { key: value }))
             });
 
             // If the base is a boolean setting prefix or condition expression, fold the list
-            return isBooleanExpression(expression.base, newKey) ? this.foldLeft(node) : node;
+            return isBooleanExpression(expression.base, key) ? this.foldLeft(node) : node;
         }
-
-        if (newKey !== expression.key) {
-            // Unreachable
-            throw new ParseError("Internal error: unexpected path taken during fold expression resolution", expression);
-        }
-
-        return expression;
     }
 
-    private processCompoundExpression(expression: Before.CompoundExpression): Before.Expression {
-        const args = expression.args.map(arg => this.processExpression(arg));
-
+    onExpression(expression: Before.CompoundExpression, args: Before.CompoundExpression["args"]): Before.Expression | undefined {
         const numberOfFolds = args.filter(arg => arg.type === "List").length;
 
         if (numberOfFolds > 1) {
@@ -126,9 +92,6 @@ export class FoldResolver extends BasePostProcessor {
             if (args.some((arg, i) => arg !== expression.args[i])) {
                 // No folds directly as subexpressions, but some have been found and resolved down the tree
                 return this.derived(expression, { args });
-            }
-            else {
-                return expression;
             }
         }
         else if (args.length === 1) {
@@ -170,76 +133,68 @@ export class FoldResolver extends BasePostProcessor {
     }
 }
 
-export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new FoldResolver(sourceMap);
+class Impl extends StatementVisitor {
+    private visitor: FoldResolver;
 
-    function* processConditionPush(statement: Before.ConditionPush): IterableIterator<After.ConditionPush> {
-        const newCondition = impl.processExpression(statement.condition);
-
-        if (newCondition !== statement.condition) {
-            validateExpressionResolved(newCondition);
-            yield impl.derived(statement, { condition: newCondition });
-        }
-        else {
-            yield statement as After.ConditionPush;
-        }
+    constructor(sourceMap: SourceMap) {
+        super(sourceMap);
+        this.visitor = new FoldResolver(sourceMap);
     }
 
-    function* processSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
-        const newSetting = impl.processExpression(statement.setting);
-        const newValue = impl.processExpression(statement.value);
-        const newCondition = statement.condition && impl.processExpression(statement.condition);
+    visitAll(statements: Before.Statement[]): After.Statement[] {
+        function* generate(self: any) {
+            for (const statement of statements) {
+                yield* self.visit(statement);
+            }
+        }
 
-        if (newSetting !== statement.setting || newCondition !== statement.condition || newValue !== statement.value) {
-            validateExpressionResolved(newValue);
+        return [...generate(this)];
+    }
 
-            if (newCondition) {
-                validateExpressionResolved(newCondition);
+    *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
+        const setting = this.visitor.visit(statement.setting) as Before.SettingAssignment["setting"] | Before.List;
+        const value = this.visitor.visit(statement.value);
+        const condition = statement.condition && this.visitor.visit(statement.condition);
+
+        validateExpressionResolved(value);
+
+        if (condition) {
+            validateExpressionResolved(condition);
+        }
+
+        if (setting.type === "List") {
+            if (setting.fold === "or") {
+                throw new ParseError("Disjunction is not allowed in setting targets", setting);
             }
 
-            if (newSetting.type === "List") {
-                if (newSetting.fold === "or") {
-                    throw new ParseError("Disjunction is not allowed in setting targets", newSetting);
-                }
-
-                for (const setting of newSetting.values) {
-                    yield impl.derived(statement, {
-                        setting: setting as After.SettingAssignment["setting"],
-                        value: newValue,
-                        condition: newCondition
-                    });
-                }
+            for (const target of setting.values) {
+                yield this.derived(statement, { setting: target as After.SettingAssignment["setting"], value, condition });
             }
-            else {
-                yield impl.derived(statement, {
-                    setting: newSetting as After.SettingAssignment["setting"],
-                    value: newValue,
-                    condition: newCondition
-                });
-            }
+        }
+        else if (setting !== statement.setting || value !== statement.value || condition !== statement.condition) {
+            yield this.derived(statement, { setting, value, condition }) as After.SettingAssignment;
         }
         else {
             yield statement as After.SettingAssignment;
         }
     }
 
-    function* processStatement(statement: Before.Statement): IterableIterator<After.Statement> {
-        if (statement.type === "SettingAssignment") {
-            yield* processSettingAssignment(statement);
-        }
-        else if (statement.type === "ConditionPush") {
-            yield* processConditionPush(statement);
+    *onConditionPush(statement: Before.ConditionPush): IterableIterator<After.ConditionPush> {
+        const condition = this.visitor.visit(statement.condition);
+
+        validateExpressionResolved(condition);
+
+        if (condition !== statement.condition) {
+            yield this.derived(statement, { condition }) as After.ConditionPush;
         }
         else {
-            yield statement;
+            yield statement as After.ConditionPush;
         }
     }
+}
 
-    function* processStatements(statements: Before.Statement[]): IterableIterator<After.Statement> {
-        for (const statement of statements) {
-            yield* processStatement(statement);
-        }
-    }
+export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
+    const impl = new Impl(sourceMap);
 
-    return [...processStatements(statements)];
+    return impl.visitAll(statements) as After.Statement[];
 }

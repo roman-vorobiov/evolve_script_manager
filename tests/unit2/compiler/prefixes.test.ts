@@ -65,7 +65,7 @@ describe("Compiler", () => {
             expect(error).toBeInstanceOf(ParseError);
             if (error instanceof ParseError) {
                 expect(error.message).toEqual("'Bolognium' is not a valid resource for AutoSell");
-                expect(error.offendingEntity).toBe(originalNode.setting.base);
+                expect(error.offendingEntity).toBe(originalNode.setting.key);
             }
         });
 

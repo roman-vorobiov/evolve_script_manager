@@ -1,8 +1,8 @@
 import { SourceMap } from "$lib/core/dsl2/parser/source";
-import { BasePostProcessor } from "$lib/core/dsl2/compiler/utils";
+import { ExpressionVisitor } from "$lib/core/dsl2/compiler/utils";
 import { flattenObject, invertMap } from "$lib/core/utils"
 
-import type * as Parser from "$lib/core/dsl2/model";
+import type { Initial as Parser } from "$lib/core/dsl2/model";
 
 class MockSourceMap extends SourceMap {
     private originsMap: WeakMap<WeakKey, any>;
@@ -37,12 +37,12 @@ function fromFactory(objectToUriMap: WeakMap<WeakKey, string>) {
     }
 }
 
-export function processExpression<T extends object>(node: T, factory: (sm: SourceMap) => BasePostProcessor) {
+export function processExpression(node: Parser.Expression, factory: (sm: SourceMap) => ExpressionVisitor) {
     const objectToUriMap = invertMap(flattenObject(node));
     const sourceMap = new MockSourceMap(objectToUriMap);
     const processor = factory(sourceMap);
 
-    const result = processor.processExpression(node);
+    const result = processor.visit(node);
 
     return { node: result, from: fromFactory(objectToUriMap) };
 }
