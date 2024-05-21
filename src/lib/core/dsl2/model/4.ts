@@ -1,4 +1,4 @@
-import type { Modify } from "$lib/core/utils/typeUtils"
+import type { Modify } from "$lib/core/utils/typeUtils";
 import type * as Previous from "./3";
 
 export type StringLiteral = Previous.StringLiteral;

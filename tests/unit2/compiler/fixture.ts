@@ -57,4 +57,18 @@ export function processStatement<T1 extends object, T2>(node: T1, processor: (s:
     }
 }
 
+export function processStatements<T1 extends object, T2>(nodes: T1[], processor: (s: T1[], sm: SourceMap) => T2) {
+    let commonMap: any = {};
+    for (const [i, node] of nodes.entries()) {
+        commonMap = { ...commonMap, ...flattenObject(node, `nodes[${i}]`) };
+    }
+
+    const objectToUriMap = invertMap(commonMap);
+    const sourceMap = new MockSourceMap(objectToUriMap);
+
+    const results = processor(nodes, sourceMap);
+
+    return { nodes: results, from: fromFactory(objectToUriMap) };
+}
+
 export { getExcepion, valuesOf, decoratorsOf as originsOf } from "../fixture";

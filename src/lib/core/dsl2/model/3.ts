@@ -1,4 +1,4 @@
-import type { Modify } from "$lib/core/utils/typeUtils"
+import type { Modify } from "$lib/core/utils/typeUtils";
 import type * as Previous from "./2";
 
 export type Symbol = Previous.Symbol;

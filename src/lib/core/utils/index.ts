@@ -27,7 +27,7 @@ export function toObject(value: any) {
  *
  * @example { a: { b: { c: 123 } } } -> { ["a"]: { b: { c: 123 } }, ["a.b"]: { c: 123 }, ["a.b.c"]: 123 }
  */
-export function flattenObject<T extends object>(obj: T): Record<string, any> {
+export function flattenObject<T extends object>(obj: T, rootName: string = "root"): Record<string, any> {
     const uriToObjectMap: Record<string, any> = {};
 
     function fillObjectMap(obj: any, uri: string) {
@@ -40,7 +40,7 @@ export function flattenObject<T extends object>(obj: T): Record<string, any> {
         uriToObjectMap[uri] = obj;
     }
 
-    fillObjectMap(obj, "root");
+    fillObjectMap(obj, rootName);
 
     return uriToObjectMap;
 }

@@ -82,3 +82,15 @@ export class StatementVisitor extends BaseVisitor {
         return (this as any)[`on${statement.type}`]?.(statement) ?? statement;
     }
 }
+
+export class GeneratingStatementVisitor extends StatementVisitor {
+    visitAll(statements: Parser.Statement[]): Parser.Statement[] {
+        function* generate(self: any) {
+            for (const statement of statements) {
+                yield* self.visit(statement);
+            }
+        }
+
+        return [...generate(this)];
+    }
+}

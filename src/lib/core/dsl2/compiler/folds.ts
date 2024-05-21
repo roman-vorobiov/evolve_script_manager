@@ -2,7 +2,7 @@ import { settingType, prefixes } from "$lib/core/domain/settings";
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { assume } from "$lib/core/utils/typeUtils";
 import { ParseError } from "../model";
-import { ExpressionVisitor, StatementVisitor } from "./utils";
+import { ExpressionVisitor, GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/2";
@@ -133,22 +133,12 @@ export class FoldResolver extends ExpressionVisitor {
     }
 }
 
-class Impl extends StatementVisitor {
+class Impl extends GeneratingStatementVisitor {
     private visitor: FoldResolver;
 
     constructor(sourceMap: SourceMap) {
         super(sourceMap);
         this.visitor = new FoldResolver(sourceMap);
-    }
-
-    visitAll(statements: Before.Statement[]): After.Statement[] {
-        function* generate(self: any) {
-            for (const statement of statements) {
-                yield* self.visit(statement);
-            }
-        }
-
-        return [...generate(this)];
     }
 
     *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
