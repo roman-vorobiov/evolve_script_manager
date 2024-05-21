@@ -5,7 +5,7 @@ import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/4";
 
-const resolvePrefixes = (node: Parser.Statement) => processStatement(node, resolvePrefixesImpl);
+const resolvePrefixes = (node: Parser.Statement) => processStatement(node, resolvePrefixesImpl)!;
 
 describe("Compiler", () => {
     describe("Prefixes", () => {

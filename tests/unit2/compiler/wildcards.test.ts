@@ -5,7 +5,7 @@ import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/1";
 
-const resolveWildcards = (node: Parser.Statement) => processStatement(node, resolveWildcardsImpl);
+const resolveWildcards = (node: Parser.Statement) => processStatement(node, resolveWildcardsImpl)!;
 
 describe("Compiler", () => {
     describe("Wildcards", () => {

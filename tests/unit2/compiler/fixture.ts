@@ -47,13 +47,14 @@ export function processExpression(node: Parser.Expression, factory: (sm: SourceM
     return { node: result, from: fromFactory(objectToUriMap) };
 }
 
-export function processStatement<T1 extends object, T2 extends object>(node: T1, processor: (s: T1[], sm: SourceMap) => T2[]) {
+export function processStatement<T1 extends object, T2>(node: T1, processor: (s: T1[], sm: SourceMap) => T2) {
     const objectToUriMap = invertMap(flattenObject(node));
     const sourceMap = new MockSourceMap(objectToUriMap);
 
     const results = processor([node], sourceMap);
-
-    return { nodes: results, from: fromFactory(objectToUriMap) };
+    if (results !== undefined) {
+        return { nodes: results, from: fromFactory(objectToUriMap) };
+    }
 }
 
 export { getExcepion, valuesOf, decoratorsOf as originsOf } from "../fixture";

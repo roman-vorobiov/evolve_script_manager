@@ -10,7 +10,7 @@ const processExpression = (node: Parser.Expression) => {
 }
 
 const resolveFolds = (node: Parser.Statement) => {
-    return processStatement(node, resolveFoldsImpl);
+    return processStatement(node, resolveFoldsImpl)!;
 }
 
 describe("Compiler", () => {

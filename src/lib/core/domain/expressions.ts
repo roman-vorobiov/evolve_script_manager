@@ -29,7 +29,7 @@ function queueAlias(value: string): string {
     return enums.queueTypes[value as keyof typeof enums.queueTypes] ?? value;
 }
 
-type ExpressionType = {
+export type ExpressionType = {
     type: "string" | "number" | "boolean" | null,
     valueDescription: string,
     allowedValues: string[] | null,
@@ -114,4 +114,14 @@ export const otherExpressions: Record<string, OtherExpressionType> = {
     BrokenCars:       { type: "number", aliasFor: "bcar" },
     ActiveChallenges: { type: "number", aliasFor: "alevel" },
     TechKnowledge:    { type: "number", aliasFor: "tknow" },
+};
+
+export const otherExpressionsAliases = {
+    rname:   "RaceName",
+    tpfleet: "FleetSize",
+    mrelay:  "MassRelayCharge",
+    satcost: "SatelliteCost",
+    bcar:    "BrokenCars",
+    alevel:  "ActiveChallenges",
+    tknow:   "TechKnowledge",
 };

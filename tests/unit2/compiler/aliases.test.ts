@@ -5,7 +5,7 @@ import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/5";
 
-const resolveAliases = (node: Parser.Statement) => processStatement(node, resolveAliasesImpl);
+const resolveAliases = (node: Parser.Statement) => processStatement(node, resolveAliasesImpl)!;
 
 describe("Compiler", () => {
     describe("Aliases", () => {
