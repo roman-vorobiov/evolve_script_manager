@@ -2,10 +2,6 @@ import type { Modify } from "$lib/core/utils/typeUtils";
 import type { SourceMap } from "../parser/source";
 import type { Initial as Parser } from "../model/index"
 
-function differentLists<BeforeT, AfterT extends BeforeT>(l: AfterT[], r: BeforeT[]): boolean {
-    return l.some((value, i) => value !== r[i]);
-}
-
 abstract class BaseVisitor {
     constructor(protected sourceMap: SourceMap) {}
 
@@ -16,6 +12,10 @@ abstract class BaseVisitor {
 
     protected derived<T1 extends object, T2 extends object>(original: T1, overrides: T2): Modify<T1, T2> {
         return this.deriveLocation(original, { ...original, ...overrides });
+    }
+
+    protected differentLists<BeforeT, AfterT extends BeforeT>(l: AfterT[], r: BeforeT[]): boolean {
+        return l.some((value, i) => value !== r[i]);
     }
 }
 
@@ -36,7 +36,7 @@ export abstract class ExpressionVisitor extends BaseVisitor {
 
     private visitAll(expressions: Parser.Expression[], parent?: Parser.Expression): Parser.Expression[] {
         const values = expressions.map(value => this.visit(value, parent));
-        return differentLists(values, expressions) ? values : expressions;
+        return this.differentLists(values, expressions) ? values : expressions;
     }
 
     protected visitExpression(expression: Parser.CompoundExpression, parent?: Parser.Expression): Parser.Expression {
@@ -73,7 +73,7 @@ export abstract class ExpressionVisitor extends BaseVisitor {
     }
 }
 
-export class StatementVisitor extends BaseVisitor {
+export abstract class StatementVisitor extends BaseVisitor {
     visitAll(statements: Parser.Statement[]): Parser.Statement[] {
         return statements.map(statement => this.visit(statement));
     }
@@ -83,7 +83,7 @@ export class StatementVisitor extends BaseVisitor {
     }
 }
 
-export class GeneratingStatementVisitor extends StatementVisitor {
+export abstract class GeneratingStatementVisitor extends StatementVisitor {
     visitAll(statements: Parser.Statement[]): Parser.Statement[] {
         function* generate(self: any) {
             for (const statement of statements) {
