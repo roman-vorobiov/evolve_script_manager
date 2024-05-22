@@ -14,6 +14,8 @@ function resolveErrors(errors: CompileError[], sourceMap: SourceMap): ParseError
     return errors.map(error => resolveError(error, sourceMap));
 }
 
+export type { ParseError } from "./model";
+
 export type CompileResult = {
     config: Domain.Config | null,
     errors: ParseError[],

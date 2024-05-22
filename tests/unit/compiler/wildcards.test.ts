@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl2/compiler/wildcards";
-import { CompileError } from "$lib/core/dsl2/model";
+import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl/compiler/wildcards";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/1";
+import type * as Parser from "$lib/core/dsl/model/1";
 
 const resolveWildcards = (node: Parser.Statement) => processStatement(node, resolveWildcardsImpl);
 

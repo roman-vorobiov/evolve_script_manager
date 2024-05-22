@@ -42,19 +42,26 @@
 
     $: {
         if (editor) {
-            monaco.editor.setModelMarkers(editor.getModel()!, "owner", errors.map(makeMarker));
+            monaco.editor.setModelMarkers(editor.getModel()!, "owner", [...makeMarkers(errors)]);
         }
     }
 
-    function makeMarker(e: ParseError) {
-        return {
-            startLineNumber: e.location.start.line,
-            startColumn: e.location.start.column,
-            endLineNumber: e.location.stop.line,
-            endColumn: e.location.stop.column,
-            message: e.message,
-            severity: monaco.MarkerSeverity.Error
-        };
+    function* makeMarkers(errors: ParseError[]): IterableIterator<Monaco.editor.IMarkerData> {
+        for (const e of errors) {
+            if (e.location === undefined) {
+                console.error(`Unknown location: ${e.message}`);
+            }
+            else {
+                yield {
+                    startLineNumber: e.location.start.line,
+                    startColumn: e.location.start.column,
+                    endLineNumber: e.location.stop.line,
+                    endColumn: e.location.stop.column,
+                    message: e.message,
+                    severity: monaco.MarkerSeverity.Error
+                }
+            }
+        }
     }
 
     function readCurrentValue() {

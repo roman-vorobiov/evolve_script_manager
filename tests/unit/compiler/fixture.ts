@@ -1,8 +1,8 @@
-import { SourceMap } from "$lib/core/dsl2/parser/source";
-import { ExpressionVisitor } from "$lib/core/dsl2/compiler/utils";
+import { SourceMap } from "$lib/core/dsl/parser/source";
+import { ExpressionVisitor } from "$lib/core/dsl/compiler/utils";
 import { flattenObject, invertMap } from "$lib/core/utils"
 
-import type { Initial as Parser } from "$lib/core/dsl2/model";
+import type { Initial as Parser } from "$lib/core/dsl/model";
 
 class MockSourceMap extends SourceMap {
     private originsMap: WeakMap<WeakKey, any>;

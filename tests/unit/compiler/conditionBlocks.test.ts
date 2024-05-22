@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { processStatements, valuesOf, originsOf } from "./fixture";
-import { applyConditionBlocks as applyConditionBlocksImpl } from "$lib/core/dsl2/compiler/conditionBlocks";
+import { applyConditionBlocks as applyConditionBlocksImpl } from "$lib/core/dsl/compiler/conditionBlocks";
 
-import type * as Parser from "$lib/core/dsl2/model/6";
+import type * as Parser from "$lib/core/dsl/model/6";
 
 const applyConditionBlocks = (nodes: Parser.Statement[]) => processStatements(nodes, applyConditionBlocksImpl);
 

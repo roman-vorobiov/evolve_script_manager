@@ -34,6 +34,6 @@ export default defineConfig({
         }
     },
     test: {
-        include: ["tests/{unit2,integration}/**/*.{test,spec}.{js,ts}"]
+        include: ["tests/{unit,integration}/**/*.{test,spec}.{js,ts}"]
     }
 });

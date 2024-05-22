@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, getExcepion } from "./fixture";
-import { validateTypes as validateTypesImpl, Validator } from "$lib/core/dsl2/compiler/validation";
-import { CompileError } from "$lib/core/dsl2/model";
+import { validateTypes as validateTypesImpl, Validator } from "$lib/core/dsl/compiler/validation";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/6";
+import type * as Parser from "$lib/core/dsl/model/6";
 
 const processExpression = (node: Parser.Expression) => new Validator().visit(node);
 

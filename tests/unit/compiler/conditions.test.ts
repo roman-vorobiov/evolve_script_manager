@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf } from "./fixture";
-import { flattenExpressions as flattenExpressionsImpl, toEvalString } from "$lib/core/dsl2/compiler/conditions";
+import { flattenExpressions as flattenExpressionsImpl, toEvalString } from "$lib/core/dsl/compiler/conditions";
 
-import type * as Parser from "$lib/core/dsl2/model/7";
+import type * as Parser from "$lib/core/dsl/model/7";
 
 const flattenExpressions = (node: Parser.Statement) => processStatement(node, flattenExpressionsImpl);
 

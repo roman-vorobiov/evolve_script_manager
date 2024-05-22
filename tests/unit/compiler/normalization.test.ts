@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { processStatements, valuesOf, originsOf } from "./fixture";
-import { normalizeStatements as normalizeStatementsImpl } from "$lib/core/dsl2/compiler/normalize";
+import { normalizeStatements as normalizeStatementsImpl } from "$lib/core/dsl/compiler/normalize";
 
-import type * as Parser from "$lib/core/dsl2/model/9";
+import type * as Parser from "$lib/core/dsl/model/9";
 
 const normalizeStatements = (nodes: Parser.Statement[]) => processStatements(nodes, normalizeStatementsImpl);
 

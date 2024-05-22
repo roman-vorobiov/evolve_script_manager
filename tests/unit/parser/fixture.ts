@@ -1,6 +1,6 @@
-import * as Parser from "$lib/core/dsl2/parser/parser";
+import * as Parser from "$lib/core/dsl/parser/parser";
 
-import type { Position, SourceLocation } from "$lib/core/dsl2/parser/source";
+import type { Position, SourceLocation } from "$lib/core/dsl/parser/source";
 
 function parse(source: string, impl: (source: string) => Parser.ParseResult) {
     const MAX_POSITION_LITERALS = 20;

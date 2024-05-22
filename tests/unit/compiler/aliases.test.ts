@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { resolveAliases as resolveAliasesImpl } from "$lib/core/dsl2/compiler/aliases";
-import { CompileError } from "$lib/core/dsl2/model";
+import { resolveAliases as resolveAliasesImpl } from "$lib/core/dsl/compiler/aliases";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/5";
+import type * as Parser from "$lib/core/dsl/model/5";
 
 const resolveAliases = (node: Parser.Statement) => processStatement(node, resolveAliasesImpl);
 

@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { resolvePlaceholders as resolvePlaceholdersImpl } from "$lib/core/dsl2/compiler/placeholders";
-import { CompileError } from "$lib/core/dsl2/model";
+import { resolvePlaceholders as resolvePlaceholdersImpl } from "$lib/core/dsl/compiler/placeholders";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/3";
+import type * as Parser from "$lib/core/dsl/model/3";
 
 const resolvePlaceholders = (node: Parser.Statement) => processStatement(node, resolvePlaceholdersImpl);
 

@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { resolvePrefixes as resolvePrefixesImpl } from "$lib/core/dsl2/compiler/prefixes";
-import { CompileError } from "$lib/core/dsl2/model";
+import { resolvePrefixes as resolvePrefixesImpl } from "$lib/core/dsl/compiler/prefixes";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/4";
+import type * as Parser from "$lib/core/dsl/model/4";
 
 const resolvePrefixes = (node: Parser.Statement) => processStatement(node, resolvePrefixesImpl);
 

@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processExpression as processExpressionImpl, processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl2/compiler/folds";
-import { CompileError } from "$lib/core/dsl2/model";
+import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl/compiler/folds";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/2";
+import type * as Parser from "$lib/core/dsl/model/2";
 
 const processExpression = (node: Parser.Expression) => {
     return processExpressionImpl(node, (sourceMap) => new FoldResolver(sourceMap));

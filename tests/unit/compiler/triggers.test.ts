@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
-import { createTriggerChains as createTriggerChainsImpl } from "$lib/core/dsl2/compiler/triggers";
-import { CompileError } from "$lib/core/dsl2/model";
+import { createTriggerChains as createTriggerChainsImpl } from "$lib/core/dsl/compiler/triggers";
+import { CompileError } from "$lib/core/dsl/model";
 
-import type * as Parser from "$lib/core/dsl2/model/8";
+import type * as Parser from "$lib/core/dsl/model/8";
 
 const createTriggerChains = (node: Parser.Statement) => processStatement(node, createTriggerChainsImpl);
 

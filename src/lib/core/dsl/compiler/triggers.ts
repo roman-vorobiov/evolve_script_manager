@@ -1,6 +1,6 @@
 import { triggerConditions, triggerActions } from "$lib/core/domain/triggers";
+import { CompileError } from "../model";
 import { GeneratingStatementVisitor } from "./utils";
-import { CompileError } from "$lib/core/dsl2/model";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/8";
