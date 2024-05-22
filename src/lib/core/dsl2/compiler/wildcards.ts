@@ -20,7 +20,7 @@ export class WildcardResolver extends ExpressionVisitor {
     }
 }
 
-class Impl extends StatementVisitor {
+class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     private visitor: WildcardResolver;
 
     constructor(sourceMap: SourceMap) {
@@ -50,5 +50,5 @@ class Impl extends StatementVisitor {
 export function resolveWildcards(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements) as After.Statement[];
+    return impl.visitAll(statements);
 }

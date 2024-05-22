@@ -42,7 +42,7 @@ function convertBinaryExpression(expression: Before.Expression) {
     }
 }
 
-class Impl extends StatementVisitor {
+class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     private triggerIdx = 0;
 
     onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | After.Override {
@@ -100,5 +100,5 @@ class Impl extends StatementVisitor {
 export function normalizeStatements(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements as any) as any;
+    return impl.visitAll(statements);
 }

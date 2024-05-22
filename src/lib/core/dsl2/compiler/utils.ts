@@ -1,9 +1,15 @@
+import { assert } from "$lib/core/utils/typeUtils";
+
 import type { Modify } from "$lib/core/utils/typeUtils";
 import type { SourceMap } from "../parser/source";
 import type { Initial as Parser } from "../model/index";
 
 export function isConstant(expression: Parser.Expression): expression is Parser.Constant {
     return expression.type === "Boolean" || expression.type === "Number" || expression.type === "String";
+}
+
+type ModelEntity = {
+    type: string
 }
 
 abstract class BaseVisitor {
@@ -77,18 +83,18 @@ export abstract class ExpressionVisitor extends BaseVisitor {
     }
 }
 
-export abstract class StatementVisitor extends BaseVisitor {
-    visitAll(statements: Parser.Statement[]): Parser.Statement[] {
+export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT extends ModelEntity = BeforeT> extends BaseVisitor {
+    visitAll(statements: BeforeT[]): AfterT[] {
         return statements.map(statement => this.visit(statement));
     }
 
-    visit(statement: Parser.Statement): Parser.Statement {
+    visit(statement: BeforeT): AfterT {
         return (this as any)[`on${statement.type}`]?.(statement) ?? statement;
     }
 }
 
-export abstract class GeneratingStatementVisitor extends BaseVisitor {
-    visitAll(statements: Parser.Statement[]): Parser.Statement[] {
+export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, AfterT extends ModelEntity = BeforeT> extends BaseVisitor {
+    visitAll(statements: BeforeT[]): AfterT[] {
         function* generate(self: any) {
             for (const statement of statements) {
                 yield* self.visit(statement);
@@ -98,12 +104,13 @@ export abstract class GeneratingStatementVisitor extends BaseVisitor {
         return [...generate(this)];
     }
 
-    *visit(statement: Parser.Statement): IterableIterator<Parser.Statement> {
+    *visit(statement: BeforeT): IterableIterator<AfterT> {
         const iterator = (this as any)[`on${statement.type}`]?.(statement);
         if (iterator !== undefined) {
             yield* iterator;
         }
         else {
+            assert<AfterT>(statement);
             yield statement;
         }
     }

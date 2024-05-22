@@ -37,7 +37,7 @@ export class PlaceholderResolver extends ExpressionVisitor {
     }
 }
 
-class Impl extends StatementVisitor {
+class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     constructor(sourceMap: SourceMap) {
         super(sourceMap);
     }
@@ -68,5 +68,5 @@ class Impl extends StatementVisitor {
 export function resolvePlaceholders(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements) as After.Statement[];
+    return impl.visitAll(statements);
 }

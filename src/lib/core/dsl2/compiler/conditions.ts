@@ -43,7 +43,7 @@ export function toEvalString(expression: Before.Expression, wrap: boolean = fals
     }
 }
 
-export class Impl extends StatementVisitor {
+export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | undefined {
         const conditionStrategy = isConstant(statement.value) ? "toFlat" : "toSimple";
         const condition = statement.condition && this[conditionStrategy](statement.condition);
@@ -82,5 +82,5 @@ export class Impl extends StatementVisitor {
 export function flattenExpressions(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements) as After.Statement[];
+    return impl.visitAll(statements);
 }

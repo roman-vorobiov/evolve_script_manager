@@ -5,7 +5,7 @@ import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/8";
 
-const createTriggerChains = (node: Parser.Statement) => processStatement(node, createTriggerChainsImpl)!;
+const createTriggerChains = (node: Parser.Statement) => processStatement(node, createTriggerChainsImpl);
 
 describe("Compiler", () => {
     describe("Triggers", () => {

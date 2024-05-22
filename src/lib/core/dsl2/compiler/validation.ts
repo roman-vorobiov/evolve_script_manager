@@ -1,7 +1,9 @@
 import { expressions, otherExpressions, otherExpressionsAliases } from "$lib/core/domain/expressions";
 import { settingType } from "$lib/core/domain/settings";
 import { ParseError } from "../model";
+import { StatementVisitor } from "./utils";
 
+import type { SourceMap } from "../parser/source";
 import type * as Parser from "../model/6";
 
 function getSettingType(setting: Parser.Identifier): string {
@@ -86,12 +88,8 @@ export class Validator {
     }
 }
 
-class Impl {
+class Impl extends StatementVisitor<Parser.Statement> {
     private visitor = new Validator();
-
-    visit(statement: Parser.Statement) {
-        (this as any)[`on${statement.type}`]?.(statement);
-    }
 
     onSettingAssignment(statement: Parser.SettingAssignment) {
         const valueType = this.visitor.visit(statement.value);
@@ -111,12 +109,8 @@ class Impl {
     }
 };
 
-export function validateTypes(statements: Parser.Statement[]): Parser.Statement[] {
-    const impl = new Impl();
+export function validateTypes(statements: Parser.Statement[], sourceMap: SourceMap): Parser.Statement[] {
+    const impl = new Impl(sourceMap);
 
-    for (const statement of statements) {
-        impl.visit(statement);
-    }
-
-    return statements;
+    return impl.visitAll(statements);
 }

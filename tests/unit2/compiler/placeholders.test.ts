@@ -5,7 +5,7 @@ import { ParseError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/3";
 
-const resolvePlaceholders = (node: Parser.Statement) => processStatement(node, resolvePlaceholdersImpl)!;
+const resolvePlaceholders = (node: Parser.Statement) => processStatement(node, resolvePlaceholdersImpl);
 
 describe("Compiler", () => {
     describe("Placeholders", () => {

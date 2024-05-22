@@ -4,7 +4,7 @@ import { applyConditionBlocks as applyConditionBlocksImpl } from "$lib/core/dsl2
 
 import type * as Parser from "$lib/core/dsl2/model/6";
 
-const applyConditionBlocks = (nodes: Parser.Statement[]) => processStatements(nodes, applyConditionBlocksImpl)!;
+const applyConditionBlocks = (nodes: Parser.Statement[]) => processStatements(nodes, applyConditionBlocksImpl);
 
 describe("Compiler", () => {
     describe("Condition blocks", () => {

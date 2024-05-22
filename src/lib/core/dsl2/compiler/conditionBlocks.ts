@@ -4,7 +4,7 @@ import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/6";
 import type * as After from "../model/7";
 
-class Impl extends GeneratingStatementVisitor {
+class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
     private stack: After.Expression[] = [];
 
     *onConditionPush(statement: Before.ConditionPush): IterableIterator<After.Statement> {
@@ -48,5 +48,5 @@ class Impl extends GeneratingStatementVisitor {
 export function applyConditionBlocks(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements) as After.Statement[];
+    return impl.visitAll(statements);
 }

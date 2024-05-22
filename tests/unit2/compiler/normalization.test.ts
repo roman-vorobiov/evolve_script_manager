@@ -4,7 +4,7 @@ import { normalizeStatements as normalizeStatementsImpl } from "$lib/core/dsl2/c
 
 import type * as Parser from "$lib/core/dsl2/model/9";
 
-const normalizeStatements = (nodes: Parser.Statement[]) => processStatements(nodes, normalizeStatementsImpl)!;
+const normalizeStatements = (nodes: Parser.Statement[]) => processStatements(nodes, normalizeStatementsImpl);
 
 describe("Compiler", () => {
     describe("Normalization", () => {

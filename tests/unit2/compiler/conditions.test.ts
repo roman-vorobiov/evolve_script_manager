@@ -4,7 +4,7 @@ import { flattenExpressions as flattenExpressionsImpl, toEvalString } from "$lib
 
 import type * as Parser from "$lib/core/dsl2/model/7";
 
-const flattenExpressions = (node: Parser.Statement) => processStatement(node, flattenExpressionsImpl)!;
+const flattenExpressions = (node: Parser.Statement) => processStatement(node, flattenExpressionsImpl);
 
 describe("Compiler", () => {
     describe("Conditions", () => {

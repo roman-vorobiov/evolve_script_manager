@@ -12,7 +12,7 @@ const chainCondition = {
     count: { type: "Number", value: 0 }
 };
 
-class Impl extends GeneratingStatementVisitor {
+class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
         if (statement.actions.length === 0) {
             return;
@@ -116,5 +116,5 @@ class Impl extends GeneratingStatementVisitor {
 export function createTriggerChains(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements as any) as After.Statement[];
+    return impl.visitAll(statements);
 }

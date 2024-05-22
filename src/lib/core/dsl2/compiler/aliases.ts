@@ -39,7 +39,7 @@ export class AliasResolver extends ExpressionVisitor {
     }
 }
 
-class Impl extends StatementVisitor {
+class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     private visitor: AliasResolver;
 
     constructor(sourceMap: SourceMap) {
@@ -68,5 +68,5 @@ class Impl extends StatementVisitor {
 export function resolveAliases(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
     const impl = new Impl(sourceMap);
 
-    return impl.visitAll(statements) as After.Statement[];
+    return impl.visitAll(statements);
 }
