@@ -1,6 +1,7 @@
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import loader from "@monaco-editor/loader";
-import { initializeSyntax } from "$lib/core/dsl/syntax/monaco";
+
+import { initializeSyntax } from "./syntax";
 
 let instance: typeof Monaco;
 
