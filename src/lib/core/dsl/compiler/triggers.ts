@@ -43,9 +43,9 @@ function validateTriggerId(
     types: typeof triggerConditions | typeof triggerActions,
     id: SourceTracked<String>
 ): string {
-    const candidates = types[type as keyof typeof types] as string[];
+    const info: any = types[type as keyof typeof types];
 
-    if (candidates.indexOf(id.valueOf()) === -1) {
+    if (info.allowedValues.indexOf(id.valueOf()) === -1) {
         if (type === "Built" || type === "Build") {
             throw new ParseError(`Unknown building '${id}'`, id.location);
         }

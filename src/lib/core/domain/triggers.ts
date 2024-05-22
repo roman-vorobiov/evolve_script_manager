@@ -7,13 +7,13 @@ const buildingIds = Object.keys(buildings);
 const projectIds = Object.keys(projects);
 
 export const triggerConditions = {
-    Unlocked: techIds,
-    Researched: techIds,
-    Built: buildingIds
+    Unlocked:   { type: "tech",     allowedValues: techIds },
+    Researched: { type: "tech",     allowedValues: techIds },
+    Built:      { type: "building", allowedValues: buildingIds }
 }
 
 export const triggerActions = {
-    Build: buildingIds,
-    Research: techIds,
-    Arpa: projectIds
+    Build:    { type: "building", allowedValues: buildingIds },
+    Research: { type: "tech",     allowedValues: techIds },
+    Arpa:     { type: "project",  allowedValues: projectIds }
 }
