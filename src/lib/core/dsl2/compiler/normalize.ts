@@ -49,6 +49,7 @@ class Impl extends StatementVisitor {
         if (!isConstant(statement.value)) {
             return this.deriveLocation(statement, <After.Override> {
                 type: "Override",
+                setting: statement.setting.value,
                 value: {
                     ...convertSimpleExpression(statement.condition as Before.SimpleExpression, 1),
                     cmp: "A?B",
@@ -60,6 +61,7 @@ class Impl extends StatementVisitor {
         else if (statement.condition !== undefined) {
             return this.deriveLocation(statement, <After.Override> {
                 type: "Override",
+                setting: statement.setting.value,
                 value: {
                     ...convertBinaryExpression(statement.condition),
                     ret: statement.value.value

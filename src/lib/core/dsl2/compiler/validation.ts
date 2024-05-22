@@ -111,10 +111,12 @@ class Impl {
     }
 };
 
-export function validateTypes(statements: Parser.Statement[]) {
+export function validateTypes(statements: Parser.Statement[]): Parser.Statement[] {
     const impl = new Impl();
 
     for (const statement of statements) {
         impl.visit(statement);
     }
+
+    return statements;
 }

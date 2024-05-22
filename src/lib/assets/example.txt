@@ -1,0 +1,403 @@
+##### UI #####
+
+activeTargetsUI = ON
+
+displayTotalDaysTypeInTopBar = ON
+
+Log.arpa     = OFF
+Log.attack   = OFF
+Log.prestige = ON
+Log.spying   = OFF
+
+##### Capabilities ####
+
+autoFight         = ON
+autoHell          = ON
+autoTax           = ON
+autoGovernment    = ON
+autoCraft         = ON
+autoTrigger       = ON
+autoBuild         = ON
+autoARPA          = ON
+autoPower         = ON
+autoStorage       = ON
+autoMarket        = ON
+autoGalaxyMarket  = ON
+autoResearch      = ON
+autoJobs          = ON
+autoCraftsmen     = ON
+autoQuarry        = ON
+autoSmelter       = ON
+autoFactory       = ON
+autoMiningDroid   = ON
+autoGraphenePlant = ON
+autoGenetics      = ON
+autoMinorTrait    = ON
+autoEject         = ON
+
+##### Prestige #####
+
+prestigeType = "ascension"
+prestigeMADWait = OFF
+prestigeBioseedProbes = 0
+
+##### Challenges #####
+
+Challenge.plasmid = ON
+Challenge.crispr  = ON
+Challenge.trade   = ON
+Challenge.craft   = ON
+
+##### Production #####
+
+# Don't craft from demanded resources
+AutoFoundryWeight.Plywood      = 0 if ResourceDemanded.Lumber
+AutoFoundryWeight.Brick        = 0 if ResourceDemanded.Cement
+AutoFoundryWeight.Wrought_Iron = 0 if ResourceDemanded.Iron
+AutoFoundryWeight.Sheet_Metal  = 0 if ResourceDemanded.Aluminium
+AutoFoundryWeight.Mythril      = 0 if ResourceDemanded[Iridium or Alloy]
+AutoFoundryWeight.Aerogel      = 0 if ResourceDemanded[Infernite or Graphene]
+AutoFoundryWeight.Nanoweave    = 0 if ResourceDemanded[Vitreloy or Nano_Tube]
+
+# Stockpile wrought iron for the embassy
+if Challenge.no_craft then
+    AutoFoundryWeight.Wrought_Iron = 10 if BuildingCount.galaxy-embassy == 0
+end
+
+# Prioritize adamantite production
+if ResourceDemanded.Adamantite then
+    AutoDroidWeight[Uranium, Coal, Aluminium] = 0
+end
+
+##### Market #####
+
+# Ensure there is enough fuel
+AutoTradePriority[Coal, Oil, Helium_3] = 100 if ResourceRatio[...] < 0.02
+
+# Sometimes the script thinks a resource is in excess even though it's being used as a fuel
+# Make sure the fuel is still being imported even in these cases
+tradeRouteSellExcess = OFF
+
+AutoBuy[*] = ON
+
+# Don't sell resources that can be used for crafting
+AutoSell[*] = ON
+AutoSell[Lumber, Cement, Iron, Aluminium] = OFF
+
+# Only trade most profitable resources
+AutoTradeSell[*] = OFF
+AutoTradeSell[Steel, Aluminium] = ON
+
+##### Civics #####
+
+# Government
+govInterim = "democracy"
+govFinal   = "technocracy"
+govSpace   = "federation"
+
+# Governor
+govGovernor = "entrepreneur" if ResetType.mad
+govGovernor = "spiritual"    if ResetType.bioseed
+govGovernor = "sports"       if ResetType.ascension
+
+# Morale/Tax
+generalMinimumTaxRate = 0
+
+# Rush unification
+foreignUnification    = ON
+foreignPolicyInferior = "Purchase"
+foreignPolicySuperior = "Purchase"
+
+# unless playing balorg
+if TraitLevel.terrifying > 0 then
+    foreignUnification    = OFF
+    foreignPolicySuperior = "Sabotage"
+end
+
+# Optimize advantage estimation
+foreignMinAdvantage  = 48
+foreignMaxAdvantage  = 52
+foreignProtect       = "never"
+foreignPowerRequired = 80
+
+# Mercs
+foreignHireMercMoneyStoragePercent = 50
+foreignHireMercCostLowerThanIncome = 5
+foreignHireMercDeadSoldiers        = 4
+
+##### Traits #####
+
+#Minor
+AutoTrait[*] = OFF
+
+AutoTrait[content] = ON if ResourceQuantity.Morale < ResourceStorage.Morale
+
+AutoTrait[gambler, persuasive, fibroblast] = ON if TraitLevel[...] < 10
+
+AutoTrait[tactical, mastery, ambidextrous] = ON
+AutoTraitWeight[tactical, mastery, ambidextrous] = 2
+
+##### Fleet #####
+
+FleetPriority.gxy_stargate = -1.0
+
+if ResourceDemanded.Vitreloy then
+    FleetPriority.gxy_chthonian = -0.99
+    FleetPriority.gxy_alien1 = -0.98
+end
+
+if not ResourceSatisfied.Knowledge then
+    FleetPriority.gxy_alien2 = -0.89
+    FleetPriority.gxy_gorddon = -0.88
+end
+
+if ResourceDemanded[Bolognium, Adamantite or Iridium] then
+    FleetPriority.gxy_alien2 = -0.79
+    FleetPriority.gxy_gateway = -0.78
+end
+
+if ResourceDemanded[Orichalcum or Neutronium] then
+    FleetPriority.gxy_chthonian = -0.69
+end
+
+##### ARPA #####
+
+ProjectMax.railway        = 10
+ProjectMax.stock_exchange = 10 if ResetType.bioseed
+ProjectMax.railway        = 1  if ResetType.bioseed
+
+AutoArpa.monument = OFF
+AutoArpa.monument = ON if ResourceQuantity.Morale >= ResourceStorage.Morale
+AutoArpa.monument = ON if ProjectCount.monument < 2
+AutoArpa.monument = ON if Challenge.banana and ProjectCount.monument < 50
+
+##### Buildings #####
+
+AutoPowerSmart.space-iridium_mine = ON
+AutoPowerSmart.space-helium_mine  = ON
+
+# Prioritize production of demanded resources
+AutoBuildWeight.space-outpost             = 200 if not ResourceSatisfied.Neutronium
+AutoBuildWeight.interstellar-mining_droid = 200 if not ResourceSatisfied.Adamantite
+
+AutoBuildWeight.space-living_quarters = 200
+AutoBuildWeight.space-ziggurat        = 150
+AutoBuildWeight.space-red_mine        = 102
+AutoBuildWeight.space-fabrication     = 101
+AutoBuildWeight.portal-turret         = 1000 if BuildingCount.portal-turret < 10
+
+# Make space for living quarters
+if BuildingAffordable.space-living_quarters and BuildingCount.space-living_quarters < 10 then
+    AutoBuild.space-red_mine    = OFF
+    AutoBuild.space-fabrication = OFF
+    AutoBuild.space-biodome     = OFF
+end
+
+# No need for more knowledge multiplies the weight by 0.01, so counteract that
+if ResearchComplete.tech-deify then
+    AutoBuildWeight.space-exotic_lab = 10000 if ResourceSatisfied.Knowledge
+end
+
+# Power generation priority
+if ResourceIncome.Power < 5 then
+    AutoBuildWeight.city-fission_power  = 200
+    AutoBuildWeight.space-e_reactor     = 200
+    AutoBuildWeight.interstellar-fusion = 200
+end
+
+# Building limits
+
+AutoBuild.city-mill                  = OFF
+AutoBuild.city-mill                  = ON if BuildingCount[...] < 20
+AutoBuild.city-windmill              = OFF
+AutoBuild.city-windmill              = ON if BuildingCount[...] < 20
+AutoBuild.space-swarm_plant          = OFF
+AutoBuild.space-swarm_control        = OFF
+AutoBuild.space-swarm_satellite      = OFF
+AutoBuild.space-gps                  = OFF
+AutoBuild.space-iron_ship            = OFF
+AutoBuild.space-oil_extractor        = OFF
+AutoBuild.interstellar-starport      = OFF
+AutoBuild.interstellar-starport      = ON if ResourceQuantity.Alpha_Support >= ResourceStorage.Alpha_Support
+AutoBuild.interstellar-exchange      = OFF
+AutoBuild.interstellar-neutron_miner = OFF
+AutoBuild.portal-attractor           = OFF
+AutoBuild.portal-attractor           = ON if BuildingCount.portal-turret >= 10
+AutoBuild.space-swarm_plant          = OFF
+
+BuildingMax.city-tourist_center      = 10
+BuildingMax.city-casino              = 10
+BuildingMax.city-library             = 50
+BuildingMax.city-hospital            = 10
+BuildingMax.city-storage_yard        = 12
+BuildingMax.city-warehouse           = 12
+BuildingMax.city-silo                = 10
+BuildingMax.city-shed                = 20
+BuildingMax.city-lumber_yard         = 20
+BuildingMax.city-sawmill             = 20
+BuildingMax.city-rock_quarry         = 20
+BuildingMax.city-cement_plant        = 20
+BuildingMax.city-mine                = 20
+BuildingMax.city-coal_mine           = 20
+BuildingMax.city-oil_depot           = 10
+BuildingMax.city-oil_well            = 10
+BuildingMax.city-trade               = 20
+BuildingMax.city-wharf               = 10
+BuildingMax.city-mass_driver         = -1 if ResearchComplete.tech-orichalcum_driver
+BuildingMax.city-mass_driver         = 0  if BuildingUnlocked.space-elerium_contain
+BuildingMax.space-spc_casino         = 10
+BuildingMax.interstellar-habitat     = BuildingCount.interstellar-fusion
+BuildingMax.interstellar-warehouse   = 10
+BuildingMax.interstellar-cargo_yard  = 5
+BuildingMax.interstellar-g_factory   = 10
+BuildingMax.portal-turret            = 10
+BuildingMax.galaxy-scout_ship        = 2
+BuildingMax.galaxy-corvette_ship     = 2
+
+# Todo
+# # Don't overbuild fuel depots
+# if MissionUnaffordable[any of HELIUM_MISSIONS] then
+#     AutoBuild.space-propellant_depot = ON
+#     AutoBuild.space-gas_storage      = ON
+# end
+
+# # Primary function of these is support, but we still want to build them for deuterium storage
+# if MissionUnaffordable[any of DEUTERIUM_MISSIONS] then
+#     AutoBuildWeight.interstellar-xfer_station = 10000 if ResourceSatisfied.Alpha_Support
+#     AutoBuildWeight.interstellar-nexus        = 10000 if ResourceSatisfied.Nebula_Support
+# end
+
+
+if ResetType.mad then
+    AutoBuild.city-hospital  = OFF
+    AutoBuild.city-boot_camp = OFF
+
+    BuildingMax.city-garrison   = 20
+    BuildingMax.city-factory    = 1
+end
+
+if ResetType.bioseed then
+    AutoBuild.city-hospital        = OFF
+    AutoBuild.city-boot_camp       = OFF
+    AutoBuild.space-biodome        = OFF
+    AutoBuild.space-drone          = OFF
+
+    BuildingMax.city-garrison         = 26
+    BuildingMax.space-red_mine        = 1
+    BuildingMax.space-fabrication     = 1
+    BuildingMax.space-space_station   = 2
+    BuildingMax.space-elerium_ship    = 2
+    BuildingMax.space-elerium_contain = 1
+
+    # Keep building biolabs to speed up sequencing
+    if not BuildingUnlocked.space-star_dock then
+        AutoBuild.city-biolab = ON
+        # No need for more knowledge multiplies the weight by 0.01, so counteract that
+        AutoBuildWeight.city-biolab = 10000 if ResourceSatisfied.Knowledge
+    end
+
+    # Don't overbuild knowledge structs
+    if ResearchComplete.tech-quantum_manufacturing then
+        AutoArpa.lhc                = OFF
+        AutoBuild.city-university   = OFF
+        AutoBuild.city-library      = OFF
+        AutoBuild.city-wardenclyffe = OFF
+        AutoBuild.city-biolab       = OFF
+        AutoBuild.space-satellite   = OFF
+        AutoBuild.space-exotic_lab  = OFF
+        AutoBuild.space-observatory = OFF
+    end
+end
+
+if ResetType.whitehole then
+    AutoBuild.interstellar-cruiser     = OFF
+    AutoBuild.interstellar-far_reach   = OFF
+
+    BuildingMax.space-red_mine            = 10
+    BuildingMax.space-fabrication         = 10
+    BuildingMax.interstellar-mass_ejector = 2
+    BuildingMax.portal-turret             = 0 if ResourceQuantity.Soul_Gem >= 10
+end
+
+if ResetType.ascension then
+    BuildingMax.city-storage_yard      = 24
+    BuildingMax.city-warehouse         = 24
+    BuildingMax.space-red_mine         = 20
+    BuildingMax.space-fabrication      = 20
+    BuildingMax.space-biodome          = 10
+    BuildingMax.space-drone            = 10
+    BuildingMax.interstellar-cruiser   = 10
+    BuildingMax.interstellar-far_reach = 20
+
+    # No need for more power multiplies the weight by 0.01, so counteract that
+    if ResourceSatisfied.Power then
+        AutoBuildWeight.interstellar-dyson             = 10000
+        AutoBuildWeight.interstellar-dyson_sphere      = 10000
+        AutoBuildWeight.interstellar-orichalcum_sphere = 10000
+    end
+end
+
+##### Triggers #####
+
+Build city-oil_well      when Researched tech-oil_well
+Build space-moon_base    when Built space-moon_mission
+Build space-iridium_mine when Built space-moon_base
+Build space-helium_mine  when Built space-moon_base
+Build space-spaceport    when Built space-red_mission
+Build space-outpost      when Built space-gas_moon_mission
+
+when Built space-belt_mission do
+    Build space-space_station
+    Build space-iridium_ship
+end
+
+Build interstellar-xfer_station when Built interstellar-proxima_mission
+
+when Built interstellar-nebula_mission do
+    Build interstellar-nexus
+    Build interstellar-harvester
+end
+
+Build space-elerium_ship      when Researched tech-elerium_mining
+Build space-elerium_contain   when Researched tech-elerium_tech
+Build galaxy-telemetry_beacon when Built galaxy-gateway_station
+Build galaxy-scout_ship       when Built galaxy-starbase
+
+# Rush technocracy
+when Unlocked tech-industrialization do
+    Research tech-industrialization
+    Research tech-diplomacy
+    Research tech-republic
+    Research tech-technocracy
+end
+
+# PrioritizeResearch:[
+#     tech-rover,
+#     tech-probes,
+#     tech-starcharts,
+
+#     # Production research
+#     tech-smelting,
+#     tech-steel,
+#     tech-bayer_process,
+#     tech-oil_well,
+#     tech-hunter_process,
+#     tech-cambridge_process,
+#     tech-graphene,
+#     tech-stanene,
+#     tech-aerogel,
+
+#     # Power research
+#     tech-electricity,
+#     tech-oil_power,
+#     tech-fission,
+
+#     # Other useful research
+#     tech-tax_rates,
+#     tech-trade,
+#     tech-apartment,
+# ]
+
+# Todo
+# Don't waste gems
+# IgnoreResearch = [tech-combat_droids, tech-hellfire_furnace]

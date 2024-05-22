@@ -39,6 +39,7 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 type: "Override",
+                setting: "hello",
                 value: {
                     type1: "Boolean",
                     arg1: true,
@@ -70,6 +71,7 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 type: "Override",
+                setting: "hello",
                 value: {
                     type1: "ResourceDemanded",
                     arg1: "Copper",
@@ -112,6 +114,7 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 type: "Override",
+                setting: "hello",
                 value: {
                     type1: "ResourceDemanded",
                     arg1: "Copper",

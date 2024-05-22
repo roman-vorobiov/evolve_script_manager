@@ -9,7 +9,10 @@
         "preview": "vite preview",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-        "test": "vitest"
+        "test": "vitest",
+        "test:unit": "vitest --dir tests/unit2",
+        "test:integration": "vitest --dir tests/integration",
+        "benchmark": "vitest bench"
     },
     "devDependencies": {
         "@monaco-editor/loader": "^1.4.0",

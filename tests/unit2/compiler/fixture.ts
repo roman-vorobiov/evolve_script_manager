@@ -52,9 +52,8 @@ export function processStatement<T1 extends object, T2>(node: T1, processor: (s:
     const sourceMap = new MockSourceMap(objectToUriMap);
 
     const results = processor([node], sourceMap);
-    if (results !== undefined) {
-        return { nodes: results, from: fromFactory(objectToUriMap) };
-    }
+
+    return { nodes: results, from: fromFactory(objectToUriMap) };
 }
 
 export function processStatements<T1 extends object, T2>(nodes: T1[], processor: (s: T1[], sm: SourceMap) => T2) {

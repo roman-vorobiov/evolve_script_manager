@@ -8,6 +8,7 @@ export type SettingAssignment = {
 
 export type Override = {
     type: "Override",
+    setting: string,
     value: Domain.Override
 }
 

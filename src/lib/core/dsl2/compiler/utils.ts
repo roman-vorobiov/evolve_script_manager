@@ -87,7 +87,7 @@ export abstract class StatementVisitor extends BaseVisitor {
     }
 }
 
-export abstract class GeneratingStatementVisitor extends StatementVisitor {
+export abstract class GeneratingStatementVisitor extends BaseVisitor {
     visitAll(statements: Parser.Statement[]): Parser.Statement[] {
         function* generate(self: any) {
             for (const statement of statements) {
@@ -96,5 +96,15 @@ export abstract class GeneratingStatementVisitor extends StatementVisitor {
         }
 
         return [...generate(this)];
+    }
+
+    *visit(statement: Parser.Statement): IterableIterator<Parser.Statement> {
+        const iterator = (this as any)[`on${statement.type}`]?.(statement);
+        if (iterator !== undefined) {
+            yield* iterator;
+        }
+        else {
+            yield statement;
+        }
     }
 }
