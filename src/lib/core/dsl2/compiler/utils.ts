@@ -1,6 +1,10 @@
 import type { Modify } from "$lib/core/utils/typeUtils";
 import type { SourceMap } from "../parser/source";
-import type { Initial as Parser } from "../model/index"
+import type { Initial as Parser } from "../model/index";
+
+export function isConstant(expression: Parser.Expression): expression is Parser.Constant {
+    return expression.type === "Boolean" || expression.type === "Number" || expression.type === "String";
+}
 
 abstract class BaseVisitor {
     constructor(protected sourceMap: SourceMap) {}

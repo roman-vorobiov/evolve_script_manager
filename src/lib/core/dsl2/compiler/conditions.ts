@@ -1,12 +1,8 @@
-import { StatementVisitor } from "./utils";
+import { StatementVisitor, isConstant } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/7";
 import type * as After from "../model/8";
-
-function isConstant(expression: Before.Expression): expression is Before.Constant {
-    return expression.type === "Boolean" || expression.type === "Number" || expression.type === "String";
-}
 
 function identity<T>(value: T): T {
     return value;
