@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
 import { resolveAliases as resolveAliasesImpl } from "$lib/core/dsl2/compiler/aliases";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/5";
 
@@ -104,8 +104,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => resolveAliases(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unexpected identifier 'hello'");
                 expect(error.offendingEntity).toBe(originalNode.value);
             }

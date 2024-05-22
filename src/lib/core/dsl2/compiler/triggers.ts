@@ -1,6 +1,6 @@
 import { triggerConditions, triggerActions } from "$lib/core/domain/triggers";
 import { GeneratingStatementVisitor } from "./utils";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/8";
@@ -71,11 +71,11 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const info = triggerConditions[arg.type.value as keyof typeof triggerConditions];
 
         if (info === undefined) {
-            throw new ParseError(`Unknown trigger condition '${arg.type.value}'`, arg.type);
+            throw new CompileError(`Unknown trigger condition '${arg.type.value}'`, arg.type);
         }
 
         if (!info.allowedValues.includes(arg.id.value)) {
-            throw new ParseError(`Unknown ${info.type} '${arg.id.value}'`, arg.id);
+            throw new CompileError(`Unknown ${info.type} '${arg.id.value}'`, arg.id);
         }
     }
 
@@ -83,11 +83,11 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const info = triggerActions[arg.type.value as keyof typeof triggerActions];
 
         if (info === undefined) {
-            throw new ParseError(`Unknown trigger action '${arg.type.value}'`, arg.type);
+            throw new CompileError(`Unknown trigger action '${arg.type.value}'`, arg.type);
         }
 
         if (!info.allowedValues.includes(arg.id.value)) {
-            throw new ParseError(`Unknown ${info.type} '${arg.id.value}'`, arg.id);
+            throw new CompileError(`Unknown ${info.type} '${arg.id.value}'`, arg.id);
         }
     }
 
@@ -97,7 +97,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
 
         if (!Number.isInteger(arg.count.value)) {
-            throw new ParseError("Expected integer, got float", arg.count);
+            throw new CompileError("Expected integer, got float", arg.count);
         }
 
         return arg.count;

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
 import { resolveWildcards as resolveWildcardsImpl } from "$lib/core/dsl2/compiler/wildcards";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/1";
 
@@ -209,8 +209,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => resolveWildcards(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Wildcards are only supported for setting prefixes");
                 expect(error.offendingEntity).toBe(originalNode.value.key);
             }

@@ -1,6 +1,6 @@
 import { expressions, otherExpressions, otherExpressionsAliases } from "$lib/core/domain/expressions";
 import { settingType } from "$lib/core/domain/settings";
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
@@ -9,7 +9,7 @@ import type * as Parser from "../model/6";
 function getSettingType(setting: Parser.Identifier): string {
     const type = settingType(setting.value);
     if (type === undefined) {
-        throw new ParseError(`Unknown setting ID '${setting.value}'`, setting);
+        throw new CompileError(`Unknown setting ID '${setting.value}'`, setting);
     }
 
     return type;
@@ -21,7 +21,7 @@ function checkType(type: string, expected: string, node: Parser.Expression) {
     }
 
     if (type !== expected) {
-        throw new ParseError(`Expected ${expected}, got ${type}`, node);
+        throw new CompileError(`Expected ${expected}, got ${type}`, node);
     }
 }
 
@@ -53,12 +53,12 @@ export class Validator {
         else {
             const info = expressions[expression.base.value];
             if (info === undefined) {
-                throw new ParseError("Unknown identifier", expression.base);
+                throw new CompileError("Unknown identifier", expression.base);
             }
 
             // allowedValues is only null for Eval which isn't a subscript
             if (!info.allowedValues!.includes(expression.key.value)) {
-                throw new ParseError(`'${expression.key.value}' is not a valid ${info.valueDescription}`, expression.key);
+                throw new CompileError(`'${expression.key.value}' is not a valid ${info.valueDescription}`, expression.key);
             }
 
             return info.type as string;
@@ -83,7 +83,7 @@ export class Validator {
             return "number";
         }
         else {
-            throw new ParseError(`Unknown operator '${expression.operator}'`, expression);
+            throw new CompileError(`Unknown operator '${expression.operator}'`, expression);
         }
     }
 }

@@ -1,23 +1,16 @@
 import { parseSource } from "./parser/parser";
 import { compile } from "./compiler/compiler";
+import { ParseError } from "./model"
 
-import type { ParseError as RawError } from "./model"
 import type * as Domain from "$lib/core/domain/model";
-import type { SourceLocation, SourceMap } from "./parser/source";
+import type { CompileError } from "./model"
+import type { SourceMap } from "./parser/source";
 
-type ParseError = {
-    message: string,
-    location?: SourceLocation
+function resolveError(error: CompileError, sourceMap: SourceMap): ParseError {
+    return new ParseError(error.message, sourceMap.findLocation(error.offendingEntity));
 }
 
-function resolveError(error: RawError, sourceMap: SourceMap): ParseError {
-    return {
-        message: error.message,
-        location: sourceMap.findLocation(error.offendingEntity)
-    };
-}
-
-function resolveErrors(errors: RawError[], sourceMap: SourceMap): ParseError[] {
+function resolveErrors(errors: CompileError[], sourceMap: SourceMap): ParseError[] {
     return errors.map(error => resolveError(error, sourceMap));
 }
 
@@ -29,7 +22,7 @@ export type CompileResult = {
 export function fromSource(rawText: string): CompileResult {
     const parseResult = parseSource(rawText);
     if (parseResult.errors.length !== 0) {
-        return { config: null, errors: resolveErrors(parseResult.errors, parseResult.sourceMap) };
+        return { config: null, errors: parseResult.errors };
     }
 
     const compileResult = compile(parseResult.nodes, parseResult.sourceMap);

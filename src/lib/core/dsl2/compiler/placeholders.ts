@@ -1,4 +1,4 @@
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { ExpressionVisitor, StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
@@ -8,7 +8,7 @@ import type * as After from "../model/4";
 type ReferenceGetter = (placeholder: Before.Symbol) => After.Identifier;
 
 function throwOnPlaceholder(placeholder: Before.Symbol): never {
-    throw new ParseError("Placeholder used without the context to resolve it", placeholder);
+    throw new CompileError("Placeholder used without the context to resolve it", placeholder);
 }
 
 function makeReferenceGetter(node: Before.Identifier | Before.Subscript): ReferenceGetter {
@@ -20,7 +20,7 @@ function makeReferenceGetter(node: Before.Identifier | Before.Subscript): Refere
             throwOnPlaceholder(node.key);
         }
         else {
-            throw new ParseError("Invalid setting", node);
+            throw new CompileError("Invalid setting", node);
         }
     }
 

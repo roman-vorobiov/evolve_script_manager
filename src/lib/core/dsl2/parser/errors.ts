@@ -7,6 +7,7 @@ import {
     NoViableAltException
 } from "antlr4ng";
 
+import { locationOf } from "./source";
 import { ParseError } from "../model";
 
 export class ErrorStrategy extends DefaultErrorStrategy {
@@ -38,14 +39,14 @@ export class ErrorStrategy extends DefaultErrorStrategy {
         const token = recognizer.getCurrentToken();
         const expected = this.getExpectedTokens(recognizer).toStringWithVocabulary(recognizer.vocabulary);
 
-        this.dispatch(recognizer, new ParseError(`Missing ${expected}`, token));
+        this.dispatch(recognizer, new ParseError(`Missing ${expected}`, locationOf(token)));
     }
 
     reportInputMismatch(recognizer: Parser) {
         const token = recognizer.getCurrentToken();
         const received = this.getTokenErrorDisplay(token);
 
-        this.dispatch(recognizer, new ParseError(`Unexpected ${received}`, token));
+        this.dispatch(recognizer, new ParseError(`Unexpected ${received}`, locationOf(token)));
     }
 }
 

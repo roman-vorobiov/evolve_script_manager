@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
 import { resolvePlaceholders as resolvePlaceholdersImpl } from "$lib/core/dsl2/compiler/placeholders";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/3";
 
@@ -21,8 +21,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Placeholder used without the context to resolve it");
                 expect(error.offendingEntity).toBe(originalNode.setting.key);
             }
@@ -102,8 +102,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Placeholder used without the context to resolve it");
                 expect(error.offendingEntity).toBe(originalNode.value.key);
             }
@@ -180,8 +180,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Placeholder used without the context to resolve it");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[1].key);
             }
@@ -209,8 +209,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Placeholder used without the context to resolve it");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[1].key);
             }

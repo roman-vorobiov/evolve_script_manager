@@ -1,5 +1,5 @@
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { ExpressionVisitor, StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
@@ -10,7 +10,7 @@ export class AliasResolver extends ExpressionVisitor {
     visitSubscript(expression: Before.Subscript): After.Subscript {
         const info = expressions[expression.base.value];
         if (info === undefined) {
-            throw new ParseError("Unknown identifier", expression.base);
+            throw new CompileError("Unknown identifier", expression.base);
         }
 
         if (info.alias !== undefined) {
@@ -35,7 +35,7 @@ export class AliasResolver extends ExpressionVisitor {
             });
         }
 
-        throw new ParseError(`Unexpected identifier '${expression.value}'`, expression);
+        throw new CompileError(`Unexpected identifier '${expression.value}'`, expression);
     }
 }
 

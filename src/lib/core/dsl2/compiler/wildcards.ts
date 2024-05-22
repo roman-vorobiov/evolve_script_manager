@@ -1,5 +1,5 @@
 import { prefixes } from "$lib/core/domain/settings";
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { ExpressionVisitor, StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
@@ -10,7 +10,7 @@ export class WildcardResolver extends ExpressionVisitor {
     onWildcard(expression: Before.Symbol, parent: Before.Subscript): After.List {
         const prefixInfo = prefixes[parent.base.value];
         if (prefixInfo === undefined) {
-            throw new ParseError("Wildcards are only supported for setting prefixes", expression);
+            throw new CompileError("Wildcards are only supported for setting prefixes", expression);
         }
 
         return this.deriveLocation(expression, {

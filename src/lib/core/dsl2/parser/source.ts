@@ -28,7 +28,7 @@ function tokenLocation(token: Token): SourceLocation {
 
 export type SourceEntity = ParserRuleContext | Token | SourceLocation;
 
-function locationOf(sourceEntity: SourceEntity): SourceLocation {
+export function locationOf(sourceEntity: SourceEntity): SourceLocation {
     if (sourceEntity instanceof ParserRuleContext) {
         return contextLocation(sourceEntity);
     }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
 import { createTriggerChains as createTriggerChainsImpl } from "$lib/core/dsl2/compiler/triggers";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/8";
 
@@ -171,8 +171,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => createTriggerChains(originalNode as Parser.Trigger));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected integer, got float");
                 expect(error.offendingEntity).toBe(originalNode.condition.count);
             }
@@ -194,8 +194,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => createTriggerChains(originalNode as Parser.Trigger));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unknown trigger condition 'Build'");
                 expect(error.offendingEntity).toBe(originalNode.condition.type);
             }
@@ -217,8 +217,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => createTriggerChains(originalNode as Parser.Trigger));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unknown building 'tech-club'");
                 expect(error.offendingEntity).toBe(originalNode.condition.id);
             }
@@ -240,8 +240,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => createTriggerChains(originalNode as Parser.Trigger));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unknown trigger action 'Built'");
                 expect(error.offendingEntity).toBe(originalNode.actions[0].type);
             }
@@ -263,8 +263,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => createTriggerChains(originalNode as Parser.Trigger));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unknown building 'tech-club'");
                 expect(error.offendingEntity).toBe(originalNode.condition.id);
             }

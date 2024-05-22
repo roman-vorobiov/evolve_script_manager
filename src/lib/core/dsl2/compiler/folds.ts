@@ -1,7 +1,7 @@
 import { settingType, prefixes } from "$lib/core/domain/settings";
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { assume } from "$lib/core/utils/typeUtils";
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { ExpressionVisitor, GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
@@ -25,7 +25,7 @@ function isBooleanExpression(base: Before.Identifier, keys: Before.List): boolea
 
 function validateExpressionResolved(expression: any): asserts expression is After.Expression {
     if (expression.type === "List") {
-        throw new ParseError("Fold expression detected outside of a boolean expression", expression);
+        throw new CompileError("Fold expression detected outside of a boolean expression", expression);
     }
 }
 
@@ -34,14 +34,14 @@ function getCommonSettingsType(settings: Before.List): string {
         if (setting.type === "Identifier") {
             const type = settingType(setting.value);
             if (type === undefined) {
-                throw new ParseError("Invalid setting", setting);
+                throw new CompileError("Invalid setting", setting);
             }
             return type;
         }
         else if (setting.type === "Subscript") {
             const prefixInfo = prefixes[setting.base.value];
             if (prefixInfo === undefined) {
-                throw new ParseError("Invalid setting", setting.base);
+                throw new CompileError("Invalid setting", setting.base);
             }
             return prefixInfo.type;
         }
@@ -49,7 +49,7 @@ function getCommonSettingsType(settings: Before.List): string {
 
     const types = new Set(settings.values.map(getSettingType));
     if (types.size !== 1) {
-        throw new ParseError("Only settings of the same type are allowed to be in the same list", settings);
+        throw new CompileError("Only settings of the same type are allowed to be in the same list", settings);
     }
 
     return types.values().next().value;
@@ -59,7 +59,7 @@ export class FoldResolver extends ExpressionVisitor {
     onList(list: Before.List, values: Before.List["values"], parent?: Before.Expression): Before.Expression | undefined {
         // Throw on nested lists
         if (values.some(value => value.type === "List")) {
-            throw new ParseError("Only one fold subexpression is allowed", list);
+            throw new CompileError("Only one fold subexpression is allowed", list);
         }
 
         return super.onList(list, values, parent) as Before.Expression;
@@ -86,7 +86,7 @@ export class FoldResolver extends ExpressionVisitor {
 
         if (numberOfFolds > 1) {
             // Instead of engaging in arbitrary combinatorics, just reject such cases
-            throw new ParseError("Only one fold subexpression is allowed", expression);
+            throw new CompileError("Only one fold subexpression is allowed", expression);
         }
         else if (numberOfFolds === 0) {
             if (args.some((arg, i) => arg !== expression.args[i])) {
@@ -120,7 +120,7 @@ export class FoldResolver extends ExpressionVisitor {
 
     private foldLeft(expresson: Before.List): After.Expression {
         if (expresson.fold === undefined) {
-            throw new ParseError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma", expresson);
+            throw new CompileError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma", expresson);
         }
 
         return expresson.values.reduce((l, r) => {
@@ -154,7 +154,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
 
         if (setting.type === "List") {
             if (setting.fold === "or") {
-                throw new ParseError("Disjunction is not allowed in setting targets", setting);
+                throw new CompileError("Disjunction is not allowed in setting targets", setting);
             }
 
             for (const target of setting.values) {

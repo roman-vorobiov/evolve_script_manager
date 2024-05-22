@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { processStatement, getExcepion } from "./fixture";
 import { validateTypes as validateTypesImpl, Validator } from "$lib/core/dsl2/compiler/validation";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/6";
 
@@ -159,8 +159,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unknown setting ID 'hello'");
                 expect(error.offendingEntity).toBe(originalNode.setting);
             }
@@ -179,8 +179,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Unknown identifier");
                 expect(error.offendingEntity).toBe(originalNode.condition.base);
             }
@@ -199,8 +199,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("'hello' is not a valid resource");
                 expect(error.offendingEntity).toBe(originalNode.condition.key);
             }
@@ -214,8 +214,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected boolean, got number");
                 expect(error.offendingEntity).toBe(originalNode.value);
             }
@@ -234,8 +234,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected boolean, got number");
                 expect(error.offendingEntity).toBe(originalNode.condition);
             }
@@ -252,8 +252,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected boolean, got number");
                 expect(error.offendingEntity).toBe(originalNode.condition);
             }
@@ -275,8 +275,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected string, got number");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[1]);
             }
@@ -298,8 +298,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected boolean, got string");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[1]);
             }
@@ -320,8 +320,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected boolean, got string");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[0]);
             }
@@ -343,8 +343,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected number, got boolean");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[0]);
             }
@@ -366,8 +366,8 @@ describe("Compiler", () => {
             };
 
             const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(ParseError);
-            if (error instanceof ParseError) {
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
                 expect(error.message).toEqual("Expected number, got boolean");
                 expect(error.offendingEntity).toBe(originalNode.condition.args[0]);
             }

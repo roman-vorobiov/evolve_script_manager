@@ -1,5 +1,5 @@
 import { prefixes } from "$lib/core/domain/settings";
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { ExpressionVisitor, StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
@@ -16,7 +16,7 @@ export class PrefixResolver extends ExpressionVisitor {
             }
         }
         else if (expression.key.type !== "Identifier") {
-            throw new ParseError("Identifier expected", expression.key);
+            throw new CompileError("Identifier expected", expression.key);
         }
 
         return expression as After.Subscript;
@@ -28,16 +28,16 @@ export class PrefixResolver extends ExpressionVisitor {
         }
 
         if (expression.key.type !== "Identifier") {
-            throw new ParseError("Identifier expected", expression.key);
+            throw new CompileError("Identifier expected", expression.key);
         }
 
         const prefixInfo = prefixes[expression.base.value];
         if (prefixInfo === undefined) {
-            throw new ParseError(`'${expression.base.value}' is not a valid setting prefix`, expression.base);
+            throw new CompileError(`'${expression.base.value}' is not a valid setting prefix`, expression.base);
         }
 
         if (!prefixInfo.allowedSuffixes.includes(expression.key.value)) {
-            throw new ParseError(`'${expression.key.value}' is not a valid ${prefixInfo.valueDescription} for ${expression.base.value}`, expression.key);
+            throw new CompileError(`'${expression.key.value}' is not a valid ${prefixInfo.valueDescription} for ${expression.base.value}`, expression.key);
         }
 
         return this.derived(expression.key, { value: `${prefixInfo.prefix}${expression.key.value}` });

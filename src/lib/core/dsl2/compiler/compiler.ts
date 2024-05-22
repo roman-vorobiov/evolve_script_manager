@@ -1,4 +1,4 @@
-import { ParseError } from "../model";
+import { CompileError } from "../model";
 import { resolveWildcards } from "./wildcards";
 import { resolveFolds } from "./folds";
 import { resolvePlaceholders } from "./placeholders";
@@ -58,19 +58,19 @@ function fillConfig(config: Domain.Config, statements: Final.Statement[]) {
 
 export type CompileResult = {
     config: Domain.Config | null,
-    errors: ParseError[],
+    errors: CompileError[],
 }
 
 export function compile(statements: Initial.Statement[], sourceMap: SourceMap): CompileResult {
     const config: Domain.Config = { overrides: {}, triggers: [] };
-    const errors: ParseError[] = [];
+    const errors: CompileError[] = [];
 
     try {
         const processed = process(statements, sourceMap);
         fillConfig(config, processed);
     }
     catch (e) {
-        if (e instanceof ParseError) {
+        if (e instanceof CompileError) {
             errors.push(e);
         }
         else {

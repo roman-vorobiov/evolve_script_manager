@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { processExpression as processExpressionImpl, processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
 import { resolveFolds as resolveFoldsImpl, FoldResolver } from "$lib/core/dsl2/compiler/folds";
-import { ParseError } from "$lib/core/dsl2/model";
+import { CompileError } from "$lib/core/dsl2/model";
 
 import type * as Parser from "$lib/core/dsl2/model/2";
 
@@ -165,8 +165,8 @@ describe("Compiler", () => {
                     };
 
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(ParseError);
-                    if (error instanceof ParseError) {
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
                         expect(error.message).toEqual("Invalid setting");
                         expect(error.offendingEntity).toBe(originalNode.key.values[1]);
                     }
@@ -188,8 +188,8 @@ describe("Compiler", () => {
                     };
 
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(ParseError);
-                    if (error instanceof ParseError) {
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
                         expect(error.message).toEqual("Only settings of the same type are allowed to be in the same list");
                         expect(error.offendingEntity).toBe(originalNode.key);
                     }
@@ -301,8 +301,8 @@ describe("Compiler", () => {
                     };
 
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(ParseError);
-                    if (error instanceof ParseError) {
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
                         expect(error.message).toEqual("Invalid setting");
                         expect(error.offendingEntity).toBe(originalNode.key.base);
                     }
@@ -347,8 +347,8 @@ describe("Compiler", () => {
                     };
 
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(ParseError);
-                    if (error instanceof ParseError) {
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
                         expect(error.message).toEqual("Only one fold subexpression is allowed");
                         expect(error.offendingEntity).toBe(originalNode.key);
                     }
@@ -710,8 +710,8 @@ describe("Compiler", () => {
                     };
 
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(ParseError);
-                    if (error instanceof ParseError) {
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
                         expect(error.message).toEqual("Only one fold subexpression is allowed");
                         expect(error.offendingEntity).toBe(originalNode);
                     }
@@ -781,8 +781,8 @@ describe("Compiler", () => {
                 };
 
                 const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(ParseError);
-                if (error instanceof ParseError) {
+                expect(error).toBeInstanceOf(CompileError);
+                if (error instanceof CompileError) {
                     expect(error.message).toEqual("Disjunction is not allowed in setting targets");
                     expect(error.offendingEntity.$origin).toEqual("root.setting.key");
                 }
@@ -853,8 +853,8 @@ describe("Compiler", () => {
                 };
 
                 const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(ParseError);
-                if (error instanceof ParseError) {
+                expect(error).toBeInstanceOf(CompileError);
+                if (error instanceof CompileError) {
                     expect(error.message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
                     expect(error.offendingEntity.$origin).toEqual("root.value.key");
                 }
@@ -880,8 +880,8 @@ describe("Compiler", () => {
                 };
 
                 const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(ParseError);
-                if (error instanceof ParseError) {
+                expect(error).toBeInstanceOf(CompileError);
+                if (error instanceof CompileError) {
                     expect(error.message).toEqual("Fold expression detected outside of a boolean expression");
                     expect(error.offendingEntity.$origin).toEqual("root.value.key");
                 }
@@ -954,8 +954,8 @@ describe("Compiler", () => {
                 };
 
                 const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(ParseError);
-                if (error instanceof ParseError) {
+                expect(error).toBeInstanceOf(CompileError);
+                if (error instanceof CompileError) {
                     expect(error.message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
                     expect(error.offendingEntity.$origin).toEqual("root.condition.key");
                 }
@@ -982,8 +982,8 @@ describe("Compiler", () => {
                 };
 
                 const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(ParseError);
-                if (error instanceof ParseError) {
+                expect(error).toBeInstanceOf(CompileError);
+                if (error instanceof CompileError) {
                     expect(error.message).toEqual("Fold expression detected outside of a boolean expression");
                     expect(error.offendingEntity.$origin).toEqual("root.condition.key");
                 }
