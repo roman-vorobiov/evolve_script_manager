@@ -934,6 +934,95 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
             });
 
+            it("should resolve folds inside setting shift conditions", () => {
+                const originalNode = {
+                    type: "SettingShift",
+                    setting: { type: "Identifier", value: "hello" },
+                    value: { type: "String", value: "bye" },
+                    operator: "<<",
+                    condition: {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "ResourceDemanded" },
+                        key: {
+                            type: "List",
+                            fold: "or",
+                            values: [
+                                { type: "Identifier", value: "Iridium" },
+                                { type: "Identifier", value: "Alloy" },
+                                { type: "Identifier", value: "Aluminium" },
+                            ]
+                        }
+                    }
+                };
+
+                const { nodes, from } = resolveFolds(originalNode as Parser.SettingShift);
+                expect(nodes.length).toEqual(1);
+
+                const expectedNode = from(originalNode, {
+                    condition: from(originalNode.condition.key, {
+                        type: "Expression",
+                        operator: "or",
+                        args: [
+                            from(originalNode.condition.key, {
+                                type: "Expression",
+                                operator: "or",
+                                args: [
+                                    from(originalNode.condition, { key: originalNode.condition.key.values[0] }),
+                                    from(originalNode.condition, { key: originalNode.condition.key.values[1] })
+                                ]
+                            }),
+                            from(originalNode.condition, { key: originalNode.condition.key.values[2] })
+                        ]
+                    })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
+            });
+
+            it("should resolve folds inside condition blocks", () => {
+                const originalNode = {
+                    type: "ConditionPush",
+                    condition: {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "ResourceDemanded" },
+                        key: {
+                            type: "List",
+                            fold: "or",
+                            values: [
+                                { type: "Identifier", value: "Iridium" },
+                                { type: "Identifier", value: "Alloy" },
+                                { type: "Identifier", value: "Aluminium" },
+                            ]
+                        }
+                    }
+                };
+
+                const { nodes, from } = resolveFolds(originalNode as Parser.ConditionPush);
+                expect(nodes.length).toEqual(1);
+
+                const expectedNode = from(originalNode, {
+                    condition: from(originalNode.condition.key, {
+                        type: "Expression",
+                        operator: "or",
+                        args: [
+                            from(originalNode.condition.key, {
+                                type: "Expression",
+                                operator: "or",
+                                args: [
+                                    from(originalNode.condition, { key: originalNode.condition.key.values[0] }),
+                                    from(originalNode.condition, { key: originalNode.condition.key.values[1] })
+                                ]
+                            }),
+                            from(originalNode.condition, { key: originalNode.condition.key.values[2] })
+                        ]
+                    })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
+            });
+
             it("should throw on ambiguous folds inside conditions", () => {
                 const originalNode = {
                     type: "SettingAssignment",

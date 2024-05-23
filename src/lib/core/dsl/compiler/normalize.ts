@@ -1,4 +1,5 @@
 import { StatementVisitor, isConstant } from "./utils";
+import { assert } from "$lib/core/utils/typeUtils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/9";
@@ -66,6 +67,15 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
                     ...convertBinaryExpression(statement.condition),
                     ret: statement.value.value
                 }
+            });
+        }
+        else if (statement.setting.value === "researchIgnore") {
+            assert<string>(statement.value.value);
+
+            return this.deriveLocation(statement, {
+                type: "SettingAssignment",
+                setting: statement.setting.value,
+                value: statement.value.value.split(",")
             });
         }
         else {

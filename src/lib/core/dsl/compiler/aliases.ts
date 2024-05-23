@@ -56,6 +56,14 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         }
     }
 
+    onSettingShift(statement: Before.SettingShift): After.SettingShift | undefined {
+        const condition = statement.condition && this.visitor.visit(statement.condition);
+
+        if (condition !== statement.condition) {
+            return this.derived(statement, { condition }) as After.SettingShift;
+        }
+    }
+
     onConditionPush(statement: Before.ConditionPush): After.ConditionPush | undefined {
         const condition = this.visitor.visit(statement.condition);
 

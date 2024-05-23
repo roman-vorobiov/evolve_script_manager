@@ -151,6 +151,22 @@ describe("Compiler", () => {
             });
         });
 
+        it("should throw on invalid targets for shifting", () => {
+            const originalNode = {
+                type: "SettingShift",
+                operator: "<<",
+                setting: { type: "Identifier", value: "prestigeType" },
+                value: { type: "String", value: "mad" }
+            };
+
+            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
+                expect(error.message).toEqual("Expected string[], got string");
+                expect(error.offendingEntity).toBe(originalNode.value);
+            }
+        });
+
         it("should throw on unknown settings", () => {
             const originalNode = {
                 type: "SettingAssignment",
@@ -226,6 +242,27 @@ describe("Compiler", () => {
                 type: "SettingAssignment",
                 setting: { type: "Identifier", value: "sellCopper" },
                 value: { type: "Boolean", value: true },
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceQuantity" },
+                    key: { type: "Identifier", value: "Copper" }
+                }
+            };
+
+            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
+                expect(error.message).toEqual("Expected boolean, got number");
+                expect(error.offendingEntity).toBe(originalNode.condition);
+            }
+        });
+
+        it("should throw on wrong setting shift condition types", () => {
+            const originalNode = {
+                type: "SettingShift",
+                operator: "<<",
+                setting: { type: "Identifier", value: "logFilter" },
+                value: { type: "String", value: "hello" },
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceQuantity" },

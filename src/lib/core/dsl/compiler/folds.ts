@@ -169,6 +169,20 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
     }
 
+    *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
+        const condition = statement.condition && this.visitor.visit(statement.condition);
+        if (condition) {
+            validateExpressionResolved(condition);
+        }
+
+        if (condition !== statement.condition) {
+            yield this.derived(statement, { condition });
+        }
+        else {
+            yield statement as After.SettingShift;
+        }
+    }
+
     *onConditionPush(statement: Before.ConditionPush): IterableIterator<After.ConditionPush> {
         const condition = this.visitor.visit(statement.condition);
 

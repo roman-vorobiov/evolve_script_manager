@@ -103,13 +103,16 @@ class Impl extends StatementVisitor<Parser.Statement> {
 
     onSettingShift(statement: Parser.SettingShift) {
         checkType(getSettingType(statement.setting), "string[]", statement.value);
-    }
 
-    onConditionPush(statement: Parser.ConditionPush) {
         if (statement.condition) {
             const conditionType = this.visitor.visit(statement.condition);
             checkType(conditionType, "boolean", statement.condition);
         }
+    }
+
+    onConditionPush(statement: Parser.ConditionPush) {
+        const conditionType = this.visitor.visit(statement.condition);
+        checkType(conditionType, "boolean", statement.condition);
     }
 };
 

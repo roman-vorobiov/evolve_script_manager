@@ -28,6 +28,18 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
     }
 
+    *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
+        const parentCondition = this.stack.at(-1);
+        if (parentCondition !== undefined) {
+            yield this.derived(statement, {
+                condition: this.conjunction(parentCondition, statement.condition)!
+            });
+        }
+        else {
+            yield statement;
+        }
+    }
+
     private conjunction(parent?: After.Expression, child?: After.Expression): After.Expression | undefined {
         if (parent === undefined) {
             return child;

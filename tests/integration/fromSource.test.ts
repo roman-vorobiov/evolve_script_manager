@@ -237,6 +237,23 @@ describe("Compilation", () => {
         });
     });
 
+    it("should handle researchIgnore", () => {
+        const { config, errors } = fromSource(`
+            researchIgnore << tech-combat_droids
+            researchIgnore << tech-hellfire_furnace
+        `);
+
+        expect(errors).toStrictEqual([]);
+        expect(config).toEqual({
+            overrides: {},
+            triggers: [],
+            researchIgnore: [
+                "tech-combat_droids",
+                "tech-hellfire_furnace"
+            ]
+        });
+    });
+
     it("should handle large configs", () => {
         const { errors } = fromSource(exampleConfig);
 

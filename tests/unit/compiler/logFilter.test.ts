@@ -107,7 +107,7 @@ describe("Compiler", () => {
         it("should ignore other settings", () => {
             const originalNode: Parser.SettingShift = {
                 type: "SettingShift",
-                setting: { type: "Identifier", value: "hello" },
+                setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
                 value: { type: "String", value: "foo" }
             };
@@ -118,18 +118,18 @@ describe("Compiler", () => {
             expect(nodes[0]).toBe(originalNode);
         });
 
-        it("should throw on identifiers", () => {
+        it("should throw on non-string values", () => {
             const originalNode: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "Identifier", value: "foo" }
+                value: { type: "Identifier", value: "foo" } as any
             };
 
             const error = getExcepion(() => collectLogFilterStrings([originalNode]));
             expect(error).toBeInstanceOf(CompileError);
             if (error instanceof CompileError) {
-                expect(error.message).toEqual("String expected, got identifier");
+                expect(error.message).toEqual("String expected");
                 expect(error.offendingEntity).toBe(originalNode.value);
             }
         });

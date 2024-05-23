@@ -18,7 +18,7 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
         }
 
         if (statement.value.type !== "String") {
-            throw new CompileError("String expected, got identifier", statement.value);
+            throw new CompileError("String expected", statement.value);
         }
 
         if (statement.operator === ">>") {

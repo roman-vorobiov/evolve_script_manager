@@ -75,6 +75,7 @@ describe("Compiler", () => {
 
         it.each([
             { type: "SettingAssignment", setting: { type: "Identifier", value: "foo" }, value: { type: "Number", value: 123 }, },
+            { type: "SettingShift", setting: { type: "Identifier", value: "foo" }, value: { type: "Number", value: 123 }, operator: "<<" },
             { type: "ConditionPush" }
         ])("should resolve wildcards in setting prefixes inside conditions ($type)", (base) => {
             const originalNode = {

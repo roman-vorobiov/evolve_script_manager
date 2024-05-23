@@ -149,6 +149,36 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
+        it("should resolve setting prefixes in setting shift conditions", () => {
+            const originalNode = {
+                type: "SettingShift",
+                setting: { type: "Identifier", value: "hello" },
+                value: { type: "String", value: "bye" },
+                operator: "<<",
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "SettingCurrent" },
+                    key: {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "AutoSell" },
+                        key: { type: "Identifier", value: "Copper" }
+                    }
+                }
+            };
+
+            const { nodes, from } = resolvePrefixes(originalNode as Parser.SettingShift);
+
+            const expectedNode = from(originalNode, {
+                condition: from(originalNode.condition, {
+                    key: from(originalNode.condition.key.key, { value: "sellCopper" })
+                })
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
         it("should resolve setting prefixes in condition blocks", () => {
             const originalNode = {
                 type: "ConditionPush",

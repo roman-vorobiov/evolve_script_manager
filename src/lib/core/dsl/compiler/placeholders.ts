@@ -54,14 +54,16 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         }
     }
 
-    onConditionPush(statement: Before.ConditionPush): After.ConditionPush | undefined {
-        const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
-
-        const condition = visitor.visit(statement.condition);
-
-        if (condition !== statement.condition) {
-            return this.derived(statement, { condition }) as After.ConditionPush;
+    onSettingShift(statement: Before.SettingShift): undefined {
+        if (statement.condition !== undefined) {
+            const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
+            visitor.visit(statement.condition);
         }
+    }
+
+    onConditionPush(statement: Before.ConditionPush): undefined {
+        const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
+        visitor.visit(statement.condition);
     }
 }
 

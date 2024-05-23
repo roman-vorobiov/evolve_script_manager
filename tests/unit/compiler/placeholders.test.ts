@@ -187,6 +187,38 @@ describe("Compiler", () => {
             }
         });
 
+        it("should throw on unresolveded placeholders inside setting shift conditions", () => {
+            const originalNode = {
+                type: "SettingShift",
+                setting: { type: "Identifier", value: "hello" },
+                value: { type: "String", value: "bye" },
+                operator: "<<",
+                condition: {
+                    type: "Expression",
+                    operator: "<",
+                    args: [
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceQuantity" },
+                            key: { type: "Identifier", value: "Copper" }
+                        },
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceStorage" },
+                            key: { type: "Placeholder" }
+                        }
+                    ]
+                }
+            };
+
+            const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingShift));
+            expect(error).toBeInstanceOf(CompileError);
+            if (error instanceof CompileError) {
+                expect(error.message).toEqual("Placeholder used without the context to resolve it");
+                expect(error.offendingEntity).toBe(originalNode.condition.args[1].key);
+            }
+        });
+
         it("should throw on unresolveded placeholders inside condition blocks", () => {
             const originalNode = {
                 type: "ConditionPush",

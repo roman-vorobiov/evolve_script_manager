@@ -404,6 +404,5 @@ end
 #     tech-apartment,
 # ]
 
-# Todo
-# Don't waste gems
-# IgnoreResearch = [tech-combat_droids, tech-hellfire_furnace]
+researchIgnore << tech-combat_droids
+researchIgnore << tech-hellfire_furnace
