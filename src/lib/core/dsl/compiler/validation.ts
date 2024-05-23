@@ -15,7 +15,7 @@ function getSettingType(setting: Parser.Identifier): string {
     return type;
 }
 
-function checkType(type: string, expected: string, node: Parser.Expression) {
+function checkType(type: string, expected: string, node: Parser.Expression | Parser.Identifier) {
     if (type === "unknown" || expected === "unknown") {
         return;
     }
@@ -99,6 +99,10 @@ class Impl extends StatementVisitor<Parser.Statement> {
             const conditionType = this.visitor.visit(statement.condition);
             checkType(conditionType, "boolean", statement.condition);
         }
+    }
+
+    onSettingShift(statement: Parser.SettingShift) {
+        checkType(getSettingType(statement.setting), "string[]", statement.value);
     }
 
     onConditionPush(statement: Parser.ConditionPush) {

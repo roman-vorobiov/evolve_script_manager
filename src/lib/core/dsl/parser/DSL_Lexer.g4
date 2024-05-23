@@ -20,6 +20,8 @@ DIV           : '/';
 PLUS          : '+';
 MINUS         : '-';
 
+SHIFTL        : '<<';
+SHIFTR        : '>>';
 EQ            : '==';
 NEQ           : '!=';
 LT            : '<';

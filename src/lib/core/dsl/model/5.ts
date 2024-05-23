@@ -26,6 +26,10 @@ export type SettingAssignment = {
     condition?: Expression
 }
 
+export type SettingShift = Modify<Previous.SettingShift, {
+    condition?: Expression
+}>
+
 export type ConditionPush = {
     type: "ConditionPush",
     condition: Expression
@@ -35,4 +39,4 @@ export type ConditionPop = Previous.ConditionPop;
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
-export type Statement = SettingAssignment | ConditionPush | ConditionPop | Trigger;
+export type Statement = SettingAssignment | SettingShift | ConditionPush | ConditionPop | Trigger;

@@ -10,6 +10,10 @@ export const settings = Object.keys(defaultSettings).filter(id => {
 });
 
 export function settingType(id: string): string | undefined {
+    if (id === "researchIgnore" || id === "logFilter") {
+        return "string[]";
+    }
+
     const defaultValue = defaultSettings[id as keyof typeof defaultSettings];
     if (defaultValue !== undefined) {
         return typeof defaultValue;

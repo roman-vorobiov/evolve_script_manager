@@ -223,6 +223,20 @@ describe("Compilation", () => {
         });
     });
 
+    it("should handle logFilter", () => {
+        const { config, errors } = fromSource(`
+            logFilter << "hello"
+            logFilter << "bye"
+        `);
+
+        expect(errors).toStrictEqual([]);
+        expect(config).toEqual({
+            overrides: {},
+            triggers: [],
+            logFilter: "hello, bye"
+        });
+    });
+
     it("should handle large configs", () => {
         const { errors } = fromSource(exampleConfig);
 

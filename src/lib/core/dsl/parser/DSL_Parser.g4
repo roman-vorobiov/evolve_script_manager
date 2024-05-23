@@ -21,6 +21,7 @@ statement
 
 settingStatement
     : settingAssignment
+    | settingShift
     | conditionBlock
     ;
 
@@ -46,6 +47,10 @@ settingId
 
 settingValue
     : expression
+    ;
+
+settingShift
+    : identifier op=('<<' | '>>') listItem ('if' expression)?
     ;
 
 // Triggers

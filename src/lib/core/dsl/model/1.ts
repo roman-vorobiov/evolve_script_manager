@@ -58,6 +58,14 @@ export type SettingAssignment = {
     condition?: Expression
 }
 
+export type SettingShift = {
+    type: "SettingShift",
+    setting: Identifier,
+    value: Identifier | StringLiteral,
+    operator: string,
+    condition?: Expression
+}
+
 export type ConditionPush = {
     type: "ConditionPush",
     condition: Expression
@@ -79,4 +87,4 @@ export type Trigger = {
     actions: TriggerArgument[]
 }
 
-export type Statement = SettingAssignment | ConditionPush | ConditionPop | Trigger;
+export type Statement = SettingAssignment | SettingShift | ConditionPush | ConditionPop | Trigger;

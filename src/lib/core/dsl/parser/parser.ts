@@ -184,8 +184,8 @@ class Visitor extends DSLVisitor<void> {
     }
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
-        const settingName = this.expressionGetter.visit(ctx.settingId())!;
-        const settingValue = this.expressionGetter.visit(ctx.settingValue())!;
+        const settingName = this.expressionGetter.visit(ctx.settingId());
+        const settingValue = this.expressionGetter.visit(ctx.settingValue());
 
         const node: Parser.SettingAssignment = {
             type: "SettingAssignment",
@@ -194,7 +194,27 @@ class Visitor extends DSLVisitor<void> {
         };
 
         if (ctx.expression() !== null) {
-            node.condition = this.expressionGetter.visit(ctx.expression()!)!;
+            node.condition = this.expressionGetter.visit(ctx.expression()!);
+        }
+
+        this.sourceMap.addLocation(node, ctx);
+        this.nodes.push(node);
+    }
+
+    visitSettingShift = (ctx: Context.SettingShiftContext) => {
+        const settingName = this.expressionGetter.visit(ctx.identifier());
+        const settingValue = this.expressionGetter.visit(ctx.listItem());
+        const operator = ctx._op!.text!;
+
+        const node: Parser.SettingShift = {
+            type: "SettingShift",
+            setting: settingName,
+            value: settingValue,
+            operator
+        };
+
+        if (ctx.expression() !== null) {
+            node.condition = this.expressionGetter.visit(ctx.expression()!);
         }
 
         this.sourceMap.addLocation(node, ctx);

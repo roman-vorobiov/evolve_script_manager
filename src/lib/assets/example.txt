@@ -9,6 +9,12 @@ Log.attack   = OFF
 Log.prestige = ON
 Log.spying   = OFF
 
+logFilter << "interstellar_blackhole_unstable"
+logFilter << "research_success%tech_stabilize_blackhole"
+logFilter << "civics_garrison_victorious"
+logFilter << "civics_garrison_defeat"
+logFilter << "civics_garrison_gained"
+
 ##### Capabilities ####
 
 autoFight         = ON

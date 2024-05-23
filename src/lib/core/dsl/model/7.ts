@@ -12,6 +12,7 @@ export type SimpleExpression = Previous.SimpleExpression;
 export type Expression = Previous.Expression;
 
 export type SettingAssignment = Previous.SettingAssignment;
+export type SettingShift = Previous.SettingShift;
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
