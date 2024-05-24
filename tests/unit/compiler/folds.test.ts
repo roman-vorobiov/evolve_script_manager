@@ -34,11 +34,11 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.key, {
+                    const expectedNode = from(originalNode, {
                         type: "Expression",
                         operator: fold,
                         args: [
-                            from(originalNode.key, {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: fold,
                                 args: [
@@ -71,7 +71,9 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.key, {
+                    const expectedNode = from(originalNode, {
+                        type: "List",
+                        fold,
                         values: [
                             from(originalNode, { key: originalNode.key.values[0] }),
                             from(originalNode, { key: originalNode.key.values[1] }),
@@ -100,11 +102,11 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.key, {
+                    const expectedNode = from(originalNode, {
                         type: "Expression",
                         operator: "and",
                         args: [
-                            from(originalNode.key, {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: "and",
                                 args: [
@@ -137,7 +139,9 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.key, {
+                    const expectedNode = from(originalNode, {
+                        type: "List",
+                        fold: "and",
                         values: [
                             from(originalNode, { key: originalNode.key.values[0] }),
                             from(originalNode, { key: originalNode.key.values[1] }),
@@ -216,11 +220,11 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.key.key, {
+                    const expectedNode = from(originalNode, {
                         type: "Expression",
                         operator: fold,
                         args: [
-                            from(originalNode.key.key, {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: fold,
                                 args: [
@@ -263,7 +267,9 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.key.key, {
+                    const expectedNode = from(originalNode, {
+                        type: "List",
+                        fold,
                         values: [
                             from(originalNode, {
                                 key: from(originalNode.key, { key: originalNode.key.key.values[0] })
@@ -376,7 +382,7 @@ describe("Compiler", () => {
 
                     const expectedNode = from(originalNode, {
                         args: [
-                            from(originalNode.args[0], {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: fold,
                                 args: originalNode.args[0].values
@@ -413,7 +419,9 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.args[0], {
+                    const expectedNode = from(originalNode, {
+                        type: "List",
+                        fold: "or",
                         values: [
                             from(originalNode, {
                                 args: [
@@ -465,7 +473,9 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.args[1], {
+                    const expectedNode = from(originalNode, {
+                        type: "List",
+                        fold: "or",
                         values: [
                             from(originalNode, {
                                 args: [
@@ -520,11 +530,11 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.args[0], {
+                    const expectedNode = from(originalNode, {
                         type: "Expression",
                         operator: "or",
                         args: [
-                            from(originalNode.args[0], {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
@@ -583,11 +593,11 @@ describe("Compiler", () => {
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode.args[1], {
+                    const expectedNode = from(originalNode, {
                         type: "Expression",
                         operator: "or",
                         args: [
-                            from(originalNode.args[1], {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
@@ -663,11 +673,11 @@ describe("Compiler", () => {
                         ]
                     });
 
-                    const expectedNode = from(originalNode.args[0].args![0].key!, {
+                    const expectedNode = from(originalNode, {
                         type: "Expression",
                         operator: fold,
                         args: [
-                            from(originalNode.args[0].args![0].key!, {
+                            from(originalNode, {
                                 type: "Expression",
                                 operator: fold,
                                 args: [
@@ -784,7 +794,7 @@ describe("Compiler", () => {
                 expect(error).toBeInstanceOf(CompileError);
                 if (error instanceof CompileError) {
                     expect(error.message).toEqual("Disjunction is not allowed in setting targets");
-                    expect(error.offendingEntity.$origin).toEqual("root.setting.key");
+                    expect(error.offendingEntity).toBe(originalNode.setting.key);
                 }
             });
         });
@@ -813,11 +823,11 @@ describe("Compiler", () => {
                 expect(nodes.length).toEqual(1);
 
                 const expectedNode = from(originalNode, {
-                    value: from(originalNode.value.key, {
+                    value: from(originalNode.value, {
                         type: "Expression",
                         operator: "or",
                         args: [
-                            from(originalNode.value.key, {
+                            from(originalNode.value, {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
@@ -883,7 +893,7 @@ describe("Compiler", () => {
                 expect(error).toBeInstanceOf(CompileError);
                 if (error instanceof CompileError) {
                     expect(error.message).toEqual("Fold expression detected outside of a boolean expression");
-                    expect(error.offendingEntity.$origin).toEqual("root.value.key");
+                    expect(error.offendingEntity.$origin).toEqual("root.value");
                 }
             });
         });
@@ -913,11 +923,11 @@ describe("Compiler", () => {
                 expect(nodes.length).toEqual(1);
 
                 const expectedNode = from(originalNode, {
-                    condition: from(originalNode.condition.key, {
+                    condition: from(originalNode.condition, {
                         type: "Expression",
                         operator: "or",
                         args: [
-                            from(originalNode.condition.key, {
+                            from(originalNode.condition, {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
@@ -959,11 +969,11 @@ describe("Compiler", () => {
                 expect(nodes.length).toEqual(1);
 
                 const expectedNode = from(originalNode, {
-                    condition: from(originalNode.condition.key, {
+                    condition: from(originalNode.condition, {
                         type: "Expression",
                         operator: "or",
                         args: [
-                            from(originalNode.condition.key, {
+                            from(originalNode.condition, {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
@@ -1002,11 +1012,11 @@ describe("Compiler", () => {
                 expect(nodes.length).toEqual(1);
 
                 const expectedNode = from(originalNode, {
-                    condition: from(originalNode.condition.key, {
+                    condition: from(originalNode.condition, {
                         type: "Expression",
                         operator: "or",
                         args: [
-                            from(originalNode.condition.key, {
+                            from(originalNode.condition, {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
@@ -1074,7 +1084,7 @@ describe("Compiler", () => {
                 expect(error).toBeInstanceOf(CompileError);
                 if (error instanceof CompileError) {
                     expect(error.message).toEqual("Fold expression detected outside of a boolean expression");
-                    expect(error.offendingEntity.$origin).toEqual("root.condition.key");
+                    expect(error.offendingEntity.$origin).toEqual("root.condition");
                 }
             });
         });

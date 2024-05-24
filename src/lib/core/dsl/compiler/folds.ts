@@ -77,7 +77,7 @@ export class FoldResolver extends ExpressionVisitor {
             });
 
             // If the base is a boolean setting prefix or condition expression, fold the list
-            return isBooleanExpression(expression.base, key) ? this.foldLeft(node) : node;
+            return this.foldIfNeeded(node, expression, isBooleanExpression(expression.base, key));
         }
     }
 
@@ -96,7 +96,7 @@ export class FoldResolver extends ExpressionVisitor {
         }
         else if (args.length === 1) {
             // This means the argument of 'not' is not boolean, but it's not this component's job to guard against that
-            return this.derived(expression, { args: [this.foldLeft(args[0] as Before.List)] });
+            return this.derived(expression, { args: [this.foldLeft(args[0] as Before.List, expression)] });
         }
         else {
             let node: Before.List;
@@ -114,17 +114,38 @@ export class FoldResolver extends ExpressionVisitor {
                 });
             }
 
-            return isBooleanOperator(expression.operator) ? this.foldLeft(node) : node;
+            return this.foldIfNeeded(node, expression, isBooleanOperator(expression.operator));
         }
     }
 
-    private foldLeft(expresson: Before.List): After.Expression {
+    visitSettingId(expression: Before.Identifier | Before.Subscript): Before.SettingAssignment["setting"] | Before.List {
+        if (expression.type === "Identifier") {
+            return expression;
+        }
+
+        if (expression.key.type === "List" && expression.key.fold === "or") {
+            throw new CompileError("Disjunction is not allowed in setting targets", expression.key);
+        }
+
+        return this.visit(expression) as Before.SettingAssignment["setting"] | Before.List;
+    }
+
+    private foldIfNeeded(expresson: Before.List, originalNode: Before.Expression, condition: boolean) {
+        if (condition) {
+            return this.foldLeft(expresson, originalNode);
+        }
+        else {
+            return this.deriveLocation(originalNode, expresson);
+        }
+    }
+
+    private foldLeft(expresson: Before.List, originalNode: Before.Expression): After.Expression {
         if (expresson.fold === undefined) {
             throw new CompileError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma", expresson);
         }
 
         return expresson.values.reduce((l, r) => {
-            return this.deriveLocation(expresson, <After.Expression> {
+            return this.deriveLocation(originalNode, <After.Expression> {
                 type: "Expression",
                 operator: expresson.fold,
                 args: [l, r]
@@ -142,7 +163,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
-        const setting = this.visitor.visit(statement.setting) as Before.SettingAssignment["setting"] | Before.List;
+        const setting = this.visitor.visitSettingId(statement.setting);
         const value = this.visitor.visit(statement.value);
         const condition = statement.condition && this.visitor.visit(statement.condition);
 
@@ -153,10 +174,6 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
 
         if (setting.type === "List") {
-            if (setting.fold === "or") {
-                throw new CompileError("Disjunction is not allowed in setting targets", setting);
-            }
-
             for (const target of setting.values) {
                 yield this.derived(statement, { setting: target as After.SettingAssignment["setting"], value, condition });
             }

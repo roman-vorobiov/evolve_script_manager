@@ -5,7 +5,7 @@ import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/3";
 import type * as After from "../model/4";
 
-type ReferenceGetter = (placeholder: Before.Symbol) => After.Identifier;
+type ReferenceGetter = (placeholder: Before.Symbol) => After.Subscript["key"];
 
 function throwOnPlaceholder(placeholder: Before.Symbol): never {
     throw new CompileError("Placeholder used without the context to resolve it", placeholder);
@@ -13,26 +13,22 @@ function throwOnPlaceholder(placeholder: Before.Symbol): never {
 
 function makeReferenceGetter(node: Before.Identifier | Before.Subscript): ReferenceGetter {
     if (node.type === "Subscript") {
-        if (node.key.type === "Identifier") {
-            return () => node.key as After.Identifier;
-        }
-        else if (node.key.type === "Placeholder") {
+        if (node.key.type === "Placeholder") {
             throwOnPlaceholder(node.key);
         }
-        else {
-            throw new CompileError("Invalid setting", node);
-        }
+
+        return () => node.key as After.Subscript["key"];
     }
 
     return throwOnPlaceholder;
 }
 
 export class PlaceholderResolver extends ExpressionVisitor {
-    constructor(sourceMap: SourceMap, private getter: ReferenceGetter) {
+    constructor(sourceMap: SourceMap, private getter: ReferenceGetter = throwOnPlaceholder) {
         super(sourceMap);
     }
 
-    onPlaceholder(node: Before.Symbol): After.Identifier {
+    onPlaceholder(node: Before.Symbol): After.Subscript["key"] {
         return this.getter(node);
     }
 }
