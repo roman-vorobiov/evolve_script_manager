@@ -2,7 +2,7 @@ import { settingType, prefixes } from "$lib/core/domain/settings";
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { assume } from "$lib/core/utils/typeUtils";
 import { CompileError } from "../model";
-import { ExpressionVisitor, GeneratingStatementVisitor } from "./utils";
+import { ExpressionVisitor, GeneratingStatementVisitor, differentLists } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/2";
@@ -89,7 +89,7 @@ export class FoldResolver extends ExpressionVisitor {
             throw new CompileError("Only one fold subexpression is allowed", expression);
         }
         else if (numberOfFolds === 0) {
-            if (args.some((arg, i) => arg !== expression.args[i])) {
+            if (differentLists(args, expression.args)) {
                 // No folds directly as subexpressions, but some have been found and resolved down the tree
                 return this.derived(expression, { args });
             }

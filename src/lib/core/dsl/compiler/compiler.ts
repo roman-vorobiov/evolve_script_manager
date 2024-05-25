@@ -1,4 +1,5 @@
 import { CompileError } from "../model";
+import { inlineReferences } from "./inlineReferences";
 import { resolveWildcards } from "./wildcards";
 import { resolveFolds } from "./folds";
 import { resolvePlaceholders } from "./placeholders";
@@ -30,6 +31,7 @@ class Pipeline<T = Initial.Statement> {
 
 function process(statements: Initial.Statement[], sourceMap: SourceMap): Final.Statement[] {
     return new Pipeline(statements, sourceMap)
+        .then(inlineReferences)
         .then(resolveWildcards)
         .then(resolveFolds)
         .then(resolvePlaceholders)
@@ -78,7 +80,7 @@ export function compile(statements: Initial.Statement[], sourceMap: SourceMap): 
             errors.push(e);
         }
         else {
-            throw e;
+            console.error(e);
         }
     }
 

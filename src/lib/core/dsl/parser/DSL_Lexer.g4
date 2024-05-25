@@ -32,8 +32,9 @@ AND           : 'and';
 OR            : 'or';
 NOT           : 'not';
 
-// Identifiers
+// Keywords
 
+Def  : 'def';
 If   : 'if';
 Then : 'then';
 When : 'when';
@@ -42,7 +43,7 @@ End  : 'end';
 ON   : 'ON';
 OFF  : 'OFF';
 
-Identifier: [a-zA-Z] [a-zA-Z\-_0-9]*;
+Identifier: '$'? [a-zA-Z] [a-zA-Z\-_0-9]*;
 
 Number: '-'? ('0' | [1-9] [0-9]*) ('.' [0-9]+)?;
 

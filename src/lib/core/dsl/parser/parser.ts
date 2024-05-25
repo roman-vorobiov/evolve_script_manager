@@ -183,6 +183,20 @@ class Visitor extends DSLVisitor<void> {
         });
     }
 
+    visitExpressionDefinition = (ctx: Context.ExpressionDefinitionContext) => {
+        const name = this.expressionGetter.visit(ctx.identifier());
+        const body = this.expressionGetter.visit(ctx.expression());
+
+        const node: Parser.ExpressionDefinition = {
+            type: "ExpressionDefinition",
+            name,
+            body
+        };
+
+        this.sourceMap.addLocation(node, ctx);
+        this.nodes.push(node);
+    }
+
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
         const settingName = this.expressionGetter.visit(ctx.settingId());
         const settingValue = this.expressionGetter.visit(ctx.settingValue());

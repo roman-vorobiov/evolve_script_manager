@@ -44,7 +44,7 @@ export function locationOf(sourceEntity: SourceEntity): SourceLocation {
 }
 
 export class SourceMap {
-    private locations = new WeakMap<any, SourceLocation>();
+    private locations = new WeakMap<WeakKey, SourceLocation>();
 
     findLocation<T extends object>(object: T): SourceLocation | undefined {
         return this.locations.get(object);

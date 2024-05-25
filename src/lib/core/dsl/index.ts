@@ -3,34 +3,64 @@ import { compile } from "./compiler/compiler";
 import { ParseError } from "./model"
 
 import type * as Domain from "$lib/core/domain/model";
-import type { CompileError } from "./model"
-import type { SourceMap } from "./parser/source";
+import { CompileError } from "./model"
+import type { SourceLocation, SourceMap } from "./parser/source";
 
-function resolveError(error: CompileError, sourceMap: SourceMap): ParseError {
-    return new ParseError(error.message, sourceMap.findLocation(error.offendingEntity));
+export type ProblemInfo = {
+    type: "error" | "info",
+    message: string,
+    location?: SourceLocation
 }
 
-function resolveErrors(errors: CompileError[], sourceMap: SourceMap): ParseError[] {
-    return errors.map(error => resolveError(error, sourceMap));
+function* resolveError(error: CompileError | ParseError, sourceMap: SourceMap): IterableIterator<ProblemInfo> {
+    if (error instanceof CompileError) {
+        yield {
+            type: "error",
+            message: error.message,
+            location: sourceMap.findLocation(error.offendingEntity)
+        };
+
+        for (const [detail, entity] of error.details) {
+            yield {
+                type: "info",
+                message: detail,
+                location: sourceMap.findLocation(entity)
+            };
+        }
+    }
+    else {
+        yield {
+            type: "error",
+            message: error.message,
+            location: error.location
+        };
+    }
 }
 
-export type { ParseError } from "./model";
+function* resolveErrors(errors: (CompileError | ParseError)[], sourceMap: SourceMap): IterableIterator<ProblemInfo> {
+    for (const error of errors) {
+        yield* resolveError(error, sourceMap);
+    }
+}
 
 export type CompileResult = {
     config: Domain.Config | null,
-    errors: ParseError[],
+    errors: ProblemInfo[],
 }
 
 export function fromSource(rawText: string): CompileResult {
     const parseResult = parseSource(rawText);
     if (parseResult.errors.length !== 0) {
-        return { config: null, errors: parseResult.errors };
+        return {
+            config: null,
+            errors: [...resolveErrors(parseResult.errors, parseResult.sourceMap)]
+        };
     }
 
     const compileResult = compile(parseResult.nodes, parseResult.sourceMap);
 
     return {
         config: compileResult.config,
-        errors: resolveErrors(compileResult.errors, parseResult.sourceMap)
+        errors: [...resolveErrors(compileResult.errors, parseResult.sourceMap)]
     };
 }

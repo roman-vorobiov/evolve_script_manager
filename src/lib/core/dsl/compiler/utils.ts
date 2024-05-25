@@ -8,6 +8,10 @@ export function isConstant(expression: Parser.Expression): expression is Parser.
     return expression.type === "Boolean" || expression.type === "Number" || expression.type === "String";
 }
 
+export function differentLists<BeforeT, AfterT extends BeforeT>(l: AfterT[], r: BeforeT[]): boolean {
+    return l.some((value, i) => value !== r[i]);
+}
+
 type ModelEntity = {
     type: string
 }
@@ -22,10 +26,6 @@ abstract class BaseVisitor {
 
     protected derived<T1 extends object, T2 extends object>(original: T1, overrides: T2): Modify<T1, T2> {
         return this.deriveLocation(original, { ...original, ...overrides });
-    }
-
-    protected differentLists<BeforeT, AfterT extends BeforeT>(l: AfterT[], r: BeforeT[]): boolean {
-        return l.some((value, i) => value !== r[i]);
     }
 }
 
@@ -46,7 +46,7 @@ export abstract class ExpressionVisitor extends BaseVisitor {
 
     private visitAll(expressions: Parser.Expression[], parent?: Parser.Expression): Parser.Expression[] {
         const values = expressions.map(value => this.visit(value, parent));
-        return this.differentLists(values, expressions) ? values : expressions;
+        return differentLists(values, expressions) ? values : expressions;
     }
 
     protected visitExpression(expression: Parser.CompoundExpression, parent?: Parser.Expression): Parser.Expression {

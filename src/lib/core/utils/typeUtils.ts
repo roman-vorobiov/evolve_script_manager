@@ -11,4 +11,4 @@ export function assume(condition: boolean): asserts condition {}
 /**
  * @brief Create a new type from @template Original overriding keys in @template Overrides
  */
-export type Modify<Original, Overrides> = Omit<Original, keyof Overrides> & Overrides;
+export type Modify<Original, Overrides extends Partial<Original>> = Omit<Original, keyof Overrides> & Overrides;

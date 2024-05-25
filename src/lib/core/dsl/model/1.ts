@@ -1,90 +1,29 @@
-export type Symbol = {
-    type: "Wildcard" | "Placeholder"
-}
+import type { Modify } from "$lib/core/utils/typeUtils";
+import type * as Previous from "./0";
 
-export type StringLiteral = {
-    type: "String",
-    value: string
-}
+export type Symbol = Previous.Symbol;
+export type StringLiteral = Previous.StringLiteral;
+export type NumberLiteral = Previous.NumberLiteral;
+export type BooleanLiteral = Previous.BooleanLiteral;
+export type EvalLiteral = Previous.EvalLiteral;
+export type Identifier = Previous.Identifier;
+export type Constant = Previous.Constant;
+export type SimpleExpression = Previous.SimpleExpression;
+export type List = Previous.List;
+export type Subscript = Previous.Subscript;
+export type CompoundExpression = Previous.CompoundExpression;
+export type Expression = Previous.Expression;
 
-export type NumberLiteral = {
-    type: "Number",
-    value: number
-}
-
-export type BooleanLiteral = {
-    type: "Boolean",
-    value: boolean
-}
-
-export type EvalLiteral = {
-    type: "Eval",
-    value: string
-}
-
-export type Identifier = {
-    type: "Identifier",
-    value: string
-}
-
-export type List = {
-    type: "List",
-    values: Expression[],
-    fold?: string
-}
-
-export type Subscript = {
-    type: "Subscript",
-    base: Identifier,
-    key: Identifier | Symbol | Subscript | List
-}
-
-export type CompoundExpression = {
-    type: "Expression",
-    operator: string,
-    args: Expression[]
-}
-
-export type Constant = StringLiteral | NumberLiteral | BooleanLiteral;
-
-export type SimpleExpression = Constant | EvalLiteral | Identifier;
-
-export type Expression = SimpleExpression | Subscript | List | CompoundExpression;
-
-export type SettingAssignment = {
-    type: "SettingAssignment",
-    setting: Identifier | Subscript,
-    value: Expression,
-    condition?: Expression
-}
-
-export type SettingShift = {
-    type: "SettingShift",
-    setting: Identifier,
-    value: Identifier | StringLiteral,
-    operator: string,
-    condition?: Expression
-}
-
-export type ConditionPush = {
-    type: "ConditionPush",
-    condition: Expression
-}
-
-export type ConditionPop = {
-    type: "ConditionPop"
-}
-
-export type TriggerArgument = {
-    type: Identifier,
-    id: Identifier,
-    count?: NumberLiteral
-}
-
-export type Trigger = {
-    type: "Trigger",
+export type SettingAssignment = Previous.SettingAssignment;
+export type SettingShift = Previous.SettingShift;
+export type ConditionPush = Previous.ConditionPush;
+export type ConditionPop = Previous.ConditionPop;
+export type TriggerArgument = Modify<Previous.TriggerArgument, {
+    count: NumberLiteral
+}>;
+export type Trigger = Modify<Previous.Trigger, {
     condition: TriggerArgument,
     actions: TriggerArgument[]
-}
+}>;
 
-export type Statement = SettingAssignment | SettingShift | ConditionPush | ConditionPop | Trigger;
+export type Statement = Exclude<Previous.Statement, Previous.ExpressionDefinition | Previous.Trigger> | Previous.Trigger;

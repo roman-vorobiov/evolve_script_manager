@@ -1,6 +1,10 @@
 export * from "./rangeUtils";
 export * from "./setUtils";
 
+export function shallowClone<T extends object>(obj: T): T {
+    return Object.fromEntries(Object.entries(obj).slice()) as T;
+}
+
 /**
  * @brief Turn a POD into the corresponding object type
  */

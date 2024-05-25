@@ -20,7 +20,8 @@ statement
     ;
 
 settingStatement
-    : settingAssignment
+    : expressionDefinition
+    | settingAssignment
     | settingShift
     | conditionBlock
     ;
@@ -28,6 +29,12 @@ settingStatement
 triggerStatement
     : trigger
     | triggerChain
+    ;
+
+// Definitions
+
+expressionDefinition
+    : 'def' identifier '=' expression
     ;
 
 // Settings

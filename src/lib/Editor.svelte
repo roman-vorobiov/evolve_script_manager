@@ -4,11 +4,11 @@
 
     import { loadMonaco, type Monaco } from "$lib/editor/monaco";
 
-    import { type State } from "$lib/core/state";
-    import { type ParseError } from "$lib/core/dsl";
+    import type { State } from "$lib/core/state";
+    import type { ProblemInfo } from "$lib/core/dsl";
 
     export let state: State;
-    export let errors: ParseError[] = [];
+    export let errors: ProblemInfo[] = [];
 
     let editor: Monaco.editor.IStandaloneCodeEditor;
     let monaco: typeof Monaco;
@@ -46,7 +46,7 @@
         }
     }
 
-    function* makeMarkers(errors: ParseError[]): IterableIterator<Monaco.editor.IMarkerData> {
+    function* makeMarkers(errors: ProblemInfo[]): IterableIterator<Monaco.editor.IMarkerData> {
         for (const e of errors) {
             if (e.location === undefined) {
                 console.error(`Unknown location: ${e.message}`);
@@ -58,9 +58,18 @@
                     endLineNumber: e.location.stop.line,
                     endColumn: e.location.stop.column,
                     message: e.message,
-                    severity: monaco.MarkerSeverity.Error
+                    severity: markerSeverity(e.type)
                 }
             }
+        }
+    }
+
+    function markerSeverity(problemType: ProblemInfo["type"]): Monaco.MarkerSeverity {
+        if (problemType === "error") {
+            return monaco.MarkerSeverity.Error;
+        }
+        else {
+            return monaco.MarkerSeverity.Info;
         }
     }
 

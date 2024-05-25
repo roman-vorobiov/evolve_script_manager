@@ -1,22 +1,16 @@
 import type { SourceLocation } from "../parser/source";
 
-export type * as Initial from "./1";
+export type * as Initial from "./0";
 export type * as Final from "./10";
 
 export class ParseError extends Error {
-    location?: SourceLocation;
-
-    constructor(message: string, location?: SourceLocation) {
+    constructor(message: string, public location?: SourceLocation) {
         super(message);
-        this.location = location;
     }
 }
 
 export class CompileError extends Error {
-    offendingEntity: any;
-
-    constructor(message: string, offendingEntity: any) {
+    constructor(message: string, public offendingEntity: any, public details: [string, any][] = []) {
         super(message);
-        this.offendingEntity = offendingEntity;
     }
 }

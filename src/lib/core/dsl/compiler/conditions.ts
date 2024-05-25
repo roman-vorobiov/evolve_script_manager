@@ -1,4 +1,4 @@
-import { StatementVisitor, isConstant } from "./utils";
+import { StatementVisitor, isConstant, differentLists } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/7";
@@ -58,7 +58,7 @@ export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         if (expression.type === "Expression") {
             const args = expression.args.map(arg => this.toSimple(arg));
 
-            if (this.differentLists(args, expression.args)) {
+            if (differentLists(args, expression.args)) {
                 return this.derived(expression, { args });
             }
         }
