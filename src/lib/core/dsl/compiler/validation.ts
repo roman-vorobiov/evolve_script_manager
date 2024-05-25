@@ -116,8 +116,8 @@ class Impl extends StatementVisitor<Parser.Statement> {
     }
 };
 
-export function validateTypes(statements: Parser.Statement[], sourceMap: SourceMap): Parser.Statement[] {
-    const impl = new Impl(sourceMap);
+export function validateTypes(statements: Parser.Statement[], sourceMap: SourceMap, errors: CompileError[]): Parser.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

@@ -790,12 +790,11 @@ describe("Compiler", () => {
                     value: { type: "Number", value: 123 }
                 };
 
-                const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(CompileError);
-                if (error instanceof CompileError) {
-                    expect(error.message).toEqual("Disjunction is not allowed in setting targets");
-                    expect(error.offendingEntity).toBe(originalNode.setting.key);
-                }
+                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
+                expect(errors.length).toEqual(1);
+
+                expect(errors[0].message).toEqual("Disjunction is not allowed in setting targets");
+                expect(errors[0].offendingEntity).toBe(originalNode.setting.key);
             });
         });
 
@@ -862,12 +861,11 @@ describe("Compiler", () => {
                     }
                 };
 
-                const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(CompileError);
-                if (error instanceof CompileError) {
-                    expect(error.message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
-                    expect(error.offendingEntity.$origin).toEqual("root.value.key");
-                }
+                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
+                expect(errors.length).toEqual(1);
+
+                expect(errors[0].message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
+                expect(errors[0].offendingEntity.$origin).toEqual("root.value.key");
             });
 
             it("should throw on unresolved folds inside settings", () => {
@@ -889,12 +887,11 @@ describe("Compiler", () => {
                     }
                 };
 
-                const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(CompileError);
-                if (error instanceof CompileError) {
-                    expect(error.message).toEqual("Fold expression detected outside of a boolean expression");
-                    expect(error.offendingEntity.$origin).toEqual("root.value");
-                }
+                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
+                expect(errors.length).toEqual(1);
+
+                expect(errors[0].message).toEqual("Fold expression detected outside of a boolean expression");
+                expect(errors[0].offendingEntity.$origin).toEqual("root.value");
             });
         });
 
@@ -1052,12 +1049,11 @@ describe("Compiler", () => {
                     }
                 };
 
-                const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(CompileError);
-                if (error instanceof CompileError) {
-                    expect(error.message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
-                    expect(error.offendingEntity.$origin).toEqual("root.condition.key");
-                }
+                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
+                expect(errors.length).toEqual(1);
+
+                expect(errors[0].message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
+                expect(errors[0].offendingEntity.$origin).toEqual("root.condition.key");
             });
 
             it("should throw on unresolved folds inside conditions", () => {
@@ -1080,12 +1076,11 @@ describe("Compiler", () => {
                     }
                 };
 
-                const error = getExcepion(() => resolveFolds(originalNode as Parser.SettingAssignment));
-                expect(error).toBeInstanceOf(CompileError);
-                if (error instanceof CompileError) {
-                    expect(error.message).toEqual("Fold expression detected outside of a boolean expression");
-                    expect(error.offendingEntity.$origin).toEqual("root.condition");
-                }
+                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
+                expect(errors.length).toEqual(1);
+
+                expect(errors[0].message).toEqual("Fold expression detected outside of a boolean expression");
+                expect(errors[0].offendingEntity.$origin).toEqual("root.condition");
             });
         });
     });

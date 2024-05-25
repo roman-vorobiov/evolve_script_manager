@@ -34,10 +34,6 @@ export class PlaceholderResolver extends ExpressionVisitor {
 }
 
 class Impl extends StatementVisitor<Before.Statement, After.Statement> {
-    constructor(sourceMap: SourceMap) {
-        super(sourceMap);
-    }
-
     onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | undefined {
         const getter = makeReferenceGetter(statement.setting);
         const visitor = new PlaceholderResolver(this.sourceMap, getter);
@@ -63,8 +59,8 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     }
 }
 
-export function resolvePlaceholders(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function resolvePlaceholders(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

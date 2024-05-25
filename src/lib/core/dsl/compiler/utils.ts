@@ -2,7 +2,7 @@ import { assert } from "$lib/core/utils/typeUtils";
 
 import type { Modify } from "$lib/core/utils/typeUtils";
 import type { SourceMap } from "../parser/source";
-import type { Initial as Parser } from "../model/index";
+import { CompileError, type Initial as Parser } from "../model/index";
 
 export function isConstant(expression: Parser.Expression): expression is Parser.Constant {
     return expression.type === "Boolean" || expression.type === "Number" || expression.type === "String";
@@ -83,9 +83,42 @@ export abstract class ExpressionVisitor extends BaseVisitor {
     }
 }
 
-export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT extends ModelEntity = BeforeT> extends BaseVisitor {
+abstract class BaseStatementVisitor extends BaseVisitor {
+    private errors: CompileError[];
+
+    constructor(sourceMap: SourceMap, errors: CompileError[]) {
+        super(sourceMap);
+        this.errors = errors;
+    }
+
+    protected *guard<T>(iterator: IterableIterator<T>): IterableIterator<T> {
+        try {
+            yield* iterator;
+        }
+        catch (e) {
+            if (e instanceof CompileError) {
+                this.errors.push(e);
+            }
+            else {
+                throw e;
+            }
+        }
+    }
+
+    protected *asGenerator<T>(fn: () => T): IterableIterator<T> {
+        yield fn();
+    }
+}
+
+export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT extends ModelEntity = BeforeT> extends BaseStatementVisitor {
     visitAll(statements: BeforeT[]): AfterT[] {
-        return statements.map(statement => this.visit(statement));
+        function* generate(self: StatementVisitor<BeforeT, AfterT>) {
+            for (const statement of statements) {
+                yield* self.guard(self.asGenerator(() => self.visit(statement)));
+            }
+        }
+
+        return [...generate(this)];
     }
 
     visit(statement: BeforeT): AfterT {
@@ -93,11 +126,11 @@ export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT exten
     }
 }
 
-export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, AfterT extends ModelEntity = BeforeT> extends BaseVisitor {
+export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, AfterT extends ModelEntity = BeforeT> extends BaseStatementVisitor {
     visitAll(statements: BeforeT[]): AfterT[] {
-        function* generate(self: any) {
+        function* generate(self: GeneratingStatementVisitor<BeforeT, AfterT>) {
             for (const statement of statements) {
-                yield* self.visit(statement);
+                yield* self.guard(self.visit(statement));
             }
         }
 

@@ -1,5 +1,6 @@
 import { GeneratingStatementVisitor } from "./utils";
 
+import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/6";
 import type * as After from "../model/7";
@@ -57,8 +58,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 };
 
-export function applyConditionBlocks(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function applyConditionBlocks(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

@@ -157,8 +157,8 @@ export class FoldResolver extends ExpressionVisitor {
 class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
     private visitor: FoldResolver;
 
-    constructor(sourceMap: SourceMap) {
-        super(sourceMap);
+    constructor(sourceMap: SourceMap, errors: CompileError[]) {
+        super(sourceMap, errors);
         this.visitor = new FoldResolver(sourceMap);
     }
 
@@ -214,8 +214,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 }
 
-export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function resolveFolds(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

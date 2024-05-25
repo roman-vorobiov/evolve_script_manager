@@ -27,11 +27,15 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         });
 
         for (const tail of iterator) {
-            yield this.deriveLocation(statement, <After.Trigger> {
-                type: "Trigger",
-                condition: chainCondition,
-                action: this.normalizeAction(tail)
-            });
+            const makeChain = () => {
+                return this.deriveLocation(statement, <After.Trigger> {
+                    type: "Trigger",
+                    condition: chainCondition,
+                    action: this.normalizeAction(tail)
+                });
+            };
+
+            yield* this.guard(this.asGenerator(makeChain));
         }
     }
 
@@ -113,8 +117,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 };
 
-export function createTriggerChains(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function createTriggerChains(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

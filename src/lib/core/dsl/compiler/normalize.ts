@@ -1,6 +1,7 @@
 import { StatementVisitor, isConstant } from "./utils";
 import { assert } from "$lib/core/utils/typeUtils";
 
+import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/9";
 import type * as After from "../model/10";
@@ -107,8 +108,8 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     }
 };
 
-export function normalizeStatements(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function normalizeStatements(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

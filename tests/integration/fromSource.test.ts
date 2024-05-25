@@ -254,6 +254,22 @@ describe("Compilation", () => {
         });
     });
 
+    it("should handle compiler errors", () => {
+        const { config, errors } = fromSource(`
+            AutoSell.Lumber = ON
+            AutoSell.Stone = 123
+            AutoSell.Copper = OFF
+        `);
+
+        expect(errors.length).toEqual(1);
+        expect(config).toEqual({
+            overrides: {},
+            triggers: [],
+            sellLumber: true,
+            sellCopper: false
+        });
+    });
+
     it("should handle large configs", () => {
         const { errors } = fromSource(exampleConfig);
 

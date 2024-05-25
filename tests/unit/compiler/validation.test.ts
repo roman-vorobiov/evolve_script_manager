@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { processStatement, getExcepion } from "./fixture";
+import { processStatement } from "./fixture";
 import { validateTypes as validateTypesImpl, Validator } from "$lib/core/dsl/compiler/validation";
-import { CompileError } from "$lib/core/dsl/model";
 
 import type * as Parser from "$lib/core/dsl/model/6";
 
@@ -159,12 +158,11 @@ describe("Compiler", () => {
                 value: { type: "String", value: "mad" }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected string[], got string");
-                expect(error.offendingEntity).toBe(originalNode.value);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected string[], got string");
+            expect(errors[0].offendingEntity).toBe(originalNode.value);
         });
 
         it("should throw on unknown settings", () => {
@@ -174,12 +172,11 @@ describe("Compiler", () => {
                 value: { type: "Boolean", value: true }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Unknown setting ID 'hello'");
-                expect(error.offendingEntity).toBe(originalNode.setting);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Unknown setting ID 'hello'");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting);
         });
 
         it("should throw on unknown prefixes", () => {
@@ -194,12 +191,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Unknown identifier");
-                expect(error.offendingEntity).toBe(originalNode.condition.base);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Unknown identifier");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.base);
         });
 
         it("should throw on unknown suffixes", () => {
@@ -214,12 +210,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("'hello' is not a valid resource");
-                expect(error.offendingEntity).toBe(originalNode.condition.key);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("'hello' is not a valid resource");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.key);
         });
 
         it("should throw on wrong value types", () => {
@@ -229,12 +224,11 @@ describe("Compiler", () => {
                 value: { type: "Number", value: 123 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected boolean, got number");
-                expect(error.offendingEntity).toBe(originalNode.value);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got number");
+            expect(errors[0].offendingEntity).toBe(originalNode.value);
         });
 
         it("should throw on wrong condition types", () => {
@@ -249,12 +243,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected boolean, got number");
-                expect(error.offendingEntity).toBe(originalNode.condition);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got number");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition);
         });
 
         it("should throw on wrong setting shift condition types", () => {
@@ -270,12 +263,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected boolean, got number");
-                expect(error.offendingEntity).toBe(originalNode.condition);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingShift);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got number");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition);
         });
 
         it("should throw on wrong condition types in blocks", () => {
@@ -288,12 +280,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected boolean, got number");
-                expect(error.offendingEntity).toBe(originalNode.condition);
-            }
+            const { errors } = validateTypes(originalNode as Parser.ConditionPush);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got number");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition);
         });
 
         it.each(["==", "!="])("should throw on mismatched expression types ('%s')", (op) => {
@@ -311,12 +302,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected string, got number");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[1]);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected string, got number");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1]);
         });
 
         it.each(["and", "or"])("should throw on mismatched expression types ('%s')", (op) => {
@@ -334,12 +324,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected boolean, got string");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[1]);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got string");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1]);
         });
 
         it.each(["not"])("should throw on mismatched expression types ('%s')", (op) => {
@@ -356,12 +345,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected boolean, got string");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[0]);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got string");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[0]);
         });
 
         it.each(["<", "<=", ">", ">="])("should throw on mismatched expression types ('%s')", (op) => {
@@ -379,12 +367,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected number, got boolean");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[0]);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected number, got boolean");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[0]);
         });
 
         it.each(["+", "-", "*", "/"])("should throw on mismatched expression types ('%s')", (op) => {
@@ -402,12 +389,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => validateTypes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Expected number, got boolean");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[0]);
-            }
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected number, got boolean");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[0]);
         });
     });
 });

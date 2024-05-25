@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
+import { processStatement, valuesOf, originsOf } from "./fixture";
 import { resolvePlaceholders as resolvePlaceholdersImpl } from "$lib/core/dsl/compiler/placeholders";
-import { CompileError } from "$lib/core/dsl/model";
 
 import type * as Parser from "$lib/core/dsl/model/3";
 
@@ -20,12 +19,11 @@ describe("Compiler", () => {
                 value: { type: "Boolean", value: true },
             };
 
-            const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Placeholder used without the context to resolve it");
-                expect(error.offendingEntity).toBe(originalNode.setting.key);
-            }
+            const { errors } = resolvePlaceholders(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting.key);
         });
 
         it("should resolve placeholders in setting values", () => {
@@ -101,12 +99,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Placeholder used without the context to resolve it");
-                expect(error.offendingEntity).toBe(originalNode.value.key);
-            }
+            const { errors } = resolvePlaceholders(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
+            expect(errors[0].offendingEntity).toBe(originalNode.value.key);
         });
 
         it("should resolve placeholders in conditions", () => {
@@ -179,12 +176,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Placeholder used without the context to resolve it");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[1].key);
-            }
+            const { errors } = resolvePlaceholders(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1].key);
         });
 
         it("should throw on unresolveded placeholders inside setting shift conditions", () => {
@@ -211,12 +207,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingShift));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Placeholder used without the context to resolve it");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[1].key);
-            }
+            const { errors } = resolvePlaceholders(originalNode as Parser.SettingShift);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1].key);
         });
 
         it("should throw on unresolveded placeholders inside condition blocks", () => {
@@ -240,12 +235,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => resolvePlaceholders(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Placeholder used without the context to resolve it");
-                expect(error.offendingEntity).toBe(originalNode.condition.args[1].key);
-            }
+            const { errors } = resolvePlaceholders(originalNode as Parser.ConditionPush);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1].key);
         });
     });
 });

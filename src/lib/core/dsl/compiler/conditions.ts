@@ -1,5 +1,6 @@
 import { StatementVisitor, isConstant, differentLists } from "./utils";
 
+import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/7";
 import type * as After from "../model/8";
@@ -79,8 +80,8 @@ export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     }
 }
 
-export function flattenExpressions(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function flattenExpressions(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

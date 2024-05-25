@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { processStatements, valuesOf, originsOf, getExcepion } from "./fixture";
+import { processStatements, valuesOf, originsOf } from "./fixture";
 import { inlineReferences as inlineReferencesImpl } from "$lib/core/dsl/compiler/inlineReferences";
-import { CompileError } from "$lib/core/dsl/model";
 
 import type * as Parser from "$lib/core/dsl/model/0";
 
@@ -69,16 +68,15 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode as Parser.ExpressionDefinition]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("'foo' is not defined");
-                expect(error.offendingEntity).toBe(defNode.body.args[0]);
-            }
+            const { errors } = inlineReferences([defNode as Parser.ExpressionDefinition]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("'foo' is not defined");
+            expect(errors[0].offendingEntity).toBe(defNode.body.args[0]);
         });
 
         it("should validate subscript base type", () => {
-            const defNode: Parser.ExpressionDefinition = {
+            const defNode = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
                 body: { type: "Number", value: 123 }
@@ -94,16 +92,15 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode, originalNode as Parser.SettingAssignment]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier expected, got Number");
-                expect(error.offendingEntity).toBe(originalNode.value.base);
-            }
+            const { errors } = inlineReferences([defNode as Parser.ExpressionDefinition, originalNode as Parser.SettingAssignment]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier expected, got Number");
+            expect(errors[0].offendingEntity).toBe(originalNode.value.base);
         });
 
         it("should validate subscript key type", () => {
-            const defNode: Parser.ExpressionDefinition = {
+            const defNode = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
                 body: { type: "Number", value: 123 }
@@ -119,12 +116,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode, originalNode as Parser.SettingAssignment]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier, Subscript or List expected, got Number");
-                expect(error.offendingEntity).toBe(originalNode.value.key);
-            }
+            const { errors } = inlineReferences([defNode as Parser.ExpressionDefinition, originalNode as Parser.SettingAssignment]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier, Subscript or List expected, got Number");
+            expect(errors[0].offendingEntity).toBe(originalNode.value.key);
         });
 
         it("should throw on undefined variables", () => {
@@ -138,12 +134,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => inlineReferences([originalNode as Parser.SettingAssignment]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("'foo' is not defined");
-                expect(error.offendingEntity).toBe(originalNode.value.key);
-            }
+            const { errors } = inlineReferences([originalNode as Parser.SettingAssignment]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("'foo' is not defined");
+            expect(errors[0].offendingEntity).toBe(originalNode.value.key);
         });
 
         it("should throw on placeholders", () => {
@@ -157,12 +152,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode as Parser.ExpressionDefinition]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Placeholder used without the context to resolve it");
-                expect(error.offendingEntity).toBe(defNode.body.key);
-            }
+            const { errors } = inlineReferences([defNode as Parser.ExpressionDefinition]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
+            expect(errors[0].offendingEntity).toBe(defNode.body.key);
         });
 
         it("should be limited to a lexical scope", () => {
@@ -229,15 +223,14 @@ describe("Compiler", () => {
                 body: { type: "Number", value: 456 }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode1, defNode2]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Redefinition of 'foo'");
-                expect(error.offendingEntity).toBe(defNode2);
-                expect(error.details.length).toEqual(1);
-                expect(error.details[0][0]).toEqual("Previously defined here");
-                expect(error.details[0][1]).toBe(defNode1);
-            }
+            const { errors } = inlineReferences([defNode1, defNode2]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Redefinition of 'foo'");
+            expect(errors[0].offendingEntity).toBe(defNode2);
+            expect(errors[0].details.length).toEqual(1);
+            expect(errors[0].details[0][0]).toEqual("Previously defined here");
+            expect(errors[0].details[0][1]).toBe(defNode1);
         });
 
         it("should repace references inside condition blocks", () => {
@@ -339,12 +332,11 @@ describe("Compiler", () => {
                 value: { type: "Number", value: 456 }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode, originalNode as Parser.SettingAssignment]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier or Subscript expected, got Number");
-                expect(error.offendingEntity).toBe(originalNode.setting);
-            }
+            const { errors } = inlineReferences([defNode, originalNode as Parser.SettingAssignment]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier or Subscript expected, got Number");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting);
         });
 
         it("should repace references inside setting values", () => {
@@ -448,12 +440,11 @@ describe("Compiler", () => {
                 value: { type: "String", value: "456" }
             };
 
-            const error = getExcepion(() => inlineReferences([defNode, originalNode as Parser.SettingShift]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier expected, got Number");
-                expect(error.offendingEntity).toBe(originalNode.setting);
-            }
+            const { errors } = inlineReferences([defNode, originalNode as Parser.SettingShift]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier expected, got Number");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting);
         });
 
         it("should repace references inside setting shift values", () => {
@@ -576,12 +567,11 @@ describe("Compiler", () => {
                 ]
             };
 
-            const error = getExcepion(() => inlineReferences([defNode, originalNode]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier expected, got Number");
-                expect(error.offendingEntity).toBe(originalNode.condition.id);
-            }
+            const { errors } = inlineReferences([defNode, originalNode]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier expected, got Number");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.id);
         });
 
         it("should repace references inside trigger counts", () => {
@@ -651,12 +641,11 @@ describe("Compiler", () => {
                 ]
             };
 
-            const error = getExcepion(() => inlineReferences([defNode, originalNode]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Number expected, got String");
-                expect(error.offendingEntity).toBe(originalNode.condition.count);
-            }
+            const { errors } = inlineReferences([defNode, originalNode]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Number expected, got String");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.count);
         });
     });
 });

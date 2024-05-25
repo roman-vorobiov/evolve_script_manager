@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { processStatements, getExcepion } from "./fixture";
+import { processStatements } from "./fixture";
 import { collectLogFilterStrings as collectLogFilterStringsImpl } from "$lib/core/dsl/compiler/logFilter";
-import { CompileError } from "$lib/core/dsl/model";
 
 import type * as Parser from "$lib/core/dsl/model/7";
 
@@ -126,12 +125,11 @@ describe("Compiler", () => {
                 value: { type: "Identifier", value: "foo" } as any
             };
 
-            const error = getExcepion(() => collectLogFilterStrings([originalNode]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("String expected");
-                expect(error.offendingEntity).toBe(originalNode.value);
-            }
+            const { errors } = collectLogFilterStrings([originalNode]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("String expected");
+            expect(errors[0].offendingEntity).toBe(originalNode.value);
         });
 
         it("should throw on conditions", () => {
@@ -147,12 +145,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => collectLogFilterStrings([originalNode]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Log filter cannot be set conditionally");
-                expect(error.offendingEntity).toBe(originalNode.condition);
-            }
+            const { errors } = collectLogFilterStrings([originalNode]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Log filter cannot be set conditionally");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition);
         });
     });
 });

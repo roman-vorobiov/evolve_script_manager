@@ -49,8 +49,8 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
     }
 }
 
-export function collectLogFilterStrings(statements: Parser.Statement[], sourceMap: SourceMap): Parser.Statement[] {
-    const impl = new Impl(sourceMap);
+export function collectLogFilterStrings(statements: Parser.Statement[], sourceMap: SourceMap, errors: CompileError[]): Parser.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

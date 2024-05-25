@@ -18,10 +18,10 @@ import type { Initial, Final } from "../model";
 import type { SourceMap } from "../parser/source";
 
 class Pipeline<T = Initial.Statement> {
-    constructor(private statements: T[], private sourceMap: SourceMap) {}
+    constructor(private statements: T[], private sourceMap: SourceMap, private errors: CompileError[]) {}
 
-    then<U>(pipe: (_: T[], sm: SourceMap) => U[]): Pipeline<U> {
-        return new Pipeline(pipe(this.statements, this.sourceMap), this.sourceMap);
+    then<U>(pipe: (_: T[], sm: SourceMap, e: CompileError[]) => U[]): Pipeline<U> {
+        return new Pipeline(pipe(this.statements, this.sourceMap, this.errors), this.sourceMap, this.errors);
     }
 
     flush() {
@@ -29,8 +29,8 @@ class Pipeline<T = Initial.Statement> {
     }
 }
 
-function process(statements: Initial.Statement[], sourceMap: SourceMap): Final.Statement[] {
-    return new Pipeline(statements, sourceMap)
+function process(statements: Initial.Statement[], sourceMap: SourceMap, errors: CompileError[]): Final.Statement[] {
+    return new Pipeline(statements, sourceMap, errors)
         .then(inlineReferences)
         .then(resolveWildcards)
         .then(resolveFolds)
@@ -72,16 +72,11 @@ export function compile(statements: Initial.Statement[], sourceMap: SourceMap): 
     const errors: CompileError[] = [];
 
     try {
-        const processed = process(statements, sourceMap);
+        const processed = process(statements, sourceMap, errors);
         fillConfig(config, processed);
     }
     catch (e) {
-        if (e instanceof CompileError) {
-            errors.push(e);
-        }
-        else {
-            console.error(e);
-        }
+        console.error(e);
     }
 
     return { config, errors };

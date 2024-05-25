@@ -47,8 +47,8 @@ export class PrefixResolver extends ExpressionVisitor {
 class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     private visitor: PrefixResolver;
 
-    constructor(sourceMap: SourceMap) {
-        super(sourceMap);
+    constructor(sourceMap: SourceMap, errors: CompileError[]) {
+        super(sourceMap, errors);
         this.visitor = new PrefixResolver(sourceMap);
     }
 
@@ -79,8 +79,8 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     }
 }
 
-export function resolvePrefixes(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function resolvePrefixes(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }

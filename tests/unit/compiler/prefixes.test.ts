@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { processStatement, valuesOf, originsOf, getExcepion } from "./fixture";
+import { processStatement, valuesOf, originsOf } from "./fixture";
 import { resolvePrefixes as resolvePrefixesImpl } from "$lib/core/dsl/compiler/prefixes";
-import { CompileError } from "$lib/core/dsl/model";
 
 import type * as Parser from "$lib/core/dsl/model/4";
 
@@ -42,12 +41,11 @@ describe("Compiler", () => {
                 value: { type: "Boolean", value: true }
             };
 
-            const error = getExcepion(() => resolvePrefixes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("'hello' is not a valid setting prefix");
-                expect(error.offendingEntity).toBe(originalNode.setting.base);
-            }
+            const { errors } = resolvePrefixes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("'hello' is not a valid setting prefix");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting.base);
         });
 
         it("should throw on incompatible suffixes inside setting targets", () => {
@@ -61,12 +59,11 @@ describe("Compiler", () => {
                 value: { type: "Boolean", value: true }
             };
 
-            const error = getExcepion(() => resolvePrefixes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("'Bolognium' is not a valid resource for AutoSell");
-                expect(error.offendingEntity).toBe(originalNode.setting.key);
-            }
+            const { errors } = resolvePrefixes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("'Bolognium' is not a valid resource for AutoSell");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting.key);
         });
 
         it("should throw on invalid suffixes inside setting targets", () => {
@@ -84,12 +81,11 @@ describe("Compiler", () => {
                 value: { type: "Boolean", value: true }
             };
 
-            const error = getExcepion(() => resolvePrefixes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier expected");
-                expect(error.offendingEntity).toBe(originalNode.setting.key);
-            }
+            const { errors } = resolvePrefixes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier expected");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting.key);
         });
 
         it("should resolve setting prefixes in setting values", () => {
@@ -240,12 +236,11 @@ describe("Compiler", () => {
                 }
             };
 
-            const error = getExcepion(() => resolvePrefixes(originalNode as Parser.SettingAssignment));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier expected");
-                expect(error.offendingEntity).toBe(originalNode.condition.key);
-            }
+            const { errors } = resolvePrefixes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier expected");
+            expect(errors[0].offendingEntity).toBe(originalNode.condition.key);
         });
     });
 });

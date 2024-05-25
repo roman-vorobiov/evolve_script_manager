@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { processStatements, getExcepion } from "./fixture";
+import { processStatements } from "./fixture";
 import { collectIgnoredTechs as collectIgnoredTechsImpl } from "$lib/core/dsl/compiler/ignoredResearch";
-import { CompileError } from "$lib/core/dsl/model";
 
 import type * as Parser from "$lib/core/dsl/model/7";
 
@@ -442,12 +441,11 @@ describe("Compiler", () => {
                 value: { type: "String", value: "tech-theocracy" } as any
             };
 
-            const error = getExcepion(() => collectIgnoredTechs([originalNode]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Identifier expected");
-                expect(error.offendingEntity).toBe(originalNode.value);
-            }
+            const { errors } = collectIgnoredTechs([originalNode]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Identifier expected");
+            expect(errors[0].offendingEntity).toBe(originalNode.value);
         });
 
         it("should throw on invalid values", () => {
@@ -458,12 +456,11 @@ describe("Compiler", () => {
                 value: { type: "Identifier", value: "hello" }
             };
 
-            const error = getExcepion(() => collectIgnoredTechs([originalNode]));
-            expect(error).toBeInstanceOf(CompileError);
-            if (error instanceof CompileError) {
-                expect(error.message).toEqual("Unknown research 'hello'");
-                expect(error.offendingEntity).toBe(originalNode.value);
-            }
+            const { errors } = collectIgnoredTechs([originalNode]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Unknown research 'hello'");
+            expect(errors[0].offendingEntity).toBe(originalNode.value);
         });
     });
 });

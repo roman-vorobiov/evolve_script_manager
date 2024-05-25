@@ -165,8 +165,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 }
 
-export function inlineReferences(statements: Before.Statement[], sourceMap: SourceMap): After.Statement[] {
-    const impl = new Impl(sourceMap);
+export function inlineReferences(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
+    const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);
 }
