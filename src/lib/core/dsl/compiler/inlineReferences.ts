@@ -1,5 +1,5 @@
 import { CompileError, CompileWarning } from "../model";
-import { ExpressionVisitor, GeneratingStatementVisitor, differentLists } from "./utils";
+import { ExpressionVisitor, GeneratingStatementVisitor } from "./utils";
 import { PlaceholderResolver } from "./placeholders"
 import { shallowClone } from "$lib/core/utils"
 
@@ -83,24 +83,22 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         this.currentScope[statement.name.value] = definition;
     }
 
-    *onConditionPush(statement: Before.ConditionPush): IterableIterator<After.ConditionPush> {
+    *visitConditionBlock(statement: Before.ConditionBlock): IterableIterator<After.Statement> {
         this.scope.push(shallowClone(this.currentScope));
 
-        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-        const condition = visitor.visit(statement.condition);
-
-        if (condition !== statement.condition) {
-            yield this.derived(statement, { condition }) as After.ConditionPush;
+        try {
+            yield* super.visitConditionBlock(statement);
         }
-        else {
-            yield statement;
+        finally {
+            this.scope.pop();
         }
     }
 
-    *onConditionPop(statement: Before.ConditionPop): IterableIterator<After.ConditionPop> {
-        this.scope.pop();
+    *onConditionBlock(statement: Before.ConditionBlock, body: After.Statement[]): IterableIterator<After.ConditionBlock> {
+        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
+        const condition = visitor.visit(statement.condition);
 
-        yield statement;
+        yield this.derived(statement, { condition, body }) as After.ConditionBlock;
     }
 
     *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
@@ -110,13 +108,9 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const value = visitor.visit(statement.value);
         const condition = statement.condition && visitor.visit(statement.condition);
 
-        if (setting !== statement.setting || value !== statement.value || condition !== statement.condition) {
-            validateType(setting, statement.setting, "Identifier", "Subscript");
-            yield this.derived(statement, { setting, value, condition }) as After.SettingAssignment;
-        }
-        else {
-            yield statement;
-        }
+        validateType(setting, statement.setting, "Identifier", "Subscript");
+
+        yield this.derived(statement, { setting, value, condition }) as After.SettingAssignment;
     }
 
     *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
@@ -126,25 +120,16 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const value = visitor.visit(statement.value);
         const condition = statement.condition && visitor.visit(statement.condition);
 
-        if (setting !== statement.setting || value !== statement.value || condition !== statement.condition) {
-            validateType(setting, statement.setting, "Identifier");
-            yield this.derived(statement, { setting, value, condition }) as After.SettingShift;
-        }
-        else {
-            yield statement;
-        }
+        validateType(setting, statement.setting, "Identifier");
+
+        yield this.derived(statement, { setting, value, condition }) as After.SettingShift;
     }
 
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
         const condition = this.processTriggerArgument(statement.condition);
         const actions = statement.actions.map(a => this.processTriggerArgument(a));
 
-        if (condition !== statement.condition || differentLists(actions, statement.actions)) {
-            yield this.derived(statement, { condition, actions }) as After.Trigger;
-        }
-        else {
-            yield statement as After.Trigger;
-        }
+        yield this.derived(statement, { condition, actions }) as After.Trigger;
     }
 
     private processTriggerArgument(arg: Before.TriggerArgument): After.TriggerArgument {
@@ -153,15 +138,10 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const id = visitor.visit(arg.id);
         const count = arg.count && visitor.visit(arg.count);
 
-        if (id !== arg.id || count !== arg.count) {
-            validateType(id, arg.id, "Identifier");
-            count && validateType(count, arg.count, "Number");
+        validateType(id, arg.id, "Identifier");
+        count && validateType(count, arg.count, "Number");
 
-            return this.derived(arg, { id, count }) as After.TriggerArgument;
-        }
-        else {
-            return arg as After.TriggerArgument;
-        }
+        return this.derived(arg, { id, count }) as After.TriggerArgument;
     }
 
     private get currentScope(): ScopeDefinitions {

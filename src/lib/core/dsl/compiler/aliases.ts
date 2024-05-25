@@ -47,29 +47,23 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         this.visitor = new AliasResolver(sourceMap);
     }
 
-    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | undefined {
+    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
         const value = this.visitor.visit(statement.value);
         const condition = statement.condition && this.visitor.visit(statement.condition);
 
-        if (value !== statement.value || condition !== statement.condition) {
-            return this.derived(statement, { value, condition }) as After.SettingAssignment;
-        }
+        return this.derived(statement, { value, condition }) as After.SettingAssignment;
     }
 
-    onSettingShift(statement: Before.SettingShift): After.SettingShift | undefined {
+    onSettingShift(statement: Before.SettingShift): After.SettingShift {
         const condition = statement.condition && this.visitor.visit(statement.condition);
 
-        if (condition !== statement.condition) {
-            return this.derived(statement, { condition }) as After.SettingShift;
-        }
+        return this.derived(statement, { condition }) as After.SettingShift;
     }
 
-    onConditionPush(statement: Before.ConditionPush): After.ConditionPush | undefined {
+    onConditionBlock(statement: Before.ConditionBlock, body: After.Statement[]): After.ConditionBlock {
         const condition = this.visitor.visit(statement.condition);
 
-        if (condition !== statement.condition) {
-            return this.derived(statement, { condition }) as After.ConditionPush;
-        }
+        return this.derived(statement, { condition, body }) as After.ConditionBlock;
     }
 }
 

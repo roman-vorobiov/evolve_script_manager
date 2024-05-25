@@ -178,11 +178,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
                 yield this.derived(statement, { setting: target as After.SettingAssignment["setting"], value, condition });
             }
         }
-        else if (setting !== statement.setting || value !== statement.value || condition !== statement.condition) {
-            yield this.derived(statement, { setting, value, condition }) as After.SettingAssignment;
-        }
         else {
-            yield statement as After.SettingAssignment;
+            yield this.derived(statement, { setting, value, condition }) as After.SettingAssignment;
         }
     }
 
@@ -192,25 +189,15 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
             validateExpressionResolved(condition);
         }
 
-        if (condition !== statement.condition) {
-            yield this.derived(statement, { condition });
-        }
-        else {
-            yield statement as After.SettingShift;
-        }
+        yield this.derived(statement, { condition });
     }
 
-    *onConditionPush(statement: Before.ConditionPush): IterableIterator<After.ConditionPush> {
+    *onConditionBlock(statement: Before.ConditionBlock, body: After.Statement[]): IterableIterator<After.ConditionBlock> {
         const condition = this.visitor.visit(statement.condition);
 
         validateExpressionResolved(condition);
 
-        if (condition !== statement.condition) {
-            yield this.derived(statement, { condition }) as After.ConditionPush;
-        }
-        else {
-            yield statement as After.ConditionPush;
-        }
+        yield this.derived(statement, { condition, body }) as After.ConditionBlock;
     }
 }
 

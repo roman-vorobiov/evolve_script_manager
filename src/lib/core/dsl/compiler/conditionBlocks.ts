@@ -8,37 +8,34 @@ import type * as After from "../model/7";
 class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
     private stack: After.Expression[] = [];
 
-    *onConditionPush(statement: Before.ConditionPush): IterableIterator<After.Statement> {
+    *visitConditionBlock(statement: Before.ConditionBlock): IterableIterator<After.Statement> {
         const newCondition = this.conjunction(this.stack.at(-1), statement.condition)!;
         this.stack.push(newCondition);
-    }
 
-    *onConditionPop(statement: Before.ConditionPop): IterableIterator<After.Statement> {
-        this.stack.pop();
+        try {
+            for (const childStatement of statement.body) {
+                yield* this.visit(childStatement);
+            }
+        }
+        finally {
+            this.stack.pop();
+        }
     }
 
     *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
         const parentCondition = this.stack.at(-1);
-        if (parentCondition !== undefined) {
-            yield this.derived(statement, {
-                condition: this.conjunction(parentCondition, statement.condition)!
-            });
-        }
-        else {
-            yield statement;
-        }
+
+        yield this.derived(statement, {
+            condition: this.conjunction(parentCondition, statement.condition)!
+        });
     }
 
     *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
         const parentCondition = this.stack.at(-1);
-        if (parentCondition !== undefined) {
-            yield this.derived(statement, {
-                condition: this.conjunction(parentCondition, statement.condition)!
-            });
-        }
-        else {
-            yield statement;
-        }
+
+        yield this.derived(statement, {
+            condition: this.conjunction(parentCondition, statement.condition)!
+        });
     }
 
     private conjunction(parent?: After.Expression, child?: After.Expression): After.Expression | undefined {

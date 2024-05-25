@@ -272,15 +272,16 @@ describe("Compiler", () => {
 
         it("should throw on wrong condition types in blocks", () => {
             const originalNode = {
-                type: "ConditionPush",
+                type: "ConditionBlock",
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceQuantity" },
                     key: { type: "Identifier", value: "Copper" }
-                }
+                },
+                body: []
             };
 
-            const { errors } = validateTypes(originalNode as Parser.ConditionPush);
+            const { errors } = validateTypes(originalNode as Parser.ConditionBlock);
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Expected boolean, got number");

@@ -989,7 +989,7 @@ describe("Compiler", () => {
 
             it("should resolve folds inside condition blocks", () => {
                 const originalNode = {
-                    type: "ConditionPush",
+                    type: "ConditionBlock",
                     condition: {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceDemanded" },
@@ -1002,10 +1002,11 @@ describe("Compiler", () => {
                                 { type: "Identifier", value: "Aluminium" },
                             ]
                         }
-                    }
+                    },
+                    body: []
                 };
 
-                const { nodes, from } = resolveFolds(originalNode as Parser.ConditionPush);
+                const { nodes, from } = resolveFolds(originalNode as Parser.ConditionBlock);
                 expect(nodes.length).toEqual(1);
 
                 const expectedNode = from(originalNode, {

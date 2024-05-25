@@ -1,4 +1,4 @@
-import { StatementVisitor, isConstant, differentLists } from "./utils";
+import { StatementVisitor, isConstant } from "./utils";
 
 import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
@@ -50,21 +50,18 @@ export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         const condition = statement.condition && this[conditionStrategy](statement.condition);
         const value = this.toSimple(statement.value);
 
-        if (value !== statement.value || condition !== statement.condition) {
-            return this.derived(statement, { value, condition });
-        }
+        return this.derived(statement, { value, condition });
     }
 
     private toFlat(expression: Before.Expression): After.Expression {
         if (expression.type === "Expression") {
             const args = expression.args.map(arg => this.toSimple(arg));
 
-            if (differentLists(args, expression.args)) {
-                return this.derived(expression, { args });
-            }
+            return this.derived(expression, { args });
         }
-
-        return expression as After.Expression;
+        else {
+            return expression;
+        }
     }
 
     private toSimple(expression: Before.Expression): After.SimpleExpression {

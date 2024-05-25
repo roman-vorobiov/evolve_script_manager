@@ -16,4 +16,4 @@ export type SettingShift = Previous.SettingShift;
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
-export type Statement = Exclude<Previous.Statement, Previous.ConditionPush | Previous.ConditionPop>;
+export type Statement = Exclude<Previous.Statement, Previous.ConditionBlock>;

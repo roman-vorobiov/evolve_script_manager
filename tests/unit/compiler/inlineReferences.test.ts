@@ -160,60 +160,65 @@ describe("Compiler", () => {
         });
 
         it("should be limited to a lexical scope", () => {
-            const defNode1 = {
-                type: "ExpressionDefinition",
-                name: { type: "Identifier", value: "foo" },
-                body: { type: "Number", value: 123 }
-            };
-
-            const defNode2 = {
-                type: "ExpressionDefinition",
-                name: { type: "Identifier", value: "foo" },
-                body: { type: "Number", value: 456 }
-            };
-
             const originalNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "hello" },
-                value: { type: "Identifier", value: "$foo" }
+                type: "ConditionBlock",
+                condition: { type: "Eval", value: "hello" },
+                body: [
+                    {
+                        type: "ExpressionDefinition",
+                        name: { type: "Identifier", value: "foo" },
+                        body: { type: "Number", value: 123 }
+                    },
+                    {
+                        type: "ConditionBlock",
+                        condition: { type: "Eval", value: "hello" },
+                        body: [
+                            {
+                                type: "ExpressionDefinition",
+                                name: { type: "Identifier", value: "foo" },
+                                body: { type: "Number", value: 456 }
+                            },
+                            {
+                                type: "SettingAssignment",
+                                setting: { type: "Identifier", value: "hello" },
+                                value: { type: "Identifier", value: "$foo" }
+                            }
+                        ]
+                    },
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "hello" },
+                        value: { type: "Identifier", value: "$foo" }
+                    }
+                ]
             };
 
-            const { warnings, nodes, from } = inlineReferences([
-                <Parser.ConditionPush> { type: "ConditionPush", condition: { type: "Eval", value: "hello" } },
-                    <Parser.ExpressionDefinition> defNode1,
-
-                    <Parser.ConditionPush> { type: "ConditionPush", condition: { type: "Eval", value: "hello" } },
-                        <Parser.ExpressionDefinition> defNode2,
-                        <Parser.SettingAssignment> originalNode,
-                    <Parser.ConditionPop> { type: "ConditionPop" },
-
-                    <Parser.SettingAssignment> originalNode,
-                <Parser.ConditionPop> { type: "ConditionPop" }
-            ]);
-            expect(nodes.length).toEqual(6);
+            const { warnings, nodes, from } = inlineReferences([originalNode as Parser.ConditionBlock]);
+            expect(nodes.length).toEqual(1);
 
             expect(warnings[0].message).toEqual("Redefinition of 'foo'");
-            expect(warnings[0].offendingEntity).toBe(defNode2);
+            expect(warnings[0].offendingEntity).toBe((originalNode.body[1].body as any)[0]);
             expect(warnings[0].details.length).toEqual(1);
             expect(warnings[0].details[0][0]).toEqual("Previously defined here");
-            expect(warnings[0].details[0][1]).toBe(defNode1);
+            expect(warnings[0].details[0][1]).toBe(originalNode.body[0]);
 
-            {
-                const expectedNode = from(originalNode, {
-                    value: defNode2.body
-                });
+            const expectedNode = from(originalNode, {
+                body: [
+                    from(originalNode.body[1], {
+                        body: [
+                            from((originalNode.body[1].body as any)[1], {
+                                value: (originalNode.body[1].body as any)[0].body
+                            })
+                        ]
+                    }),
+                    from(originalNode.body[2], {
+                        value: originalNode.body[0].body
+                    })
+                ]
+            });
 
-                expect(valuesOf(nodes[2])).toEqual(valuesOf(expectedNode));
-                expect(originsOf(nodes[2])).toEqual(originsOf(expectedNode));
-            }
-            {
-                const expectedNode = from(originalNode, {
-                    value: defNode1.body
-                });
-
-                expect(valuesOf(nodes[4])).toEqual(valuesOf(expectedNode));
-                expect(originsOf(nodes[4])).toEqual(originsOf(expectedNode));
-            }
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
         it("should throw on redefinitions in the same scope", () => {
@@ -240,21 +245,19 @@ describe("Compiler", () => {
         });
 
         it("should repace references inside condition blocks", () => {
-            const defNode = {
+            const defNode: Parser.ExpressionDefinition = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
                 body: { type: "Number", value: 123 }
             };
 
-            const originalNode = {
-                type: "ConditionPush",
-                condition: { type: "Identifier", value: "$foo" }
+            const originalNode: Parser.ConditionBlock = {
+                type: "ConditionBlock",
+                condition: { type: "Identifier", value: "$foo" },
+                body: []
             };
 
-            const { nodes, from } = inlineReferences([
-                <Parser.ExpressionDefinition> defNode,
-                <Parser.ConditionPush> originalNode
-            ]);
+            const { nodes, from } = inlineReferences([defNode, originalNode]);
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {

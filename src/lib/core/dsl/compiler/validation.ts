@@ -91,7 +91,7 @@ export class Validator {
 class Impl extends StatementVisitor<Parser.Statement> {
     private visitor = new Validator();
 
-    onSettingAssignment(statement: Parser.SettingAssignment) {
+    onSettingAssignment(statement: Parser.SettingAssignment): Parser.SettingAssignment {
         const valueType = this.visitor.visit(statement.value);
         checkType(valueType, getSettingType(statement.setting), statement.value);
 
@@ -99,20 +99,26 @@ class Impl extends StatementVisitor<Parser.Statement> {
             const conditionType = this.visitor.visit(statement.condition);
             checkType(conditionType, "boolean", statement.condition);
         }
+
+        return statement;
     }
 
-    onSettingShift(statement: Parser.SettingShift) {
+    onSettingShift(statement: Parser.SettingShift): Parser.SettingShift {
         checkType(getSettingType(statement.setting), "string[]", statement.value);
 
         if (statement.condition) {
             const conditionType = this.visitor.visit(statement.condition);
             checkType(conditionType, "boolean", statement.condition);
         }
+
+        return statement;
     }
 
-    onConditionPush(statement: Parser.ConditionPush) {
+    onConditionBlock(statement: Parser.ConditionBlock, body: Parser.Statement[]): Parser.ConditionBlock {
         const conditionType = this.visitor.visit(statement.condition);
         checkType(conditionType, "boolean", statement.condition);
+
+        return this.derived(statement, { body });
     }
 };
 

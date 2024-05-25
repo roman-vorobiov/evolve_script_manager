@@ -173,15 +173,16 @@ describe("Compiler", () => {
 
             it("should resolve aliases in condition blocks", () => {
                 const originalNode = {
-                    type: "ConditionPush",
+                    type: "ConditionBlock",
                     condition: {
                         type: "Subscript",
                         base: { type: "Identifier", value: "RacePillared" },
                         key: { type: "Identifier", value: "Imitation" }
-                    }
+                    },
+                    body: []
                 };
 
-                const { nodes, from } = resolveAliases(originalNode as Parser.ConditionPush);
+                const { nodes, from } = resolveAliases(originalNode as Parser.ConditionBlock);
 
                 const expectedNode = from(originalNode, {
                     condition: from(originalNode.condition, {

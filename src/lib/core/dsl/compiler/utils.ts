@@ -25,7 +25,24 @@ abstract class BaseVisitor {
     }
 
     protected derived<T1 extends object, T2 extends object>(original: T1, overrides: T2): Modify<T1, T2> {
-        return this.deriveLocation(original, { ...original, ...overrides });
+        const difference = Object.entries(overrides).filter(([key, value]) => {
+            if (!(key in original)) {
+                return value !== undefined;
+            }
+            else if (Array.isArray(value)) {
+                return differentLists(value, original[key as keyof T1] as any);
+            }
+            else {
+                return value !== original[key as keyof T1];
+            }
+        });
+
+        if (difference.length !== 0) {
+            return this.deriveLocation(original, { ...original, ...Object.fromEntries(difference) }) as any;
+        }
+        else {
+            return original as any;
+        }
     }
 }
 
@@ -65,21 +82,15 @@ export abstract class ExpressionVisitor extends BaseVisitor {
     }
 
     protected onExpression(expression: Parser.CompoundExpression, args: Parser.CompoundExpression["args"], parent?: Parser.Expression): Parser.Expression | undefined {
-        return this.defaultCallback(expression, args, "args");
+        return this.derived(expression, { args });
     }
 
     protected onList(expression: Parser.List, values: Parser.List["values"], parent?: Parser.Expression): Parser.Expression | undefined {
-        return this.defaultCallback(expression, values, "values");
+        return this.derived(expression, { values });
     }
 
     protected onSubscript(expression: Parser.Subscript, key: Parser.Subscript["key"], parent?: Parser.Expression): Parser.Expression | undefined {
-        return this.defaultCallback(expression, key, "key");
-    }
-
-    private defaultCallback<T extends Parser.Expression, U>(expression: T, newValue: U, key: keyof T): Parser.Expression | undefined {
-        if (newValue !== expression[key]) {
-            return this.derived(expression, { [key]: newValue }) as any as T;
-        }
+        return this.derived(expression, { key });
     }
 }
 
@@ -122,7 +133,22 @@ export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT exten
     }
 
     visit(statement: BeforeT): AfterT {
+        if (statement.type === "ConditionBlock") {
+            return this.visitConditionBlock(statement as unknown as Parser.ConditionBlock);
+        }
+
         return (this as any)[`on${statement.type}`]?.(statement) ?? statement;
+    }
+
+    visitConditionBlock(statement: Parser.ConditionBlock): AfterT {
+        const body = this.visitAll(statement.body as any);
+        return this.onConditionBlock(statement, body as any) ?? statement as unknown as AfterT;
+    }
+
+    onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): AfterT | undefined {
+        if (differentLists(body, statement.body)) {
+            return this.derived(statement, { body }) as unknown as AfterT;
+        }
     }
 }
 
@@ -138,13 +164,32 @@ export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, Af
     }
 
     *visit(statement: BeforeT): IterableIterator<AfterT> {
-        const iterator = (this as any)[`on${statement.type}`]?.(statement);
-        if (iterator !== undefined) {
-            yield* iterator;
+        if (statement.type === "ConditionBlock") {
+            yield* this.visitConditionBlock(statement as unknown as Parser.ConditionBlock);
         }
         else {
-            assert<AfterT>(statement);
-            yield statement;
+            const iterator = (this as any)[`on${statement.type}`]?.(statement);
+            if (iterator !== undefined) {
+                yield* iterator;
+            }
+            else {
+                assert<AfterT>(statement);
+                yield statement;
+            }
+        }
+    }
+
+    *visitConditionBlock(statement: Parser.ConditionBlock): IterableIterator<AfterT> {
+        const body = this.visitAll(statement.body as any);
+        yield* this.onConditionBlock(statement, body as any);
+    }
+
+    *onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): IterableIterator<AfterT> {
+        if (differentLists(body, statement.body)) {
+            yield this.derived(statement, { body }) as unknown as AfterT;
+        }
+        else {
+            yield statement as unknown as AfterT;
         }
     }
 }

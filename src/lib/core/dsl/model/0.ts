@@ -66,13 +66,10 @@ export type SettingShift = {
     condition?: Expression
 }
 
-export type ConditionPush = {
-    type: "ConditionPush",
-    condition: Expression
-}
-
-export type ConditionPop = {
-    type: "ConditionPop"
+export type ConditionBlock = {
+    type: "ConditionBlock",
+    condition: Expression,
+    body: Statement[]
 }
 
 export type TriggerArgument = {
@@ -96,7 +93,6 @@ export type ExpressionDefinition = {
 export type Statement =
     SettingAssignment |
     SettingShift |
-    ConditionPush |
-    ConditionPop |
+    ConditionBlock |
     Trigger |
     ExpressionDefinition;

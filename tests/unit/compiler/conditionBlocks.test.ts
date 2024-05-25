@@ -10,25 +10,25 @@ describe("Compiler", () => {
     describe("Condition blocks", () => {
         it("should apply conditions to nested statements", () => {
             const originalNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "hello" },
-                value: { type: "Number", value: 123 }
+                type: "ConditionBlock",
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceDemanded" },
+                    key: { type: "Identifier", value: "Copper" },
+                },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "hello" },
+                        value: { type: "Number", value: 123 }
+                    }
+                ]
             };
 
-            const blockCondition = {
-                type: "Subscript",
-                base: { type: "Identifier", value: "ResourceDemanded" },
-                key: { type: "Identifier", value: "Copper" },
-            };
+            const { nodes, from } = applyConditionBlocks([originalNode as Parser.ConditionBlock]);
 
-            const { nodes, from } = applyConditionBlocks([
-                <Parser.ConditionPush> { type: "ConditionPush", condition: blockCondition },
-                    <Parser.SettingAssignment> originalNode,
-                <Parser.ConditionPop> { type: "ConditionPop" }
-            ]);
-
-            const expectedNode = from(originalNode, {
-                condition: blockCondition
+            const expectedNode = from(originalNode.body[0], {
+                condition: originalNode.condition
             });
 
             expect(nodes.length).toEqual(1);
@@ -38,33 +38,33 @@ describe("Compiler", () => {
 
         it("should join conditions of nested statements", () => {
             const originalNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "hello" },
-                value: { type: "Number", value: 123 },
+                type: "ConditionBlock",
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
-                    key: { type: "Identifier", value: "Copper" },
-                }
+                    key: { type: "Identifier", value: "Stone" },
+                },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "hello" },
+                        value: { type: "Number", value: 123 },
+                        condition: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceDemanded" },
+                            key: { type: "Identifier", value: "Copper" },
+                        }
+                    }
+                ]
             };
 
-            const blockCondition = {
-                type: "Subscript",
-                base: { type: "Identifier", value: "ResourceDemanded" },
-                key: { type: "Identifier", value: "Stone" },
-            };
+            const { nodes, from } = applyConditionBlocks([originalNode as Parser.ConditionBlock]);
 
-            const { nodes, from } = applyConditionBlocks([
-                <Parser.ConditionPush> { type: "ConditionPush", condition: blockCondition },
-                    <Parser.SettingAssignment> originalNode,
-                <Parser.ConditionPop> { type: "ConditionPop" }
-            ]);
-
-            const expectedNode = from(originalNode, {
-                condition: from(originalNode.condition, {
+            const expectedNode = from(originalNode.body[0], {
+                condition: from(originalNode.body[0].condition, {
                     type: "Expression",
                     operator: "and",
-                    args: [blockCondition, originalNode.condition]
+                    args: [originalNode.condition, originalNode.body[0].condition]
                 })
             });
 
@@ -75,51 +75,61 @@ describe("Compiler", () => {
 
         it("should combine nested blocks", () => {
             const originalNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "hello" },
-                value: { type: "Number", value: 123 },
+                type: "ConditionBlock",
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
-                    key: { type: "Identifier", value: "Copper" },
-                }
+                    key: { type: "Identifier", value: "Stone" },
+                },
+                body: [
+                    {
+                        type: "ConditionBlock",
+                        condition: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceDemanded" },
+                            key: { type: "Identifier", value: "Coal" },
+                        },
+                        body: [
+                            {
+                                type: "SettingAssignment",
+                                setting: { type: "Identifier", value: "hello" },
+                                value: { type: "Number", value: 123 },
+                                condition: {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceDemanded" },
+                                    key: { type: "Identifier", value: "Copper" },
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "hello" },
+                        value: { type: "Number", value: 123 },
+                        condition: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceDemanded" },
+                            key: { type: "Identifier", value: "Copper" },
+                        }
+                    }
+                ]
             };
 
-            const blockConditionOuter = {
-                type: "Subscript",
-                base: { type: "Identifier", value: "ResourceDemanded" },
-                key: { type: "Identifier", value: "Stone" },
-            };
-
-            const blockConditionInner = {
-                type: "Subscript",
-                base: { type: "Identifier", value: "ResourceDemanded" },
-                key: { type: "Identifier", value: "Coal" },
-            };
-
-            const { nodes, from } = applyConditionBlocks([
-                <Parser.ConditionPush> { type: "ConditionPush", condition: blockConditionOuter },
-                    <Parser.ConditionPush> { type: "ConditionPush", condition: blockConditionInner },
-                        <Parser.SettingAssignment> originalNode,
-                    <Parser.ConditionPop> { type: "ConditionPop" },
-
-                    <Parser.SettingAssignment> originalNode,
-                <Parser.ConditionPop> { type: "ConditionPop" }
-            ]);
+            const { nodes, from } = applyConditionBlocks([originalNode as Parser.ConditionBlock]);
 
             expect(nodes.length).toEqual(2);
             {
-                const expectedNode = from(originalNode, {
-                    condition: from(originalNode.condition, {
+                const expectedNode = from(originalNode.body[0].body![0], {
+                    condition: from(originalNode.body[0].body![0].condition, {
                         type: "Expression",
                         operator: "and",
                         args: [
-                            from(blockConditionInner, {
+                            from(originalNode.body[0].condition, {
                                 type: "Expression",
                                 operator: "and",
-                                args: [blockConditionOuter, blockConditionInner]
+                                args: [originalNode.condition, originalNode.body[0].condition]
                             }),
-                            originalNode.condition
+                            originalNode.body[0].body![0].condition
                         ]
                     })
                 });
@@ -128,11 +138,11 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
             }
             {
-                const expectedNode = from(originalNode, {
-                    condition: from(originalNode.condition, {
+                const expectedNode = from(originalNode.body[1], {
+                    condition: from(originalNode.body[1].condition, {
                         type: "Expression",
                         operator: "and",
-                        args: [blockConditionOuter, originalNode.condition]
+                        args: [originalNode.condition, originalNode.body[1].condition]
                     })
                 });
 

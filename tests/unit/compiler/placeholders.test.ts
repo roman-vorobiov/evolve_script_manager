@@ -216,7 +216,7 @@ describe("Compiler", () => {
 
         it("should throw on unresolveded placeholders inside condition blocks", () => {
             const originalNode = {
-                type: "ConditionPush",
+                type: "ConditionBlock",
                 condition: {
                     type: "Expression",
                     operator: "<",
@@ -232,10 +232,11 @@ describe("Compiler", () => {
                             key: { type: "Placeholder" }
                         }
                     ]
-                }
+                },
+                body: []
             };
 
-            const { errors } = resolvePlaceholders(originalNode as Parser.ConditionPush);
+            const { errors } = resolvePlaceholders(originalNode as Parser.ConditionBlock);
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");

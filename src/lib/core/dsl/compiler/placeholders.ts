@@ -34,28 +34,30 @@ export class PlaceholderResolver extends ExpressionVisitor {
 }
 
 class Impl extends StatementVisitor<Before.Statement, After.Statement> {
-    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | undefined {
+    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
         const getter = makeReferenceGetter(statement.setting);
         const visitor = new PlaceholderResolver(this.sourceMap, getter);
 
         const value = visitor.visit(statement.value);
         const condition = statement.condition && visitor.visit(statement.condition);
 
-        if (value !== statement.value || condition !== statement.condition) {
-            return this.derived(statement, { value, condition }) as After.SettingAssignment;
-        }
+        return this.derived(statement, { value, condition }) as After.SettingAssignment;
     }
 
-    onSettingShift(statement: Before.SettingShift): undefined {
+    onSettingShift(statement: Before.SettingShift): After.SettingShift {
         if (statement.condition !== undefined) {
             const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
             visitor.visit(statement.condition);
         }
+
+        return statement as After.SettingShift;
     }
 
-    onConditionPush(statement: Before.ConditionPush): undefined {
+    onConditionBlock(statement: Before.ConditionBlock): After.ConditionBlock {
         const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
         visitor.visit(statement.condition);
+
+        return statement as After.ConditionBlock;
     }
 }
 

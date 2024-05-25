@@ -16,8 +16,7 @@ export type Expression = Previous.Expression;
 
 export type SettingAssignment = Previous.SettingAssignment;
 export type SettingShift = Previous.SettingShift;
-export type ConditionPush = Previous.ConditionPush;
-export type ConditionPop = Previous.ConditionPop;
+export type ConditionBlock = Previous.ConditionBlock;
 export type TriggerArgument = Modify<Previous.TriggerArgument, {
     count: NumberLiteral
 }>;

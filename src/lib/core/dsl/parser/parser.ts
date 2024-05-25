@@ -236,24 +236,23 @@ class Visitor extends DSLVisitor<void> {
     }
 
     visitConditionBlock = (ctx: Context.ConditionBlockContext) => {
-        const pushNode: Parser.ConditionPush = {
-            type: "ConditionPush",
-            condition: this.expressionGetter.visit(ctx.expression())!
+        const node: Parser.ConditionBlock = {
+            type: "ConditionBlock",
+            condition: this.expressionGetter.visit(ctx.expression()),
+            body: []
         };
 
-        const popNode: Parser.ConditionPop = {
-            type: "ConditionPop",
-        };
+        this.sourceMap.addLocation(node, ctx);
+        this.nodes.push(node);
 
-        this.sourceMap.addLocation(pushNode, ctx);
-        this.nodes.push(pushNode);
+        const outerScope = this.nodes;
+        this.nodes = node.body;
 
         try {
             ctx.settingStatement().forEach(s => this.visit(s));
         }
         finally {
-            this.sourceMap.addLocation(popNode, ctx);
-            this.nodes.push(popNode);
+            this.nodes = outerScope;
         }
     }
 

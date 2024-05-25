@@ -177,7 +177,7 @@ describe("Compiler", () => {
 
         it("should resolve setting prefixes in condition blocks", () => {
             const originalNode = {
-                type: "ConditionPush",
+                type: "ConditionBlock",
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "SettingCurrent" },
@@ -186,10 +186,11 @@ describe("Compiler", () => {
                         base: { type: "Identifier", value: "AutoSell" },
                         key: { type: "Identifier", value: "Copper" }
                     }
-                }
+                },
+                body: []
             };
 
-            const { nodes, from } = resolvePrefixes(originalNode as Parser.SettingAssignment);
+            const { nodes, from } = resolvePrefixes(originalNode as Parser.ConditionBlock);
 
             const expectedNode = from(originalNode, {
                 condition: from(originalNode.condition, {

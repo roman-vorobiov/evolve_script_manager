@@ -254,6 +254,20 @@ describe("Compilation", () => {
         });
     });
 
+    it("should handle variables", () => {
+        const { config, errors } = fromSource(`
+            def foo = ON
+            AutoSell.Copper = $foo
+        `);
+
+        expect(errors).toStrictEqual([]);
+        expect(config).toEqual({
+            overrides: {},
+            triggers: [],
+            sellCopper: true
+        });
+    });
+
     it("should handle compiler errors", () => {
         const { config, errors } = fromSource(`
             AutoSell.Lumber = ON
@@ -267,6 +281,37 @@ describe("Compilation", () => {
             triggers: [],
             sellLumber: true,
             sellCopper: false
+        });
+    });
+
+    it("should handle compiler errors inside condition block expressions", () => {
+        const { config, errors } = fromSource(`
+            if ResourceDemanded.Food then
+                if ResourceQuantity.Lumber then
+                    if ResourceDemanded.Stone then
+                        AutoSell.Copper = ON
+                    end
+                    AutoSell.Iron = ON
+                end
+                AutoSell.Coal = ON
+            end
+        `);
+
+        expect(errors.length).toEqual(1);
+        expect(config).toEqual({
+            overrides: {
+                sellCoal: [
+                    {
+                        type1: "ResourceDemanded",
+                        arg1: "Food",
+                        cmp: "==",
+                        type2: "Boolean",
+                        arg2: true,
+                        ret: true
+                    }
+                ]
+            },
+            triggers: []
         });
     });
 
