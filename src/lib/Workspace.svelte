@@ -14,7 +14,9 @@
     $: {
         const result = fromSource(state.config);
         errors = result.errors;
-        config = result.config;
+        if (result.config !== null) {
+            config = result.config;
+        }
     }
 </script>
 

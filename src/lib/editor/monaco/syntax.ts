@@ -41,7 +41,7 @@ function ruleName(tokenName: string, tokenText: string | undefined, state: DSLSt
         return tokenMap[tokenName];
     }
     else if (tokenName === "Identifier") {
-        if (state.insideSubscript || !isCapitalized(tokenText!)) {
+        if (state.insideSubscript || !isCapitalized(tokenText!.startsWith("$") ? tokenText!.slice(1) : tokenText!)) {
             return "variable.dsl";
         }
         else {
