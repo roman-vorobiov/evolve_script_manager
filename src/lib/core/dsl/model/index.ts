@@ -10,7 +10,19 @@ export class ParseError extends Error {
 }
 
 export class CompileError extends Error {
-    constructor(message: string, public offendingEntity: any, public details: [string, any][] = []) {
+    constructor(
+        message: string,
+        public offendingEntity: any,
+        public details: [string, any][] = []
+    ) {
         super(message);
     }
+}
+
+export class CompileWarning {
+    constructor(
+        public message: string,
+        public offendingEntity: any,
+        public details: [string, any][] = []
+    ) {}
 }

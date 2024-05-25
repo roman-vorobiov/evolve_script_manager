@@ -178,7 +178,7 @@ describe("Compiler", () => {
                 value: { type: "Identifier", value: "$foo" }
             };
 
-            const { nodes, from } = inlineReferences([
+            const { warnings, nodes, from } = inlineReferences([
                 <Parser.ConditionPush> { type: "ConditionPush", condition: { type: "Eval", value: "hello" } },
                     <Parser.ExpressionDefinition> defNode1,
 
@@ -191,6 +191,12 @@ describe("Compiler", () => {
                 <Parser.ConditionPop> { type: "ConditionPop" }
             ]);
             expect(nodes.length).toEqual(6);
+
+            expect(warnings[0].message).toEqual("Redefinition of 'foo'");
+            expect(warnings[0].offendingEntity).toBe(defNode2);
+            expect(warnings[0].details.length).toEqual(1);
+            expect(warnings[0].details[0][0]).toEqual("Previously defined here");
+            expect(warnings[0].details[0][1]).toBe(defNode1);
 
             {
                 const expectedNode = from(originalNode, {
@@ -210,7 +216,7 @@ describe("Compiler", () => {
             }
         });
 
-        it.todo("should throw on redefinitions in the same scope", () => {
+        it("should throw on redefinitions in the same scope", () => {
             const defNode1: Parser.ExpressionDefinition = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
@@ -223,14 +229,14 @@ describe("Compiler", () => {
                 body: { type: "Number", value: 456 }
             };
 
-            const { errors } = inlineReferences([defNode1, defNode2]);
-            expect(errors.length).toEqual(1);
+            const { warnings } = inlineReferences([defNode1, defNode2]);
+            expect(warnings.length).toEqual(1);
 
-            expect(errors[0].message).toEqual("Redefinition of 'foo'");
-            expect(errors[0].offendingEntity).toBe(defNode2);
-            expect(errors[0].details.length).toEqual(1);
-            expect(errors[0].details[0][0]).toEqual("Previously defined here");
-            expect(errors[0].details[0][1]).toBe(defNode1);
+            expect(warnings[0].message).toEqual("Redefinition of 'foo'");
+            expect(warnings[0].offendingEntity).toBe(defNode2);
+            expect(warnings[0].details.length).toEqual(1);
+            expect(warnings[0].details[0][0]).toEqual("Previously defined here");
+            expect(warnings[0].details[0][1]).toBe(defNode1);
         });
 
         it("should repace references inside condition blocks", () => {

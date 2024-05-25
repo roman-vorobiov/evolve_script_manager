@@ -2,7 +2,8 @@ import { SourceMap } from "$lib/core/dsl/parser/source";
 import { ExpressionVisitor } from "$lib/core/dsl/compiler/utils";
 import { flattenObject, invertMap } from "$lib/core/utils"
 
-import type { CompileError, Initial as Parser } from "$lib/core/dsl/model";
+import type { CompileError, CompileWarning, Initial as Parser } from "$lib/core/dsl/model";
+import type { Pipe } from "$lib/core/dsl/compiler/compiler";
 
 class MockSourceMap extends SourceMap {
     private originsMap: WeakMap<WeakKey, any>;
@@ -47,17 +48,18 @@ export function processExpression(node: Parser.Expression, factory: (sm: SourceM
     return { node: result, from: fromFactory(objectToUriMap) };
 }
 
-export function processStatement<T1 extends object, T2>(node: T1, processor: (s: T1[], sm: SourceMap, e: CompileError[]) => T2) {
+export function processStatement<T1 extends object, T2>(node: T1, processor: Pipe<T1, T2>) {
     const objectToUriMap = invertMap(flattenObject(node));
     const sourceMap = new MockSourceMap(objectToUriMap);
 
     const errors: CompileError[] = [];
-    const results = processor([node], sourceMap, errors);
+    const warnings: CompileWarning[] = [];
+    const results = processor([node], sourceMap, errors, warnings);
 
-    return { nodes: results, errors, from: fromFactory(objectToUriMap) };
+    return { nodes: results, errors, warnings, from: fromFactory(objectToUriMap) };
 }
 
-export function processStatements<T1 extends object, T2>(nodes: T1[], processor: (s: T1[], sm: SourceMap, e: CompileError[]) => T2) {
+export function processStatements<T1 extends object, T2>(nodes: T1[], processor: Pipe<T1, T2>) {
     let commonMap: any = {};
     for (const [i, node] of nodes.entries()) {
         commonMap = { ...commonMap, ...flattenObject(node, `nodes[${i}]`) };
@@ -67,9 +69,10 @@ export function processStatements<T1 extends object, T2>(nodes: T1[], processor:
     const sourceMap = new MockSourceMap(objectToUriMap);
 
     const errors: CompileError[] = [];
-    const results = processor(nodes, sourceMap, errors);
+    const warnings: CompileWarning[] = [];
+    const results = processor(nodes, sourceMap, errors, warnings);
 
-    return { nodes: results, errors, from: fromFactory(objectToUriMap) };
+    return { nodes: results, errors, warnings, from: fromFactory(objectToUriMap) };
 }
 
 export { getExcepion, valuesOf, decoratorsOf as originsOf } from "../fixture";

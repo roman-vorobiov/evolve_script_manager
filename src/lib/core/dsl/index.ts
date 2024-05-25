@@ -1,21 +1,22 @@
 import { parseSource } from "./parser/parser";
 import { compile } from "./compiler/compiler";
-import { ParseError } from "./model"
+import { ParseError, CompileError, CompileWarning } from "./model";
 
 import type * as Domain from "$lib/core/domain/model";
-import { CompileError } from "./model"
 import type { SourceLocation, SourceMap } from "./parser/source";
 
 export type ProblemInfo = {
-    type: "error" | "info",
+    type: "error" | "warning" | "info",
     message: string,
     location?: SourceLocation
 }
 
-function* resolveError(error: CompileError | ParseError, sourceMap: SourceMap): IterableIterator<ProblemInfo> {
-    if (error instanceof CompileError) {
+type InternalError = ParseError | CompileError | CompileWarning;
+
+function* resolveError(error: InternalError, sourceMap: SourceMap): IterableIterator<ProblemInfo> {
+    if (error instanceof CompileError || error instanceof CompileWarning) {
         yield {
-            type: "error",
+            type: error instanceof CompileError ? "error" : "warning",
             message: error.message,
             location: sourceMap.findLocation(error.offendingEntity)
         };
@@ -37,7 +38,7 @@ function* resolveError(error: CompileError | ParseError, sourceMap: SourceMap): 
     }
 }
 
-function* resolveErrors(errors: (CompileError | ParseError)[], sourceMap: SourceMap): IterableIterator<ProblemInfo> {
+function* resolveErrors(errors: InternalError[], sourceMap: SourceMap): IterableIterator<ProblemInfo> {
     for (const error of errors) {
         yield* resolveError(error, sourceMap);
     }
@@ -61,6 +62,9 @@ export function fromSource(rawText: string): CompileResult {
 
     return {
         config: compileResult.config,
-        errors: [...resolveErrors(compileResult.errors, parseResult.sourceMap)]
+        errors: [
+            ...resolveErrors(compileResult.errors, parseResult.sourceMap),
+            ...resolveErrors(compileResult.warnings, parseResult.sourceMap)
+        ]
     };
 }

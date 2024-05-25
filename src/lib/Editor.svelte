@@ -68,6 +68,9 @@
         if (problemType === "error") {
             return monaco.MarkerSeverity.Error;
         }
+        else if (problemType === "warning") {
+            return monaco.MarkerSeverity.Warning;
+        }
         else {
             return monaco.MarkerSeverity.Info;
         }

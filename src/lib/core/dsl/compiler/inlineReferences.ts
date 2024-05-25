@@ -1,11 +1,11 @@
-import { CompileError } from "../model";
+import { CompileError, CompileWarning } from "../model";
 import { ExpressionVisitor, GeneratingStatementVisitor, differentLists } from "./utils";
 import { PlaceholderResolver } from "./placeholders"
 import { shallowClone } from "$lib/core/utils"
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/0";
-import * as After from "../model/1";
+import type * as After from "../model/1";
 
 function validateType<T>(node: Before.Expression, reference: T, ...expectedTypes: string[]) {
     if (!expectedTypes.includes(node.type)) {
@@ -62,12 +62,16 @@ export class ReferenceInliner extends ExpressionVisitor {
 class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
     private scope: ScopeDefinitions[] = [{}];
 
+    constructor(sourceMap: SourceMap, errors: CompileError[], private warnings: CompileWarning[]) {
+        super(sourceMap, errors);
+    }
+
     *onExpressionDefinition(statement: Before.ExpressionDefinition): IterableIterator<never> {
-        // if (statement.name.value in this.currentScope) {
-        //     throw new CompileError(`Redefinition of '${statement.name.value}'`, statement, [
-        //         ["Previously defined here", this.currentScope[statement.name.value]]
-        //     ]);
-        // }
+        if (statement.name.value in this.currentScope) {
+            this.warnings.push(new CompileWarning(`Redefinition of '${statement.name.value}'`, statement, [
+                ["Previously defined here", this.currentScope[statement.name.value]]
+            ]));
+        }
 
         const validator = new PlaceholderResolver(this.sourceMap);
         validator.visit(statement.body);
@@ -165,8 +169,13 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 }
 
-export function inlineReferences(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
-    const impl = new Impl(sourceMap, errors);
+export function inlineReferences(
+    statements: Before.Statement[],
+    sourceMap: SourceMap,
+    errors: CompileError[],
+    warnings: CompileWarning[]
+): After.Statement[] {
+    const impl = new Impl(sourceMap, errors, warnings);
 
     return impl.visitAll(statements);
 }

@@ -1,4 +1,3 @@
-import { CompileError } from "../model";
 import { inlineReferences } from "./inlineReferences";
 import { resolveWildcards } from "./wildcards";
 import { resolveFolds } from "./folds";
@@ -14,14 +13,22 @@ import { createTriggerChains } from "./triggers";
 import { normalizeStatements } from "./normalize";
 
 import type * as Domain from "$lib/core/domain/model";
-import type { Initial, Final } from "../model";
+import type { Initial, Final, CompileError, CompileWarning } from "../model";
 import type { SourceMap } from "../parser/source";
 
-class Pipeline<T = Initial.Statement> {
-    constructor(private statements: T[], private sourceMap: SourceMap, private errors: CompileError[]) {}
+export type Pipe<T, U> = (_: T[], sm: SourceMap, e: CompileError[], w: CompileWarning[]) => U[];
 
-    then<U>(pipe: (_: T[], sm: SourceMap, e: CompileError[]) => U[]): Pipeline<U> {
-        return new Pipeline(pipe(this.statements, this.sourceMap, this.errors), this.sourceMap, this.errors);
+class Pipeline<T = Initial.Statement> {
+    constructor(
+        private statements: T[],
+        private sourceMap: SourceMap,
+        private errors: CompileError[],
+        private warnings: CompileWarning[]
+    ) {}
+
+    then<U>(pipe: Pipe<T, U>): Pipeline<U> {
+        const transformed = pipe(this.statements, this.sourceMap, this.errors, this.warnings);
+        return new Pipeline(transformed, this.sourceMap, this.errors, this.warnings);
     }
 
     flush() {
@@ -29,8 +36,8 @@ class Pipeline<T = Initial.Statement> {
     }
 }
 
-function process(statements: Initial.Statement[], sourceMap: SourceMap, errors: CompileError[]): Final.Statement[] {
-    return new Pipeline(statements, sourceMap, errors)
+function process(statements: Initial.Statement[], sourceMap: SourceMap, errors: CompileError[], warnings: CompileWarning[]): Final.Statement[] {
+    return new Pipeline(statements, sourceMap, errors, warnings)
         .then(inlineReferences)
         .then(resolveWildcards)
         .then(resolveFolds)
@@ -65,19 +72,21 @@ function fillConfig(config: Domain.Config, statements: Final.Statement[]) {
 export type CompileResult = {
     config: Domain.Config | null,
     errors: CompileError[],
+    warnings: CompileWarning[]
 }
 
 export function compile(statements: Initial.Statement[], sourceMap: SourceMap): CompileResult {
     const config: Domain.Config = { overrides: {}, triggers: [] };
     const errors: CompileError[] = [];
+    const warnings: CompileWarning[] = [];
 
     try {
-        const processed = process(statements, sourceMap, errors);
+        const processed = process(statements, sourceMap, errors, warnings);
         fillConfig(config, processed);
     }
     catch (e) {
         console.error(e);
     }
 
-    return { config, errors };
+    return { config, errors, warnings };
 }
