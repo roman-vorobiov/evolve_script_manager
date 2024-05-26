@@ -187,7 +187,9 @@ describe("Compiler", () => {
             const originalNode = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "hello" },
-                value: { type: "String", value: "bye" },
+                values: [
+                    { type: "String", value: "bye" }
+                ],
                 operator: "<<",
                 condition: {
                     type: "Expression",

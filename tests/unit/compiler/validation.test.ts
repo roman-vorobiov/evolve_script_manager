@@ -155,14 +155,16 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "prestigeType" },
-                value: { type: "String", value: "mad" }
+                values: [
+                    { type: "String", value: "mad" }
+                ]
             };
 
-            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            const { errors } = validateTypes(originalNode as Parser.SettingShift);
             expect(errors.length).toEqual(1);
 
-            expect(errors[0].message).toEqual("Expected string[], got string");
-            expect(errors[0].offendingEntity).toBe(originalNode.value);
+            expect(errors[0].message).toEqual("List manipulation is only supported for 'logFilter' and 'researchIgnore'");
+            expect(errors[0].offendingEntity).toBe(originalNode.setting);
         });
 
         it("should throw on unknown settings", () => {
@@ -255,7 +257,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "logFilter" },
-                value: { type: "String", value: "hello" },
+                values: [
+                    { type: "String", value: "hello" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceQuantity" },

@@ -311,7 +311,7 @@ describe("Compiler", () => {
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
                     expect(error).toBeInstanceOf(CompileError);
                     if (error instanceof CompileError) {
-                        expect(error.message).toEqual("Only settings of the same type are allowed to be in the same list");
+                        expect(error.message).toEqual("Only values of the same type are allowed to be in the same list");
                         expect(error.offendingEntity).toBe(originalNode.key);
                     }
                 });
@@ -1016,7 +1016,9 @@ describe("Compiler", () => {
                 const originalNode = {
                     type: "SettingShift",
                     setting: { type: "Identifier", value: "hello" },
-                    value: { type: "String", value: "bye" },
+                    values: [
+                        { type: "String", value: "bye" }
+                    ],
                     operator: "<<",
                     condition: {
                         type: "Subscript",

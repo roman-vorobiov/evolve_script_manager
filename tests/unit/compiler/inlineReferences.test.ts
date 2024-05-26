@@ -337,6 +337,83 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
             });
 
+            it("should instantiate definitions with parameter packs from other variables as lists", () => {
+                const defNode1 = {
+                    type: "ExpressionDefinition",
+                    name: { type: "Identifier", value: "foo" },
+                    body: {
+                        type: "List",
+                        values: [
+                            { type: "Identifier", value: "Copper" },
+                            { type: "Identifier", value: "Stone" },
+                        ]
+                    },
+                    parameterized: false
+                };
+
+                const defNode2 = {
+                    type: "ExpressionDefinition",
+                    name: { type: "Identifier", value: "bar" },
+                    body: {
+                        type: "Expression",
+                        operator: ">",
+                        args: [
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceQuantity" },
+                                key: { type: "Placeholder" }
+                            },
+                            { type: "Number", value: 123 }
+                        ]
+                    },
+                    parameterized: true
+                };
+
+                const originalNode = {
+                    type: "SettingAssignment",
+                    setting: { type: "Identifier", value: "hello" },
+                    value: {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "$bar" },
+                        key: { type: "Identifier", value: "$foo" }
+                    }
+                };
+
+                const { nodes, from } = inlineReferences([
+                    <Parser.ExpressionDefinition> defNode1,
+                    <Parser.ExpressionDefinition> defNode2,
+                    <Parser.SettingAssignment> originalNode
+                ]);
+                expect(nodes.length).toEqual(1);
+
+                const expectedNode = from(originalNode, {
+                    value: from(originalNode.value, {
+                        type: "List",
+                        values: [
+                            from(defNode2.body, {
+                                args: [
+                                    from(defNode2.body.args[0], {
+                                        key: defNode1.body.values[0]
+                                    }),
+                                    defNode2.body.args[1]
+                                ]
+                            }),
+                            from(defNode2.body, {
+                                args: [
+                                    from(defNode2.body.args[0], {
+                                        key: defNode1.body.values[1]
+                                    }),
+                                    defNode2.body.args[1]
+                                ]
+                            })
+                        ]
+                    })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+            });
+
             it("should throw on wildcards as arguments", () => {
                 const defNode = {
                     type: "ExpressionDefinition",
@@ -849,7 +926,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "$foo" },
-                value: { type: "String", value: "123" }
+                values: [
+                    { type: "String", value: "123" }
+                ]
             };
 
             const { nodes, from } = inlineReferences([
@@ -878,7 +957,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "$foo" },
-                value: { type: "String", value: "456" }
+                values: [
+                    { type: "String", value: "456" }
+                ]
             };
 
             const { errors } = inlineReferences([defNode, originalNode as Parser.SettingShift]);
@@ -900,7 +981,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "hello" },
-                value: { type: "Identifier", value: "$foo" }
+                values: [
+                    { type: "Identifier", value: "$foo" }
+                ]
             };
 
             const { nodes, from } = inlineReferences([
@@ -910,7 +993,9 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                value: defNode.body
+                values: [
+                    defNode.body
+                ]
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
@@ -929,7 +1014,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "hello" },
-                value: { type: "String", value: "asd" },
+                values: [
+                    { type: "String", value: "asd" }
+                ],
                 condition: { type: "Identifier", value: "$foo" }
             };
 

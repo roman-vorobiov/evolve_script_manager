@@ -13,17 +13,44 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "foo" }
+                values: [
+                    { type: "String", value: "foo" }
+                ]
             };
 
             const node2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "bar%baz" }
+                values: [
+                    { type: "String", value: "bar%baz" }
+                ]
             };
 
             const { nodes } = collectLogFilterStrings([node1, node2]);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode: Parser.SettingAssignment = {
+                type: "SettingAssignment",
+                setting: { type: "Identifier", value: "logFilter" },
+                value: { type: "String", value: "foo, bar%baz" }
+            };
+
+            expect(nodes[0]).toEqual(expectedNode);
+        });
+
+        it("should process all values", () => {
+            const node: Parser.SettingShift = {
+                type: "SettingShift",
+                setting: { type: "Identifier", value: "logFilter" },
+                operator: "<<",
+                values: [
+                    { type: "String", value: "foo" },
+                    { type: "String", value: "bar%baz" }
+                ]
+            };
+
+            const { nodes } = collectLogFilterStrings([node]);
             expect(nodes.length).toEqual(1);
 
             const expectedNode: Parser.SettingAssignment = {
@@ -40,21 +67,27 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "foo" }
+                values: [
+                    { type: "String", value: "foo" }
+                ]
             };
 
             const node2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "bar%baz" }
+                values: [
+                    { type: "String", value: "bar%baz" }
+                ]
             };
 
             const node3: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: ">>",
-                value: { type: "String", value: "foo" }
+                values: [
+                    { type: "String", value: "foo" }
+                ]
             };
 
             const { nodes } = collectLogFilterStrings([node1, node2, node3]);
@@ -74,21 +107,27 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "foo" }
+                values: [
+                    { type: "String", value: "foo" }
+                ]
             };
 
             const node2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: ">>",
-                value: { type: "String", value: "hello" }
+                values: [
+                    { type: "String", value: "hello" }
+                ]
             };
 
             const node3: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "bar%baz" }
+                values: [
+                    { type: "String", value: "bar%baz" }
+                ]
             };
 
             const { nodes } = collectLogFilterStrings([node1, node2, node3]);
@@ -108,7 +147,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "String", value: "foo" }
+                values: [
+                    { type: "String", value: "foo" }
+                ]
             };
 
             const { nodes } = collectLogFilterStrings([originalNode]);
@@ -122,14 +163,16 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "Identifier", value: "foo" } as any
+                values: [
+                    { type: "Identifier", value: "foo" }
+                ]
             };
 
             const { errors } = collectLogFilterStrings([originalNode]);
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("String expected");
-            expect(errors[0].offendingEntity).toBe(originalNode.value);
+            expect(errors[0].offendingEntity).toBe(originalNode.values[0]);
         });
 
         it("should throw on conditions", () => {
@@ -137,7 +180,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "foo" },
+                values: [
+                    { type: "String", value: "foo" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },

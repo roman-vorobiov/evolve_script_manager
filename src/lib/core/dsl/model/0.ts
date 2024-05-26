@@ -61,7 +61,7 @@ export type SettingAssignment = {
 export type SettingShift = {
     type: "SettingShift",
     setting: Identifier,
-    value: Identifier | StringLiteral,
+    values: (Identifier | StringLiteral)[],
     operator: string,
     condition?: Expression
 }

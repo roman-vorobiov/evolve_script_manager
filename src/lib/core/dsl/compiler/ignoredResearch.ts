@@ -20,25 +20,27 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
             return;
         }
 
-        if (statement.value.type !== "Identifier") {
-            throw new CompileError("Identifier expected", statement.value);
-        }
-
-        if (!(statement.value.value in techIds)) {
-            throw new CompileError(`Unknown research '${statement.value.value}'`, statement.value);
-        }
-
         const collection = statement.operator === "<<" ? this.pushedIds : this.poppedIds;
 
-        const entry = collection[statement.value.value];
-        if (entry !== undefined) {
-            entry.condition = this.disjunction(entry.condition, statement.condition);
-        }
-        else {
-            collection[statement.value.value] = {
-                tech: statement.value.value,
-                condition: statement.condition
-            };
+        for (const id of statement.values) {
+            if (id.type !== "Identifier") {
+                throw new CompileError("Identifier expected", id);
+            }
+
+            if (!(id.value in techIds)) {
+                throw new CompileError(`Unknown research '${id.value}'`, id);
+            }
+
+            const entry = collection[id.value];
+            if (entry !== undefined) {
+                entry.condition = this.disjunction(entry.condition, statement.condition);
+            }
+            else {
+                collection[id.value] = {
+                    tech: id.value,
+                    condition: statement.condition
+                };
+            }
         }
     }
 

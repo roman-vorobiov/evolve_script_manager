@@ -41,7 +41,7 @@ function getSettingType(setting: Parser.Expression): string {
 function getCommonListType(settings: Parser.List, getter: (_: Parser.Expression) => string): string {
     const types = new Set(settings.values.map(getter));
     if (types.size !== 1) {
-        throw new CompileError("Only settings of the same type are allowed to be in the same list", settings);
+        throw new CompileError("Only values of the same type are allowed to be in the same list", settings);
     }
 
     return types.values().next().value;
@@ -140,7 +140,7 @@ export abstract class ExpressionVisitor extends BaseVisitor {
         return (this as any)[`on${expression.type}`]?.(expression, parent) ?? expression;
     }
 
-    private visitAll(expressions: Parser.Expression[], parent?: Parser.Expression): Parser.Expression[] {
+    visitAll(expressions: Parser.Expression[], parent?: Parser.Expression): Parser.Expression[] {
         const values = expressions.map(value => this.visit(value, parent));
         return differentLists(values, expressions) ? values : expressions;
     }

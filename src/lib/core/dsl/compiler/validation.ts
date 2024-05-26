@@ -15,7 +15,7 @@ function getSettingType(setting: Parser.Identifier): string {
     return type;
 }
 
-function checkType(type: string, expected: string, node: Parser.Expression | Parser.Identifier) {
+function checkType(type: string, expected: string, node: any) {
     if (type === "unknown" || expected === "unknown") {
         return;
     }
@@ -104,7 +104,9 @@ class Impl extends StatementVisitor<Parser.Statement> {
     }
 
     onSettingShift(statement: Parser.SettingShift): Parser.SettingShift {
-        checkType(getSettingType(statement.setting), "string[]", statement.value);
+        if (statement.setting.value !== "logFilter" && statement.setting.value !== "researchIgnore") {
+            throw new CompileError("List manipulation is only supported for 'logFilter' and 'researchIgnore'", statement.setting);
+        }
 
         if (statement.condition) {
             const conditionType = this.visitor.visit(statement.condition);

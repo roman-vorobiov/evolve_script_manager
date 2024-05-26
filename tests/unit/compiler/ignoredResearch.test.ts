@@ -13,7 +13,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "logFilter" },
                 operator: "<<",
-                value: { type: "String", value: "foo" }
+                values: [
+                    { type: "String", value: "foo" }
+                ]
             };
 
             const { nodes } = collectIgnoredTechs([originalNode]);
@@ -27,17 +29,44 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" }
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ]
             };
 
             const originalNode2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-republic" }
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ]
             };
 
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2]);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode: Parser.SettingAssignment = {
+                type: "SettingAssignment",
+                setting: { type: "Identifier", value: "researchIgnore" },
+                value: { type: "String", value: "tech-theocracy,tech-republic" }
+            };
+
+            expect(nodes[0]).toEqual(expectedNode);
+        });
+
+        it("should process all values", () => {
+            const originalNode: Parser.SettingShift = {
+                type: "SettingShift",
+                setting: { type: "Identifier", value: "researchIgnore" },
+                operator: "<<",
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" },
+                    { type: "Identifier", value: "tech-republic" }
+                ]
+            };
+
+            const { nodes } = collectIgnoredTechs([originalNode]);
             expect(nodes.length).toEqual(1);
 
             const expectedNode: Parser.SettingAssignment = {
@@ -54,14 +83,18 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" }
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ]
             };
 
             const originalNode2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" }
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ]
             };
 
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2]);
@@ -81,7 +114,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" },
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -93,7 +128,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-republic" },
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -139,7 +176,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" },
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -151,7 +190,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" },
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -163,14 +204,18 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-republic" }
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ]
             };
 
             const originalNode4: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-republic" },
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -222,14 +267,18 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-republic" }
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ]
             };
 
             const originalNode2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-republic" },
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -241,7 +290,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-republic" },
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -293,21 +344,27 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" }
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ]
             };
 
             const originalNode2: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-republic" }
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ]
             };
 
             const originalNode3: Parser.SettingShift = {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-theocracy" }
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ]
             };
 
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2, originalNode3]);
@@ -327,7 +384,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" },
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -339,7 +398,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-theocracy" }
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ]
             };
 
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2]);
@@ -351,7 +412,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-republic" }
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ]
             };
 
             const { nodes } = collectIgnoredTechs([originalNode1]);
@@ -363,7 +426,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-republic" },
+                values: [
+                    { type: "Identifier", value: "tech-republic" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -380,7 +445,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: ">>",
-                value: { type: "Identifier", value: "tech-theocracy" },
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -392,7 +459,9 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "tech-theocracy" },
+                values: [
+                    { type: "Identifier", value: "tech-theocracy" }
+                ],
                 condition: {
                     type: "Subscript",
                     base: { type: "Identifier", value: "ResourceDemanded" },
@@ -438,14 +507,16 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "String", value: "tech-theocracy" } as any
+                values: [
+                    { type: "String", value: "tech-theocracy" }
+                ]
             };
 
             const { errors } = collectIgnoredTechs([originalNode]);
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Identifier expected");
-            expect(errors[0].offendingEntity).toBe(originalNode.value);
+            expect(errors[0].offendingEntity).toBe(originalNode.values[0]);
         });
 
         it("should throw on invalid values", () => {
@@ -453,14 +524,16 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
-                value: { type: "Identifier", value: "hello" }
+                values: [
+                    { type: "Identifier", value: "hello" }
+                ]
             };
 
             const { errors } = collectIgnoredTechs([originalNode]);
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Unknown research 'hello'");
-            expect(errors[0].offendingEntity).toBe(originalNode.value);
+            expect(errors[0].offendingEntity).toBe(originalNode.values[0]);
         });
     });
 });

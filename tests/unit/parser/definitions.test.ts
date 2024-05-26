@@ -27,6 +27,29 @@ describe("Parser", () => {
             expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
         });
 
+        it("should parse list definitions", () => {
+            const { nodes, errors, maps } = parse('def foo = [bar, "baz"]');
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps('def foo = [bar, "baz"]', {
+                type: "ExpressionDefinition",
+                name: maps.identifier("foo"),
+                body: maps('[bar, "baz"]', {
+                    type: "List",
+                    values: [
+                        maps('bar', { type: "Identifier", value: "bar" }),
+                        maps('"baz"', { type: "String", value: "baz" })
+                    ]
+                }),
+                parameterized: false
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
+
         it("should parse parameterized expression definitions", () => {
             const { nodes, errors, maps } = parse("def foo[...] = 123 + 456");
 

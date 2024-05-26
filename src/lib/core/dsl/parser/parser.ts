@@ -99,6 +99,11 @@ class ExpressionGetter extends DSLVisitor<any> {
         return this.nodeFactory.symbol("Placeholder", ctx.Ellipsis().getSymbol());
     }
 
+    visitListExpression = (ctx: Context.ListExpressionContext) => {
+        const contents = ctx.listItem().map(id => this.visit(id)!);
+        return this.nodeFactory.list(contents, undefined, ctx);
+    }
+
     visitListContents = (ctx: Context.ListContentsContext): Parser.List => {
         const contents = ctx.listItem().map(id => this.visit(id)!);
         return this.nodeFactory.list(contents, ctx._fold?.text, ctx);
@@ -185,7 +190,7 @@ class Visitor extends DSLVisitor<void> {
 
     visitExpressionDefinition = (ctx: Context.ExpressionDefinitionContext) => {
         const name = this.expressionGetter.visit(ctx.identifier());
-        const body = this.expressionGetter.visit(ctx.expression());
+        const body = this.expressionGetter.visit(ctx.expression() ?? ctx.listExpression()!);
 
         const node: Parser.ExpressionDefinition = {
             type: "ExpressionDefinition",
@@ -218,13 +223,20 @@ class Visitor extends DSLVisitor<void> {
 
     visitSettingShift = (ctx: Context.SettingShiftContext) => {
         const settingName = this.expressionGetter.visit(ctx.identifier());
-        const settingValue = this.expressionGetter.visit(ctx.listItem());
         const operator = ctx._op!.text!;
+
+        let settingValues;
+        if (ctx.listItem() !== null) {
+            settingValues = [this.expressionGetter.visit(ctx.listItem()!)];
+        }
+        else {
+            settingValues = (this.expressionGetter.visit(ctx.listExpression()!) as Parser.List).values;
+        }
 
         const node: Parser.SettingShift = {
             type: "SettingShift",
             setting: settingName,
-            value: settingValue,
+            values: settingValues,
             operator
         };
 

@@ -165,12 +165,12 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
 
         const setting = visitor.visit(statement.setting);
-        const value = visitor.visit(statement.value);
+        const values = visitor.visitAll(statement.values);
         const condition = statement.condition && visitor.visit(statement.condition);
 
         validateType(setting, statement.setting, "Identifier");
 
-        yield this.derived(statement, { setting, value, condition }) as After.SettingShift;
+        yield this.derived(statement, { setting, values, condition }) as After.SettingShift;
     }
 
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {

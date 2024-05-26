@@ -102,5 +102,63 @@ describe("Parser", () => {
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
             expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
         });
+
+        it("should parse shift of a string", () => {
+            const { nodes, errors, maps } = parse('foo << "123"');
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps('foo << "123"', {
+                type: "SettingShift",
+                operator: "<<",
+                setting: maps.identifier("foo"),
+                values: [
+                    maps('"123"', { type: "String", value: "123" })
+                ]
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
+
+        it("should parse shift of an identifier", () => {
+            const { nodes, errors, maps } = parse('foo >> bar');
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps('foo >> bar', {
+                type: "SettingShift",
+                operator: ">>",
+                setting: maps.identifier("foo"),
+                values: [
+                    maps('bar', { type: "Identifier", value: "bar" })
+                ]
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
+
+        it("should parse shift of a list", () => {
+            const { nodes, errors, maps } = parse('foo << [bar, "baz"]');
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps('foo << [bar, "baz"]', {
+                type: "SettingShift",
+                operator: "<<",
+                setting: maps.identifier("foo"),
+                values: [
+                    maps('bar', { type: "Identifier", value: "bar" }),
+                    maps('"baz"', { type: "String", value: "baz" })
+                ]
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
     });
 });

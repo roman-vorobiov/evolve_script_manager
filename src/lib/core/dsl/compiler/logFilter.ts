@@ -17,18 +17,20 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
             throw new CompileError("Log filter cannot be set conditionally", statement.condition);
         }
 
-        if (statement.value.type !== "String") {
-            throw new CompileError("String expected", statement.value);
-        }
-
-        if (statement.operator === ">>") {
-            const idx = this.ignoredIds.indexOf(statement.value.value);
-            if (idx !== -1) {
-                this.ignoredIds.splice(idx, 1);
+        for (const id of statement.values) {
+            if (id.type !== "String") {
+                throw new CompileError("String expected", id);
             }
-        }
-        else {
-            this.ignoredIds.push(statement.value.value);
+
+            if (statement.operator === ">>") {
+                const idx = this.ignoredIds.indexOf(id.value);
+                if (idx !== -1) {
+                    this.ignoredIds.splice(idx, 1);
+                }
+            }
+            else {
+                this.ignoredIds.push(id.value);
+            }
         }
     }
 

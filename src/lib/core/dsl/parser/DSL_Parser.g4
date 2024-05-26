@@ -34,7 +34,7 @@ triggerStatement
 // Definitions
 
 expressionDefinition
-    : 'def' identifier ('[' placeholder ']')? '=' expression
+    : 'def' identifier ('[' placeholder ']')? '=' (expression | listExpression)
     ;
 
 // Settings
@@ -57,7 +57,7 @@ settingValue
     ;
 
 settingShift
-    : identifier op=('<<' | '>>') listItem ('if' expression)?
+    : identifier op=('<<' | '>>') (listItem | listExpression) ('if' expression)?
     ;
 
 // Triggers
@@ -102,10 +102,10 @@ unaryExpression
     | literal
     ;
 
-// Identifiers
+// Lists
 
-identifier
-    : Identifier
+listExpression
+    : '[' EOL* listItem (',' EOL* listItem)+ EOL* ']'
     ;
 
 listContents
@@ -117,6 +117,12 @@ listItem
     : identifier
     | constantLiteral
     | subscriptExpression
+    ;
+
+// Identifiers
+
+identifier
+    : Identifier
     ;
 
 subscriptExpression
