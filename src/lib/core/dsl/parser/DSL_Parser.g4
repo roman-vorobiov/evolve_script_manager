@@ -127,7 +127,7 @@ identifier
 
 subscriptExpression
     : Identifier '.' identifier
-    | Identifier '[' subscript ']'
+    | Identifier '[' (conjunction='all of' | disjunction='any of')? subscript ']'
     ;
 
 subscript

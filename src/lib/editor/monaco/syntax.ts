@@ -14,6 +14,8 @@ function makeTokenMap(ruleToTokensMap: Record<string, string[]>) {
 
 const tokenMap = makeTokenMap({
     "keyword.dsl": [
+        "AnyOf",
+        "AllOf",
         "Def",
         "When",
         "Do",

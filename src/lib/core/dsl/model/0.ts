@@ -36,7 +36,8 @@ export type List = {
 export type Subscript = {
     type: "Subscript",
     base: Identifier,
-    key: Identifier | Symbol | Subscript | List
+    key: Identifier | Symbol | Subscript | List,
+    explicitKeyFold?: "and" | "or"
 }
 
 export type CompoundExpression = {

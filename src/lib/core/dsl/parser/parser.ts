@@ -88,7 +88,15 @@ class ExpressionGetter extends DSLVisitor<any> {
         const subscript = ctx.identifier() ?? ctx.subscript();
         const subscriptNode = this.visit(subscript!)!;
 
-        return this.nodeFactory.subscript(baseNode, subscriptNode, ctx);
+        const node = this.nodeFactory.subscript(baseNode, subscriptNode, ctx);
+        if (ctx._conjunction) {
+            node.explicitKeyFold = "and";
+        }
+        else if (ctx._disjunction) {
+            node.explicitKeyFold = "or";
+        }
+
+        return node;
     }
 
     visitWildcard = (ctx: Context.WildcardContext): Parser.Symbol => {

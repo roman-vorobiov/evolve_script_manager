@@ -34,14 +34,16 @@ NOT           : 'not';
 
 // Keywords
 
-Def  : 'def';
-If   : 'if';
-Then : 'then';
-When : 'when';
-Do   : 'do';
-End  : 'end';
-ON   : 'ON';
-OFF  : 'OFF';
+AnyOf : 'any of';
+AllOf : 'all of';
+Def   : 'def';
+If    : 'if';
+Then  : 'then';
+When  : 'when';
+Do    : 'do';
+End   : 'end';
+ON    : 'ON';
+OFF   : 'OFF';
 
 Identifier: '$'? [a-zA-Z] [a-zA-Z\-_0-9]*;
 

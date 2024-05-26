@@ -10,7 +10,7 @@ export type Identifier = Previous.Identifier;
 export type Constant = Previous.Constant;
 export type SimpleExpression = Previous.SimpleExpression;
 
-export type Subscript = Modify<Previous.Subscript, {
+export type Subscript = Modify<Omit<Previous.Subscript, "explicitKeyFold">, {
     key: Identifier | Symbol | Subscript
 }>
 

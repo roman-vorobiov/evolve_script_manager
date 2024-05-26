@@ -31,6 +31,10 @@ export class FoldResolver extends ExpressionVisitor {
                 values: key.values.map(value => this.derived(expression, <After.Subscript> { key: value }))
             });
 
+            if (expression.explicitKeyFold !== undefined) {
+                node.fold = expression.explicitKeyFold;
+            }
+
             // If the base is a boolean setting prefix or condition expression, fold the list
             return this.foldIfNeeded(node, expression, isBooleanExpression(expression.base, key));
         }
@@ -93,7 +97,7 @@ export class FoldResolver extends ExpressionVisitor {
 
     private foldLeft(expresson: Before.List, originalNode: Before.Expression): After.Expression {
         if (expresson.fold === undefined) {
-            throw new CompileError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma", expresson);
+            throw new CompileError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma or use 'any of' or 'all of' before the list", expresson);
         }
 
         return expresson.values.reduce((l, r) => {

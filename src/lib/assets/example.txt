@@ -1,3 +1,21 @@
+def HELIUM_MISSIONS = [
+    space-moon_mission,
+    space-red_mission,
+    space-hell_mission,
+    space-sun_mission,
+    space-gas_mission,
+    space-gas_moon_mission,
+    space-belt_mission,
+    space-dwarf_mission,
+    interstellar-nebula_mission
+]
+
+def DEUTERIUM_MISSIONS = [
+    interstellar-wormhole_mission,
+    galaxy-gateway_mission,
+    portal-pit_mission
+]
+
 ##### UI #####
 
 activeTargetsUI = ON
@@ -9,11 +27,16 @@ Log.attack   = OFF
 Log.prestige = ON
 Log.spying   = OFF
 
-logFilter << "interstellar_blackhole_unstable"
-logFilter << "research_success%tech_stabilize_blackhole"
-logFilter << "civics_garrison_victorious"
-logFilter << "civics_garrison_defeat"
-logFilter << "civics_garrison_gained"
+logFilter << [
+    # Combat spam
+    "civics_garrison_victorious",
+    "civics_garrison_defeat",
+    "civics_garrison_gained",
+
+    # Black hole spam
+    "interstellar_blackhole_unstable",
+    "research_success%tech_stabilize_blackhole"
+]
 
 ##### Capabilities ####
 
@@ -133,7 +156,7 @@ foreignHireMercDeadSoldiers        = 4
 
 ##### Traits #####
 
-#Minor
+# Minor
 AutoTrait[*] = OFF
 
 AutoTrait[content] = ON if ResourceQuantity.Morale < ResourceStorage.Morale
@@ -260,19 +283,17 @@ BuildingMax.portal-turret            = 10
 BuildingMax.galaxy-scout_ship        = 2
 BuildingMax.galaxy-corvette_ship     = 2
 
-# Todo
-# # Don't overbuild fuel depots
-# if MissionUnaffordable[any of HELIUM_MISSIONS] then
-#     AutoBuild.space-propellant_depot = ON
-#     AutoBuild.space-gas_storage      = ON
-# end
+def MissionUnaffordable[...] = BuildingUnlocked[...] and not BuildingAffordable[...]
 
-# # Primary function of these is support, but we still want to build them for deuterium storage
-# if MissionUnaffordable[any of DEUTERIUM_MISSIONS] then
-#     AutoBuildWeight.interstellar-xfer_station = 10000 if ResourceSatisfied.Alpha_Support
-#     AutoBuildWeight.interstellar-nexus        = 10000 if ResourceSatisfied.Nebula_Support
-# end
+# Don't overbuild fuel depots
+AutoBuild.space-propellant_depot = $MissionUnaffordable[any of $HELIUM_MISSIONS]
+AutoBuild.space-gas_storage      = $MissionUnaffordable[any of $HELIUM_MISSIONS]
 
+# Primary function of these is support, but we still want to build them for deuterium storage
+if $MissionUnaffordable[any of $DEUTERIUM_MISSIONS] then
+    AutoBuildWeight.interstellar-xfer_station = 10000 if ResourceSatisfied.Alpha_Support
+    AutoBuildWeight.interstellar-nexus        = 10000 if ResourceSatisfied.Nebula_Support
+end
 
 if ResetType.mad then
     AutoBuild.city-hospital  = OFF
@@ -404,5 +425,7 @@ end
 #     tech-apartment,
 # ]
 
-researchIgnore << tech-combat_droids
-researchIgnore << tech-hellfire_furnace
+researchIgnore << [
+    tech-combat_droids,
+    tech-hellfire_furnace
+]

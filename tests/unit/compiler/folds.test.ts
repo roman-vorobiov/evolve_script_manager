@@ -131,6 +131,36 @@ describe("Compiler", () => {
                         expect(error.offendingEntity).toBe(originalNode);
                     }
                 });
+
+                it("should throw on ambiguous folds", () => {
+                    const originalNode = {
+                        type: "List",
+                        values: [
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: { type: "Identifier", value: "Iridium" }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: { type: "Identifier", value: "Alloy" }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: { type: "Identifier", value: "Aluminium" }
+                            }
+                        ]
+                    };
+
+                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
+                        expect(error.message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma or use 'any of' or 'all of' before the list");
+                        expect(error.offendingEntity).toBe(originalNode);
+                    }
+                });
             });
 
             describe("Subscripts", () => {
@@ -147,6 +177,43 @@ describe("Compiler", () => {
                                 { type: "Identifier", value: "Aluminium" },
                             ]
                         }
+                    };
+
+                    const { node, from } = processExpression(originalNode as Parser.Expression);
+
+                    const expectedNode = from(originalNode, {
+                        type: "Expression",
+                        operator: fold,
+                        args: [
+                            from(originalNode, {
+                                type: "Expression",
+                                operator: fold,
+                                args: [
+                                    from(originalNode, { key: originalNode.key.values[0] }),
+                                    from(originalNode, { key: originalNode.key.values[1] })
+                                ]
+                            }),
+                            from(originalNode, { key: originalNode.key.values[2] })
+                        ]
+                    });
+
+                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
+                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                });
+
+                it.each(["or", "and"])("should use the explicit fold operator ('%s')", (fold) => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "ResourceDemanded" },
+                        key: {
+                            type: "List",
+                            values: [
+                                { type: "Identifier", value: "Iridium" },
+                                { type: "Identifier", value: "Alloy" },
+                                { type: "Identifier", value: "Aluminium" },
+                            ]
+                        },
+                        explicitKeyFold: fold
                     };
 
                     const { node, from } = processExpression(originalNode as Parser.Expression);
@@ -914,31 +981,6 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
             });
 
-            it("should throw on ambiguous folds inside settings", () => {
-                const originalNode = {
-                    type: "SettingAssignment",
-                    setting: { type: "Identifier", value: "hello" },
-                    value: {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "ResourceDemanded" },
-                        key: {
-                            type: "List",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
-                        }
-                    }
-                };
-
-                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
-                expect(errors.length).toEqual(1);
-
-                expect(errors[0].message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
-                expect(errors[0].offendingEntity.$origin).toEqual("root.value.key");
-            });
-
             it("should throw on unresolved folds inside settings", () => {
                 const originalNode = {
                     type: "SettingAssignment",
@@ -1102,32 +1144,6 @@ describe("Compiler", () => {
 
                 expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
                 expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
-            });
-
-            it("should throw on ambiguous folds inside conditions", () => {
-                const originalNode = {
-                    type: "SettingAssignment",
-                    setting: { type: "Identifier", value: "hello" },
-                    value: { type: "Number", value: 123 },
-                    condition: {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "ResourceDemanded" },
-                        key: {
-                            type: "List",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
-                        }
-                    }
-                };
-
-                const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
-                expect(errors.length).toEqual(1);
-
-                expect(errors[0].message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma");
-                expect(errors[0].offendingEntity.$origin).toEqual("root.condition.key");
             });
 
             it("should throw on unresolved folds inside conditions", () => {

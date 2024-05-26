@@ -254,17 +254,38 @@ describe("Compilation", () => {
         });
     });
 
-    it("should handle variables", () => {
+    it("should handle custom definitions", () => {
         const { config, errors } = fromSource(`
-            def foo = ON
-            AutoSell.Copper = $foo
+            def DEUTERIUM_MISSIONS = [
+                interstellar-wormhole_mission,
+                galaxy-gateway_mission,
+                portal-pit_mission
+            ]
+
+            def MissionUnaffordable[...] = BuildingUnlocked[...] and not BuildingAffordable[...]
+
+            if $MissionUnaffordable[any of $DEUTERIUM_MISSIONS] then
+                AutoBuildWeight.interstellar-xfer_station = 10000 if ResourceSatisfied.Alpha_Support
+            end
         `);
 
         expect(errors).toStrictEqual([]);
         expect(config).toEqual({
-            overrides: {},
-            triggers: [],
-            sellCopper: true
+            overrides: {
+                "bld_w_interstellar-xfer_station": [
+                    {
+                        "type1": "Eval",
+                        "arg1": "((_('BuildingUnlocked', 'interstellar-wormhole_mission') && !_('BuildingAffordable', 'interstellar-wormhole_mission')) ||" +
+                                " (_('BuildingUnlocked', 'galaxy-gateway_mission') && !_('BuildingAffordable', 'galaxy-gateway_mission'))) ||" +
+                                " (_('BuildingUnlocked', 'portal-pit_mission') && !_('BuildingAffordable', 'portal-pit_mission'))",
+                        "cmp": "AND",
+                        "type2": "ResourceSatisfied",
+                        "arg2": "Alpha_Support",
+                        "ret": 10000
+                    }
+                ]
+            },
+            triggers: []
         });
     });
 

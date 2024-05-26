@@ -40,7 +40,7 @@ export class ReferenceInliner extends ExpressionVisitor {
                 throw new CompileError("Identifier expected", expression.base);
             }
 
-            const instance = this.instantiate(base.body, key as After.Subscript["key"]);
+            const instance = this.instantiate(base.body, key as After.Subscript["key"], expression.explicitKeyFold);
             return this.deriveLocation(expression, instance);
         }
         else {
@@ -71,11 +71,11 @@ export class ReferenceInliner extends ExpressionVisitor {
         }
     }
 
-    private instantiate(prototype: Before.Expression, arg: Before.Subscript["key"]): After.Expression {
+    private instantiate(prototype: Before.Expression, arg: Before.Subscript["key"], explicitFold?: "and" | "or"): After.Expression {
         if (arg.type === "List") {
             return {
                 type: "List",
-                fold: arg.fold,
+                fold: explicitFold ?? arg.fold,
                 values: arg.values.map(v => this.instantiate(prototype, v as Before.Subscript["key"]))
             };
         }
