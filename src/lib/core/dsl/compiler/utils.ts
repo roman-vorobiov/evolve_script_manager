@@ -1,8 +1,11 @@
 import { assert } from "$lib/core/utils/typeUtils";
+import { settingType, prefixes } from "$lib/core/domain/settings";
+import { expressions, otherExpressions } from "$lib/core/domain/expressions";
+import { CompileError } from "../model";
 
 import type { Modify } from "$lib/core/utils/typeUtils";
 import type { SourceMap } from "../parser/source";
-import { CompileError, type Initial as Parser } from "../model/index";
+import type { Initial as Parser } from "../model";
 
 export function isConstant(expression: Parser.Expression): expression is Parser.Constant {
     return expression.type === "Boolean" || expression.type === "Number" || expression.type === "String";
@@ -10,6 +13,82 @@ export function isConstant(expression: Parser.Expression): expression is Parser.
 
 export function differentLists<BeforeT, AfterT extends BeforeT>(l: AfterT[], r: BeforeT[]): boolean {
     return l.some((value, i) => value !== r[i]);
+}
+
+function isBooleanOperator(operator: string) {
+    return !["+", "-", "*", "/"].includes(operator);
+}
+
+function getSettingType(setting: Parser.Expression): string {
+    if (setting.type === "Identifier") {
+        const type = settingType(setting.value);
+        if (type === undefined) {
+            throw new CompileError("Invalid setting", setting);
+        }
+        return type;
+    }
+    else if (setting.type === "Subscript") {
+        const prefixInfo = prefixes[setting.base.value];
+        if (prefixInfo === undefined) {
+            throw new CompileError("Invalid setting", setting.base);
+        }
+        return prefixInfo.type;
+    }
+
+    return "unknown";
+}
+
+function getCommonListType(settings: Parser.List, getter: (_: Parser.Expression) => string): string {
+    const types = new Set(settings.values.map(getter));
+    if (types.size !== 1) {
+        throw new CompileError("Only settings of the same type are allowed to be in the same list", settings);
+    }
+
+    return types.values().next().value;
+}
+
+function expressionValueType(expression: Parser.Expression, arg?: Parser.Subscript["key"]): string {
+    if (expression.type === "Identifier") {
+        const expressionInfo = expressions[expression.value] ?? otherExpressions[expression.value];
+        if (expressionInfo === undefined) {
+            return "unknown";
+        }
+        else if (expressionInfo.type !== null) {
+            return expressionInfo.type;
+        }
+        else if (arg !== undefined) {
+            if (arg.type === "List") {
+                return getCommonListType(arg, getSettingType);
+            }
+            else if (arg.type === "Identifier" || arg.type === "Subscript") {
+                return getSettingType(arg);
+            }
+        }
+    }
+    else if (expression.type === "Subscript") {
+        return expressionValueType(expression.base, expression.key);
+    }
+    else if (expression.type === "Expression") {
+        return isBooleanOperator(expression.operator) ? "boolean" : "number";
+    }
+    else if (expression.type === "List") {
+        return getCommonListType(expression, expressionValueType);
+    }
+    else if (expression.type === "Boolean") {
+        return "boolean";
+    }
+    else if (expression.type === "Number") {
+        return "number";
+    }
+    else if (expression.type === "String") {
+        return "string";
+    }
+
+    return "unknown";
+}
+
+export function isBooleanExpression(expression: Parser.Expression, arg?: Parser.Subscript["key"]): boolean {
+    return expressionValueType(expression, arg) === "boolean";
 }
 
 type ModelEntity = {

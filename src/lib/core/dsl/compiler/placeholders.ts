@@ -5,7 +5,7 @@ import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/3";
 import type * as After from "../model/4";
 
-type ReferenceGetter = (placeholder: Before.Symbol) => After.Subscript["key"];
+type ReferenceGetter = (placeholder: Before.Symbol) => any;
 
 function throwOnPlaceholder(placeholder: Before.Symbol): never {
     throw new CompileError("Placeholder used without the context to resolve it", placeholder);

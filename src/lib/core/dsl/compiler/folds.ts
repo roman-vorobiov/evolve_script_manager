@@ -1,27 +1,10 @@
-import { settingType, prefixes } from "$lib/core/domain/settings";
-import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { assume } from "$lib/core/utils/typeUtils";
 import { CompileError } from "../model";
-import { ExpressionVisitor, GeneratingStatementVisitor, differentLists } from "./utils";
+import { ExpressionVisitor, GeneratingStatementVisitor, differentLists, isBooleanExpression } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/2";
 import type * as After from "../model/3";
-
-function isBooleanOperator(operator: string) {
-    return !["+", "-", "*", "/"].includes(operator);
-}
-
-function isBooleanExpression(base: Before.Identifier, keys: Before.List): boolean {
-    const expressionInfo = expressions[base.value] ?? otherExpressions[base.value];
-    if (expressionInfo === undefined) {
-        return false;
-    }
-
-    const type = expressionInfo.type ?? getCommonSettingsType(keys);
-
-    return type === "boolean";
-}
 
 function validateExpressionResolved(expression: any): asserts expression is After.Expression {
     if (expression.type === "List") {
@@ -29,47 +12,19 @@ function validateExpressionResolved(expression: any): asserts expression is Afte
     }
 }
 
-function getCommonSettingsType(settings: Before.List): string {
-    function getSettingType(setting: Before.Expression): string | undefined {
-        if (setting.type === "Identifier") {
-            const type = settingType(setting.value);
-            if (type === undefined) {
-                throw new CompileError("Invalid setting", setting);
-            }
-            return type;
-        }
-        else if (setting.type === "Subscript") {
-            const prefixInfo = prefixes[setting.base.value];
-            if (prefixInfo === undefined) {
-                throw new CompileError("Invalid setting", setting.base);
-            }
-            return prefixInfo.type;
-        }
-    }
-
-    const types = new Set(settings.values.map(getSettingType));
-    if (types.size !== 1) {
-        throw new CompileError("Only settings of the same type are allowed to be in the same list", settings);
-    }
-
-    return types.values().next().value;
-}
-
 export class FoldResolver extends ExpressionVisitor {
-    onList(list: Before.List, values: Before.List["values"], parent?: Before.Expression): Before.Expression | undefined {
+    onList(expression: Before.List, values: Before.List["values"]): Before.Expression {
         // Throw on nested lists
         if (values.some(value => value.type === "List")) {
-            throw new CompileError("Only one fold subexpression is allowed", list);
+            throw new CompileError("Only one fold subexpression is allowed", expression);
         }
 
-        return super.onList(list, values, parent) as Before.Expression;
+        const node = this.derived(expression, { values });
+
+        return this.foldIfNeeded(node, expression, isBooleanExpression(expression));
     }
 
     onSubscript(expression: Before.Subscript, key: Before.Subscript["key"]): Before.Expression | undefined {
-        if (key.type === "Placeholder") {
-            return;
-        }
-
         if (key.type === "List") {
             // Transform each element as the subscript of `expression.base`
             const node = this.derived(key, {
@@ -81,7 +36,7 @@ export class FoldResolver extends ExpressionVisitor {
         }
     }
 
-    onExpression(expression: Before.CompoundExpression, args: Before.CompoundExpression["args"]): Before.Expression | undefined {
+    onExpression(expression: Before.CompoundExpression, args: Before.CompoundExpression["args"]): Before.Expression {
         const numberOfFolds = args.filter(arg => arg.type === "List").length;
 
         if (numberOfFolds > 1) {
@@ -89,10 +44,7 @@ export class FoldResolver extends ExpressionVisitor {
             throw new CompileError("Only one fold subexpression is allowed", expression);
         }
         else if (numberOfFolds === 0) {
-            if (differentLists(args, expression.args)) {
-                // No folds directly as subexpressions, but some have been found and resolved down the tree
-                return this.derived(expression, { args });
-            }
+            return this.derived(expression, { args });
         }
         else if (args.length === 1) {
             // This means the argument of 'not' is not boolean, but it's not this component's job to guard against that
@@ -114,7 +66,7 @@ export class FoldResolver extends ExpressionVisitor {
                 });
             }
 
-            return this.foldIfNeeded(node, expression, isBooleanOperator(expression.operator));
+            return this.foldIfNeeded(node, expression, isBooleanExpression(expression));
         }
     }
 

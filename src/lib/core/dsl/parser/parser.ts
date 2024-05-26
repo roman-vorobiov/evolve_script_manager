@@ -190,7 +190,8 @@ class Visitor extends DSLVisitor<void> {
         const node: Parser.ExpressionDefinition = {
             type: "ExpressionDefinition",
             name,
-            body
+            body,
+            parameterized: ctx.placeholder() !== null
         };
 
         this.sourceMap.addLocation(node, ctx);

@@ -1,7 +1,7 @@
 import { CompileError, CompileWarning } from "../model";
 import { ExpressionVisitor, GeneratingStatementVisitor } from "./utils";
-import { PlaceholderResolver } from "./placeholders"
-import { shallowClone } from "$lib/core/utils"
+import { PlaceholderResolver } from "./placeholders";
+import { shallowClone } from "$lib/core/utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/0";
@@ -28,33 +28,63 @@ export class ReferenceInliner extends ExpressionVisitor {
         super(sourceMap);
     }
 
-    visitSubscript(expression: Before.Subscript): After.Subscript {
-        const base = this.visit(expression.base, expression);
+    visitSubscript(expression: Before.Subscript): After.Expression {
         const key = this.visit(expression.key, expression);
-
-        if (base === expression.base && key === expression.key) {
-            return expression;
-        }
-
-        if (base !== expression.base) {
-            validateType(base, expression.base, "Identifier");
-        }
-
         if (key !== expression.key) {
             validateType(key, expression.key, "Identifier", "Subscript", "List");
         }
 
-        return this.derived(expression, { base, key }) as After.Subscript;
+        const base = this.visit(expression.base, expression) as After.Expression | Before.ExpressionDefinition;
+        if (base.type === "ExpressionDefinition") {
+            if (!base.parameterized) {
+                throw new CompileError("Identifier expected", expression.base);
+            }
+
+            const instance = this.instantiate(base.body, key as After.Subscript["key"]);
+            return this.deriveLocation(expression, instance);
+        }
+        else {
+            if (base !== expression.base) {
+                validateType(base, expression.base, "Identifier");
+            }
+
+            return this.derived(expression, { base, key }) as After.Subscript;
+        }
     }
 
-    onIdentifier(expression: Before.Identifier): After.Expression | undefined {
+    onIdentifier(expression: Before.Identifier, parent?: Before.Expression): After.Expression | Before.ExpressionDefinition | undefined {
         if (expression.value.startsWith("$")) {
             const replacement = this.scope[expression.value.slice(1)];
             if (replacement === undefined) {
                 throw new CompileError(`'${expression.value.slice(1)}' is not defined`, expression);
             }
 
-            return this.deriveLocation(expression, replacement).body;
+            if (!replacement.parameterized) {
+                return this.deriveLocation(expression, replacement.body);
+            }
+
+            if (!(parent?.type === "Subscript" && parent.base === expression)) {
+                throw new CompileError(`Missing arguments for '${replacement.name.value}'`, expression);
+            }
+
+            return replacement;
+        }
+    }
+
+    private instantiate(prototype: Before.Expression, arg: Before.Subscript["key"]): After.Expression {
+        if (arg.type === "List") {
+            return {
+                type: "List",
+                fold: arg.fold,
+                values: arg.values.map(v => this.instantiate(prototype, v as Before.Subscript["key"]))
+            };
+        }
+        else if (arg.type === "Wildcard") {
+            throw new CompileError("Wildcards are only supported for setting prefixes", arg);
+        }
+        else {
+            const parameterResolver = new PlaceholderResolver(this.sourceMap, () => arg);
+            return parameterResolver.visit(prototype);
         }
     }
 }
@@ -66,6 +96,25 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         super(sourceMap, errors);
     }
 
+    private validateDefinition(statement: Before.ExpressionDefinition) {
+        if (statement.parameterized) {
+            let numberOfPlaceholders = 0;
+            const validator = new PlaceholderResolver(this.sourceMap, (node) => {
+                ++numberOfPlaceholders;
+                return node;
+            });
+            validator.visit(statement.body);
+
+            if (numberOfPlaceholders === 0) {
+                throw new CompileError("Definition is parameterized but no placeholders were found inside the body", statement);
+            }
+        }
+        else {
+            const validator = new PlaceholderResolver(this.sourceMap);
+            validator.visit(statement.body);
+        }
+    }
+
     *onExpressionDefinition(statement: Before.ExpressionDefinition): IterableIterator<never> {
         if (statement.name.value in this.currentScope) {
             this.warnings.push(new CompileWarning(`Redefinition of '${statement.name.value}'`, statement, [
@@ -73,8 +122,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
             ]));
         }
 
-        const validator = new PlaceholderResolver(this.sourceMap);
-        validator.visit(statement.body);
+        this.validateDefinition(statement);
 
         const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
         const body = visitor.visit(statement.body);

@@ -87,7 +87,8 @@ export type Trigger = {
 export type ExpressionDefinition = {
     type: "ExpressionDefinition",
     name: Identifier,
-    body: Expression
+    body: Expression,
+    parameterized: boolean
 }
 
 export type Statement =

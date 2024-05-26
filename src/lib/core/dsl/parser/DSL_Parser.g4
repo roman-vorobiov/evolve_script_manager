@@ -34,7 +34,7 @@ triggerStatement
 // Definitions
 
 expressionDefinition
-    : 'def' identifier '=' expression
+    : 'def' identifier ('[' placeholder ']')? '=' expression
     ;
 
 // Settings

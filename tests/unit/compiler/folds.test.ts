@@ -16,6 +16,123 @@ const resolveFolds = (node: Parser.Statement) => {
 describe("Compiler", () => {
     describe("Folds", () => {
         describe("Common expression rules", () => {
+            describe("Lists", () => {
+                it.each(["or", "and"])("should fold lists of boolean expressions ('%s')", (fold) => {
+                    const originalNode = {
+                        type: "List",
+                        fold,
+                        values: [
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: { type: "Identifier", value: "Iridium" }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: { type: "Identifier", value: "Alloy" }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: { type: "Identifier", value: "Aluminium" }
+                            }
+                        ]
+                    };
+
+                    const { node, from } = processExpression(originalNode as Parser.Expression);
+
+                    const expectedNode = from(originalNode, {
+                        type: "Expression",
+                        operator: fold,
+                        args: [
+                            from(originalNode, {
+                                type: "Expression",
+                                operator: fold,
+                                args: [
+                                    originalNode.values[0],
+                                    originalNode.values[1]
+                                ]
+                            }),
+                            originalNode.values[2]
+                        ]
+                    });
+
+                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
+                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                });
+
+                it.each(["or", "and"])("should not fold lists of non-boolean expressions ('%s')", (fold) => {
+                    const originalNode = {
+                        type: "List",
+                        fold,
+                        values: [
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceQuantity" },
+                                key: { type: "Identifier", value: "Iridium" }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceQuantity" },
+                                key: { type: "Identifier", value: "Alloy" }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceQuantity" },
+                                key: { type: "Identifier", value: "Aluminium" }
+                            }
+                        ]
+                    };
+
+                    const { node } = processExpression(originalNode as Parser.Expression);
+
+                    expect(node).toBe(originalNode);
+                });
+
+                it("should throw on multiple folds", () => {
+                    const originalNode = {
+                        type: "List",
+                        fold: "and",
+                        values: [
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "AutoBuyRatio" },
+                                key: {
+                                    type: "List",
+                                    fold: "and",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" },
+                                    ]
+                                }
+                            },
+                            {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "AutoSellRatio" },
+                                key: {
+                                    type: "List",
+                                    fold: "and",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" },
+                                    ]
+                                }
+                            }
+                        ]
+                    };
+
+                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
+                        expect(error.message).toEqual("Only one fold subexpression is allowed");
+                        expect(error.offendingEntity).toBe(originalNode);
+                    }
+                });
+            });
+
             describe("Subscripts", () => {
                 it.each(["or", "and"])("should fold boolean subscripts ('%s')", (fold) => {
                     const originalNode = {
@@ -311,52 +428,6 @@ describe("Compiler", () => {
                     if (error instanceof CompileError) {
                         expect(error.message).toEqual("Invalid setting");
                         expect(error.offendingEntity).toBe(originalNode.key.base);
-                    }
-                });
-
-                it("should throw on multiple folds", () => {
-                    const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
-                        key: {
-                            type: "List",
-                            fold: "and",
-                            values: [
-                                {
-                                    type: "Subscript",
-                                    base: { type: "Identifier", value: "AutoBuyRatio" },
-                                    key: {
-                                        type: "List",
-                                        fold: "and",
-                                        values: [
-                                            { type: "Identifier", value: "Iridium" },
-                                            { type: "Identifier", value: "Alloy" },
-                                            { type: "Identifier", value: "Aluminium" },
-                                        ]
-                                    }
-                                },
-                                {
-                                    type: "Subscript",
-                                    base: { type: "Identifier", value: "AutoSellRatio" },
-                                    key: {
-                                        type: "List",
-                                        fold: "and",
-                                        values: [
-                                            { type: "Identifier", value: "Iridium" },
-                                            { type: "Identifier", value: "Alloy" },
-                                            { type: "Identifier", value: "Aluminium" },
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    };
-
-                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(CompileError);
-                    if (error instanceof CompileError) {
-                        expect(error.message).toEqual("Only one fold subexpression is allowed");
-                        expect(error.offendingEntity).toBe(originalNode.key);
                     }
                 });
             });

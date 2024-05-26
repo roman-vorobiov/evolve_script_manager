@@ -26,5 +26,29 @@ describe("Parser", () => {
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
             expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
         });
+
+        it("should parse parameterized expression definitions", () => {
+            const { nodes, errors, maps } = parse("def foo[...] = 123 + 456");
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps("def foo[...] = 123 + 456", {
+                type: "ExpressionDefinition",
+                name: maps.identifier("foo"),
+                body: maps("123 + 456", {
+                    type: "Expression",
+                    operator: "+",
+                    args: [
+                        maps("123", { type: "Number", value: 123 }),
+                        maps("456", { type: "Number", value: 456 })
+                    ]
+                }),
+                parameterized: true
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
     });
 });
