@@ -15,14 +15,23 @@ statements
     ;
 
 statement
+    : commonStatement
+    | triggerStatement
+    ;
+
+commonStatement
     : definitionStatement
     | settingStatement
-    | triggerStatement
     | callStatement
+    | loopStatement
     ;
 
 callStatement
     : identifier '(' listItem* ')'
+    ;
+
+loopStatement
+    : 'for' identifier 'in' (listExpression | identifier) 'do' EOL (statement? EOL)* 'end'
     ;
 
 // Definitions
@@ -37,7 +46,7 @@ expressionDefinition
     ;
 
 statementDefinition
-    : 'def' identifier '(' args=identifier* ')' 'begin' (statement? EOL)* 'end'
+    : 'def' identifier '(' (listItem (',' listItem)*)? ')' 'begin' EOL (statement? EOL)* 'end'
     ;
 
 // Settings
@@ -49,11 +58,7 @@ settingStatement
     ;
 
 conditionBlock
-    : 'if' expression 'then' conditionBlockBody 'end'
-    ;
-
-conditionBlockBody
-    : ((settingStatement | definitionStatement | callStatement)? EOL)*
+    : 'if' expression 'then' EOL (commonStatement? EOL)* 'end'
     ;
 
 settingAssignment

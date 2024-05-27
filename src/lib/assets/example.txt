@@ -398,32 +398,36 @@ when Unlocked tech-industrialization do
     Research tech-technocracy
 end
 
-# PrioritizeResearch:[
-#     tech-rover,
-#     tech-probes,
-#     tech-starcharts,
+def priorityResearch = [
+    tech-rover,
+    tech-probes,
+    tech-starcharts,
 
-#     # Production research
-#     tech-smelting,
-#     tech-steel,
-#     tech-bayer_process,
-#     tech-oil_well,
-#     tech-hunter_process,
-#     tech-cambridge_process,
-#     tech-graphene,
-#     tech-stanene,
-#     tech-aerogel,
+    # Production research
+    tech-smelting,
+    tech-steel,
+    tech-bayer_process,
+    tech-oil_well,
+    tech-hunter_process,
+    tech-cambridge_process,
+    tech-graphene,
+    tech-stanene,
+    tech-aerogel,
 
-#     # Power research
-#     tech-electricity,
-#     tech-oil_power,
-#     tech-fission,
+    # Power research
+    tech-electricity,
+    tech-oil_power,
+    tech-fission,
 
-#     # Other useful research
-#     tech-tax_rates,
-#     tech-trade,
-#     tech-apartment,
-# ]
+    # Other useful research
+    tech-tax_rates,
+    tech-trade,
+    tech-apartment
+]
+
+for tech in $priorityResearch do
+    Research $tech when Unlocked $tech
+end
 
 researchIgnore << [
     tech-combat_droids,

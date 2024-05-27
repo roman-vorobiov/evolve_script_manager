@@ -37,6 +37,8 @@ NOT           : 'not';
 AnyOf : 'any of';
 AllOf : 'all of';
 Def   : 'def';
+For   : 'for';
+In    : 'in';
 If    : 'if';
 Then  : 'then';
 When  : 'when';

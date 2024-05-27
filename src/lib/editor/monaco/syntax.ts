@@ -17,6 +17,8 @@ const tokenMap = makeTokenMap({
         "AnyOf",
         "AllOf",
         "Def",
+        "For",
+        "In",
         "When",
         "Do",
         "If",

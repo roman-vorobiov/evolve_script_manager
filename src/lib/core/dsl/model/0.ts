@@ -105,6 +105,13 @@ export type FunctionCall = {
     args: Expression[]
 }
 
+export type Loop = {
+    type: "Loop",
+    iteratorName: Identifier,
+    values: Identifier | List,
+    body: Statement[]
+}
+
 export type Statement =
     SettingAssignment |
     SettingShift |
@@ -112,4 +119,5 @@ export type Statement =
     Trigger |
     ExpressionDefinition |
     StatementDefinition |
-    FunctionCall;
+    FunctionCall |
+    Loop;

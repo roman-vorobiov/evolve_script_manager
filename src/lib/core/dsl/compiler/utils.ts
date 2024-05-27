@@ -264,11 +264,6 @@ export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, Af
     }
 
     *onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): IterableIterator<AfterT> {
-        if (differentLists(body, statement.body)) {
-            yield this.derived(statement, { body }) as unknown as AfterT;
-        }
-        else {
-            yield statement as unknown as AfterT;
-        }
+        yield this.derived(statement, { body }) as unknown as AfterT;
     }
 }

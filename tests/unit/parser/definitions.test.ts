@@ -73,5 +73,74 @@ describe("Parser", () => {
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
             expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
         });
+
+        it("should parse function definitions", () => {
+            const { nodes, errors, maps } = parse(`
+                \x01def foo(aaa, bbb) begin
+                    hello = $a
+                    bye = $b
+                end\x02
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps([1, 2], {
+                type: "StatementDefinition",
+                name: maps.identifier("foo"),
+                params: [
+                    maps.identifier("aaa"),
+                    maps.identifier("bbb")
+                ],
+                body: [
+                    maps('hello = $a', {
+                        type: "SettingAssignment",
+                        setting: maps.identifier('hello'),
+                        value: maps.identifier('$a')
+                    }),
+                    maps('bye = $b', {
+                        type: "SettingAssignment",
+                        setting: maps.identifier('bye'),
+                        value: maps.identifier('$b')
+                    })
+                ]
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
+
+        it("should parse loops", () => {
+            const { nodes, errors, maps } = parse(`
+                \x01for foo in [aaa, bbb] do
+                    $foo = ON
+                end\x02
+            `);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps([1, 2], {
+                type: "Loop",
+                iteratorName: maps.identifier("foo"),
+                values: maps("[aaa, bbb]", {
+                    type: "List",
+                    values: [
+                        maps.identifier("aaa"),
+                        maps.identifier("bbb")
+                    ]
+                }),
+                body: [
+                    maps('$foo = ON', {
+                        type: "SettingAssignment",
+                        setting: maps.identifier('$foo'),
+                        value: maps('ON', { type: "Boolean", value: true })
+                    })
+                ]
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
     });
 });

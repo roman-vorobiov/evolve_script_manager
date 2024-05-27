@@ -25,6 +25,10 @@ export type Trigger = Modify<Previous.Trigger, {
     actions: TriggerArgument[]
 }>;
 
-type PrunedStatementTypes = Previous.ExpressionDefinition | Previous.StatementDefinition | Previous.FunctionCall;
+export type Loop = Modify<Previous.Loop, {
+    values: List,
+}>
+
+type PrunedStatementTypes = Previous.ExpressionDefinition | Previous.StatementDefinition | Previous.FunctionCall | Previous.Loop;
 
 export type Statement = Exclude<Previous.Statement, PrunedStatementTypes | Previous.Trigger> | Previous.Trigger;

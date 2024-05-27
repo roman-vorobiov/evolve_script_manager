@@ -206,7 +206,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             expect(warnings[0].message).toEqual("Redefinition of 'foo'");
-            expect(warnings[0].offendingEntity).toBe((originalNode.body[1].body as any)[0]);
+            expect(warnings[0].offendingEntity).toBe((originalNode.body[1].body as any)[0].name);
             expect(warnings[0].details.length).toEqual(1);
             expect(warnings[0].details[0][0]).toEqual("Previously defined here");
             expect(warnings[0].details[0][1]).toBe(originalNode.body[0]);
@@ -249,7 +249,7 @@ describe("Compiler", () => {
             expect(warnings.length).toEqual(1);
 
             expect(warnings[0].message).toEqual("Redefinition of 'foo'");
-            expect(warnings[0].offendingEntity).toBe(defNode2);
+            expect(warnings[0].offendingEntity).toBe(defNode2.name);
             expect(warnings[0].details.length).toEqual(1);
             expect(warnings[0].details[0][0]).toEqual("Previously defined here");
             expect(warnings[0].details[0][1]).toBe(defNode1);

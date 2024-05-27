@@ -21,7 +21,9 @@ function validateType<T>(node: Before.Expression, reference: T, ...expectedTypes
     }
 }
 
-type ScopeDefinitions = Record<string, (Before.ExpressionDefinition | Before.StatementDefinition & { scope: ScopeDefinitions })>;
+type FunctionDefinition = Before.StatementDefinition & { scope: ScopeDefinitions };
+
+type ScopeDefinitions = Record<string, (Before.ExpressionDefinition | FunctionDefinition)>;
 
 export class ReferenceInliner extends ExpressionVisitor {
     constructor(sourceMap: SourceMap, private scope: ScopeDefinitions) {
@@ -54,9 +56,11 @@ export class ReferenceInliner extends ExpressionVisitor {
 
     onIdentifier(expression: Before.Identifier, parent?: Before.Expression): After.Expression | Before.ExpressionDefinition | undefined {
         if (expression.value.startsWith("$")) {
-            const definition = this.scope[expression.value.slice(1)];
+            const id = expression.value.slice(1);
+
+            const definition = this.scope[id];
             if (definition === undefined) {
-                throw new CompileError(`'${expression.value.slice(1)}' is not defined`, expression);
+                throw new CompileError(`'${id}' is not defined`, expression);
             }
 
             if (definition.type === "StatementDefinition") {
@@ -111,44 +115,22 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         this.validateUniqueName(statement);
         this.validateExpressionParameters(statement);
 
-        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-        const body = visitor.visit(statement.body);
+        const body = this.resolveReferences(statement.body);
 
         this.currentScope[statement.name.value] = this.derived(statement, { body });
     }
 
     *onStatementDefinition(statement: Before.StatementDefinition): IterableIterator<never> {
         this.validateUniqueName(statement);
+        this.validateFunctionParameters(statement);
 
         this.currentScope[statement.name.value] = { ...statement, scope: this.currentScope };
     }
 
     *onFunctionCall(statement: Before.FunctionCall): IterableIterator<After.Statement> {
-        if (!statement.name.value.startsWith("$")) {
-            throw new CompileError(`Unknown identifier '${statement.name.value}'`, statement.name);
-        }
+        const definition = this.findFunctionDefinition(statement);
 
-        const id = statement.name.value.slice(1);
-
-        if (this.callStack.includes(id)) {
-            throw new CompileError("Recursion is not allowed", statement);
-        }
-
-        const definition = this.currentScope[id];
-        if (definition === undefined) {
-            throw new CompileError(`'${id}' is not defined`, statement.name);
-        }
-
-        if (definition.type === "ExpressionDefinition") {
-            throw new CompileError("Expressions cannot appear outside of a statement", statement);
-        }
-
-        if (definition.params.length !== statement.args.length) {
-            throw new CompileError(`Expected ${definition.params.length} arguments, got ${statement.args.length}`, statement);
-        }
-
-        const expressionVisitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-        const args = statement.args.map(arg => expressionVisitor.visit(arg));
+        const args = this.resolveReferences(statement.args);
 
         const callStack = [...this.callStack, definition.name.value]
 
@@ -178,18 +160,15 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onConditionBlock(statement: Before.ConditionBlock, body: After.Statement[]): IterableIterator<After.ConditionBlock> {
-        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-        const condition = visitor.visit(statement.condition);
+        const condition = this.resolveReferences(statement.condition);
 
         yield this.derived(statement, { condition, body }) as After.ConditionBlock;
     }
 
     *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
-        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-
-        const setting = visitor.visit(statement.setting);
-        const value = visitor.visit(statement.value);
-        const condition = statement.condition && visitor.visit(statement.condition);
+        const setting = this.resolveReferences(statement.setting);
+        const value = this.resolveReferences(statement.value);
+        const condition = statement.condition && this.resolveReferences(statement.condition);
 
         validateType(setting, statement.setting, "Identifier", "Subscript");
 
@@ -197,15 +176,38 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
-        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-
-        const setting = visitor.visit(statement.setting);
-        const values = visitor.visitAll(statement.values);
-        const condition = statement.condition && visitor.visit(statement.condition);
+        const setting = this.resolveReferences(statement.setting);
+        const values = this.resolveReferences(statement.values);
+        const condition = statement.condition && this.resolveReferences(statement.condition);
 
         validateType(setting, statement.setting, "Identifier");
 
         yield this.derived(statement, { setting, values, condition }) as After.SettingShift;
+    }
+
+    *onLoop(statement: Before.Loop): IterableIterator<After.Statement> {
+        const values = this.resolveReferences(statement.values) as After.List;
+        validateType(values, statement.values, "List");
+
+        this.validateUniqueName(statement);
+
+        for (const value of values.values) {
+            this.scope.push(shallowClone(this.currentScope));
+
+            this.currentScope[statement.iteratorName.value] = {
+                type: "ExpressionDefinition",
+                name: statement.iteratorName,
+                body: value,
+                parameterized: false
+            };
+
+            try {
+                yield* this.visitAll(statement.body) as After.Statement[];
+            }
+            finally {
+                this.scope.pop();
+            }
+        }
     }
 
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
@@ -216,10 +218,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     private processTriggerArgument(arg: Before.TriggerArgument): After.TriggerArgument {
-        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
-
-        const id = visitor.visit(arg.id);
-        const count = arg.count && visitor.visit(arg.count);
+        const id = this.resolveReferences(arg.id);
+        const count = arg.count && this.resolveReferences(arg.count);
 
         validateType(id, arg.id, "Identifier");
         count && validateType(count, arg.count, "Number");
@@ -246,11 +246,64 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
     }
 
-    private validateUniqueName(statement: Before.ExpressionDefinition | Before.StatementDefinition) {
-        if (statement.name.value in this.currentScope) {
-            this.warnings.push(new CompileWarning(`Redefinition of '${statement.name.value}'`, statement, [
-                ["Previously defined here", this.currentScope[statement.name.value]]
+    private validateFunctionParameters(statement: Before.StatementDefinition) {
+        const uniqueNames = new Set<string>();
+        for (const param of statement.params) {
+            if (uniqueNames.has(param.value)) {
+                throw new CompileError(`Duplicate identifier '${param.value}'`, param);
+            }
+
+            uniqueNames.add(param.value);
+        }
+    }
+
+    private validateUniqueName(statement: Before.ExpressionDefinition | Before.StatementDefinition | Before.Loop) {
+        const id = statement.type === "Loop" ? statement.iteratorName : statement.name;
+
+        if (id.value in this.currentScope) {
+            this.warnings.push(new CompileWarning(`Redefinition of '${id.value}'`, id, [
+                ["Previously defined here", this.currentScope[id.value]]
             ]));
+        }
+    }
+
+    private findFunctionDefinition(statement: Before.FunctionCall): FunctionDefinition {
+        if (!statement.name.value.startsWith("$")) {
+            throw new CompileError(`Unknown identifier '${statement.name.value}'`, statement.name);
+        }
+
+        const id = statement.name.value.slice(1);
+
+        if (this.callStack.includes(id)) {
+            throw new CompileError("Recursion is not allowed", statement);
+        }
+
+        const definition = this.currentScope[id];
+        if (definition === undefined) {
+            throw new CompileError(`'${id}' is not defined`, statement.name);
+        }
+
+        if (definition.type === "ExpressionDefinition") {
+            throw new CompileError("Expressions cannot appear outside of a statement", statement);
+        }
+
+        if (definition.params.length !== statement.args.length) {
+            throw new CompileError(`Expected ${definition.params.length} arguments, got ${statement.args.length}`, statement);
+        }
+
+        return definition;
+    }
+
+    private resolveReferences(expression: Before.Expression): After.Expression;
+    private resolveReferences(expression: Before.Expression[]): After.Expression[];
+    private resolveReferences(expression: Before.Expression | Before.Expression[]): After.Expression | Before.Expression[] {
+        const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
+
+        if (Array.isArray(expression)) {
+            return visitor.visitAll(expression);
+        }
+        else {
+            return visitor.visit(expression);
         }
     }
 

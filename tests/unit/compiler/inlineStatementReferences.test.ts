@@ -238,7 +238,7 @@ describe("Compiler", () => {
             expect(warnings.length).toEqual(1);
 
             expect(warnings[0].message).toEqual("Redefinition of 'foo'");
-            expect(warnings[0].offendingEntity).toBe(defNode2);
+            expect(warnings[0].offendingEntity).toBe(defNode2.name);
         });
 
         it("should throw on statement definition used inside an expression", () => {
@@ -369,6 +369,24 @@ describe("Compiler", () => {
 
             expect(errors[0].message).toEqual("Recursion is not allowed");
             expect(errors[0].offendingEntity).toBe(defNode2.body[0]);
+        });
+
+        it("should throw on parameter duplication", () => {
+            const defNode = {
+                type: "StatementDefinition",
+                name: { type: "Identifier", value: "foo" },
+                params: [
+                    { type: "Identifier", value: "bar" },
+                    { type: "Identifier", value: "bar" }
+                ],
+                body: []
+            };
+
+            const { errors } = inlineReferences([defNode as Parser.StatementDefinition]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Duplicate identifier 'bar'");
+            expect(errors[0].offendingEntity).toBe(defNode.params[1]);
         });
     });
 });
