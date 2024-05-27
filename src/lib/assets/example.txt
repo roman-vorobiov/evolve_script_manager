@@ -16,6 +16,19 @@ def DEUTERIUM_MISSIONS = [
     portal-pit_mission
 ]
 
+def limitKnowledgeBuildings(targetTech) begin
+    if ResearchComplete[$targetTech] then
+        AutoArpa.lhc                = OFF
+        AutoBuild.city-university   = OFF
+        AutoBuild.city-library      = OFF
+        AutoBuild.city-wardenclyffe = OFF
+        AutoBuild.city-biolab       = OFF
+        AutoBuild.space-satellite   = OFF
+        AutoBuild.space-exotic_lab  = OFF
+        AutoBuild.space-observatory = OFF
+    end
+end
+
 ##### UI #####
 
 activeTargetsUI = ON
@@ -107,11 +120,11 @@ AutoTradePriority[Coal, Oil, Helium_3] = 100 if ResourceRatio[...] < 0.02
 # Make sure the fuel is still being imported even in these cases
 tradeRouteSellExcess = OFF
 
-AutoBuy[*] = ON
+AutoSell[*] = OFF
+AutoBuy[*]  = ResourceDemanded[...]
 
-# Don't sell resources that can be used for crafting
-AutoSell[*] = ON
-AutoSell[Lumber, Cement, Iron, Aluminium] = OFF
+# # Don't sell resources that can be used for crafting
+# AutoSell[Lumber, Cement, Iron, Aluminium] = OFF
 
 # Only trade most profitable resources
 AutoTradeSell[*] = OFF
@@ -154,17 +167,32 @@ foreignHireMercMoneyStoragePercent = 50
 foreignHireMercCostLowerThanIncome = 5
 foreignHireMercDeadSoldiers        = 4
 
+##### Rituals #####
+
+AutoRitualWeight[farmer, lumberjack, army, hunting] = 0
+AutoRitualWeight[science] = 0 if ResourceIncome.Knowledge > 5000
+AutoRitualWeight[factory] = 0 if ResourceRatio.Cement > 0.9
+
 ##### Traits #####
 
 # Minor
 AutoTrait[*] = OFF
 
-AutoTrait[content] = ON if ResourceQuantity.Morale < ResourceStorage.Morale
+for trait in [content] do
+    AutoTrait[$trait] = ON if ResourceQuantity.Morale < ResourceStorage.Morale
+end
 
-AutoTrait[gambler, persuasive, fibroblast] = ON if TraitLevel[...] < 10
+for trait in [gambler, persuasive, fibroblast] do
+    AutoTrait[$trait] = ON if TraitLevel[...] < 10
+end
 
-AutoTrait[tactical, mastery, ambidextrous] = ON
-AutoTraitWeight[tactical, mastery, ambidextrous] = 2
+for trait in [tactical, mastery, ambidextrous] do
+    AutoTrait[$trait] = ON
+    AutoTraitWeight[$trait] = 2
+end
+
+AutoTrait.tactical = OFF if ResetType.bioseed
+AutoTrait.content  = ON  if ResourceQuantity.Morale < ResourceStorage.Morale
 
 ##### Fleet #####
 
@@ -197,7 +225,7 @@ ProjectMax.railway        = 1  if ResetType.bioseed
 
 AutoArpa.monument = OFF
 AutoArpa.monument = ON if ResourceQuantity.Morale >= ResourceStorage.Morale
-AutoArpa.monument = ON if ProjectCount.monument < 2
+AutoArpa.monument = ON if ProjectCount.monument < 2 # for tourism
 AutoArpa.monument = ON if Challenge.banana and ProjectCount.monument < 50
 
 ##### Buildings #####
@@ -236,22 +264,18 @@ end
 
 # Building limits
 
-AutoBuild.city-mill                  = OFF
-AutoBuild.city-mill                  = ON if BuildingCount[...] < 20
-AutoBuild.city-windmill              = OFF
-AutoBuild.city-windmill              = ON if BuildingCount[...] < 20
+AutoBuild.city-mill                  = BuildingCount[...] < 20
+AutoBuild.city-windmill              = BuildingCount[...] < 20
 AutoBuild.space-swarm_plant          = OFF
 AutoBuild.space-swarm_control        = OFF
 AutoBuild.space-swarm_satellite      = OFF
 AutoBuild.space-gps                  = OFF
 AutoBuild.space-iron_ship            = OFF
 AutoBuild.space-oil_extractor        = OFF
-AutoBuild.interstellar-starport      = OFF
-AutoBuild.interstellar-starport      = ON if ResourceQuantity.Alpha_Support >= ResourceStorage.Alpha_Support
+AutoBuild.interstellar-starport      = ResourceQuantity.Alpha_Support >= ResourceStorage.Alpha_Support
 AutoBuild.interstellar-exchange      = OFF
 AutoBuild.interstellar-neutron_miner = OFF
-AutoBuild.portal-attractor           = OFF
-AutoBuild.portal-attractor           = ON if BuildingCount.portal-turret >= 10
+AutoBuild.portal-attractor           = BuildingCount.portal-turret >= 10
 AutoBuild.space-swarm_plant          = OFF
 
 BuildingMax.city-tourist_center      = 10
@@ -324,16 +348,7 @@ if ResetType.bioseed then
     end
 
     # Don't overbuild knowledge structs
-    if ResearchComplete.tech-quantum_manufacturing then
-        AutoArpa.lhc                = OFF
-        AutoBuild.city-university   = OFF
-        AutoBuild.city-library      = OFF
-        AutoBuild.city-wardenclyffe = OFF
-        AutoBuild.city-biolab       = OFF
-        AutoBuild.space-satellite   = OFF
-        AutoBuild.space-exotic_lab  = OFF
-        AutoBuild.space-observatory = OFF
-    end
+    $limitKnowledgeBuildings(tech-quantum_manufacturing)
 end
 
 if ResetType.whitehole then
@@ -344,6 +359,10 @@ if ResetType.whitehole then
     BuildingMax.space-fabrication         = 10
     BuildingMax.interstellar-mass_ejector = 2
     BuildingMax.portal-turret             = 0 if ResourceQuantity.Soul_Gem >= 10
+
+    # Don't overbuild knowledge structs
+    $limitKnowledgeBuildings(tech-adamantite_processing)
+    $limitKnowledgeBuildings(tech-adamantite_processing_flier)
 end
 
 if ResetType.ascension then

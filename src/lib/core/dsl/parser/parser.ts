@@ -82,10 +82,9 @@ class ExpressionGetter extends DSLVisitor<any> {
     }
 
     visitSubscriptExpression = (ctx: Context.SubscriptExpressionContext): Parser.Subscript => {
-        const base = ctx.Identifier()!;
-        const baseNode = this.nodeFactory.identifier(base.getText(), base.getSymbol());
+        const baseNode = this.visit(ctx.identifier(0)!);
 
-        const subscript = ctx.identifier() ?? ctx.subscript();
+        const subscript = ctx.identifier(1) ?? ctx.subscript();
         const subscriptNode = this.visit(subscript!)!;
 
         const node = this.nodeFactory.subscript(baseNode, subscriptNode, ctx);
@@ -137,25 +136,25 @@ class ExpressionGetter extends DSLVisitor<any> {
 
 class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
     private sourceMap: SourceMap;
-    private nodeFactory: NodeFactory;
+    private expressionGetter: ExpressionGetter;
 
     constructor(sourceMap: SourceMap) {
         super();
         this.sourceMap = sourceMap;
-        this.nodeFactory = new NodeFactory(sourceMap);
+        this.expressionGetter = new ExpressionGetter(sourceMap);
     }
 
     visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext): Parser.TriggerArgument => {
-        const [type, id] = ctx.Identifier();
-        const count = ctx.Number();
+        const [type, id] = ctx.identifier();
+        const count = ctx.numberLiteral();
 
         let node: Parser.TriggerArgument = {
-            type: this.nodeFactory.identifier(type.getText(), type.getSymbol()),
-            id: this.nodeFactory.identifier(id.getText(), id.getSymbol())
+            type: this.expressionGetter.visit(type),
+            id: this.expressionGetter.visit(id)
         };
 
         if (count !== null) {
-            node.count = this.nodeFactory.number(Number(count.getText()), count.getSymbol());
+            node.count = this.expressionGetter.visit(count);
         }
 
         this.sourceMap.addLocation(node, ctx);
@@ -365,7 +364,7 @@ class Visitor extends DSLVisitor<void> {
     }
 }
 
-function prepareParser(source: string, errors: ParseError[]) {
+export function prepareParser(source: string, errors: ParseError[]) {
     const chars = CharStream.fromString(source);
     const lexer = new DSLLexer(chars);
     const tokens = new CommonTokenStream(lexer);

@@ -1,6 +1,7 @@
 import { CharStream } from "antlr4ng";
 import { DSLLexer } from "$lib/core/dsl/parser/.antlr/DSLLexer";
 import { isCapitalized } from "$lib/core/utils/stringUtils";
+import { CodeCompletionProvider } from "./codeCompletion";
 
 import type * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 
@@ -145,6 +146,8 @@ class DSLTokenProvider implements Monaco.languages.TokensProvider {
 
 export function initializeSyntax(monaco: typeof Monaco) {
     monaco.languages.register({ id: "DSL" });
+
+    monaco.languages.registerCompletionItemProvider("DSL", new CodeCompletionProvider());
 
     monaco.languages.setTokensProvider("DSL", new DSLTokenProvider());
 

@@ -102,7 +102,7 @@ triggerCondition
     ;
 
 triggerActionOrCondition
-    : Identifier Identifier ('(' Number ')')?
+    : identifier identifier ('(' numberLiteral ')')?
     ;
 
 // Expressions
@@ -128,7 +128,7 @@ unaryExpression
 // Lists
 
 listExpression
-    : '[' EOL* listItem (',' EOL* listItem)+ EOL* ']'
+    : '[' EOL* listItem (',' EOL* listItem)* EOL* ']'
     ;
 
 listContents
@@ -138,7 +138,7 @@ listContents
 
 listItem
     : identifier
-    | constantLiteral
+    | stringLiteral
     | subscriptExpression
     ;
 
@@ -149,8 +149,8 @@ identifier
     ;
 
 subscriptExpression
-    : Identifier '.' identifier
-    | Identifier '[' (conjunction='all of' | disjunction='any of')? subscript ']'
+    : identifier '.' identifier
+    | identifier '[' (conjunction='all of' | disjunction='any of')? subscript ']'
     ;
 
 subscript

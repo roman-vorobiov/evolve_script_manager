@@ -32,15 +32,13 @@ function queueAlias(value: string): string {
 export type ExpressionType = {
     type: "string" | "number" | "boolean" | null,
     valueDescription: string,
-    allowedValues: string[] | null,
+    allowedValues: string[],
     alias?: (value: string) => string
 }
 
 export const expressions: Record<string, ExpressionType> = {
     SettingDefault:       { type: null,      valueDescription: "setting", allowedValues: settings },
     SettingCurrent:       { type: null,      valueDescription: "setting", allowedValues: settings },
-
-    Eval:                 { type: null,      valueDescription: "eval", allowedValues: null },
 
     BuildingUnlocked:     { type: "boolean", valueDescription: "building", allowedValues: buildings },
     BuildingClickable:    { type: "boolean", valueDescription: "building", allowedValues: buildings },
