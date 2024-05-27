@@ -1,22 +1,28 @@
 <script lang="ts">
-    import { fromSource, type ProblemInfo } from "$lib/core/dsl";
-    import { type State } from "$lib/core/state";
+    import Compiler from "$lib/workers/compiler.worker?worker";
 
     import Editor from "$lib/Editor.svelte";
+
+    import type { State } from "$lib/core/state";
+    import type { ProblemInfo, CompileResult } from "$lib/core/dsl";
 
     export let state: State;
     export let config: any;
 
-    let errors: ProblemInfo[] = [];
-
     $: view = JSON.stringify(config, null, 4);
 
-    $: {
-        const result = fromSource(state.config);
-        errors = result.errors;
-        if (result.config !== null) {
-            config = result.config;
+    let errors: ProblemInfo[] = [];
+
+    const compiler = new Compiler();
+    compiler.onmessage = ({ data }: MessageEvent<CompileResult>) => {
+        errors = data.errors;
+        if (data.config !== null) {
+            config = data.config;
         }
+    };
+
+    $: {
+        compiler.postMessage({ source: state.config });
     }
 </script>
 
