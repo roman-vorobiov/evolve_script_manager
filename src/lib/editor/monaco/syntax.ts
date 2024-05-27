@@ -21,6 +21,7 @@ const tokenMap = makeTokenMap({
         "Do",
         "If",
         "Then",
+        "Begin",
         "End",
         "AND",
         "OR",

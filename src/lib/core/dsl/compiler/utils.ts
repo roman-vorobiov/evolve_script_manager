@@ -174,7 +174,7 @@ export abstract class ExpressionVisitor extends BaseVisitor {
 }
 
 abstract class BaseStatementVisitor extends BaseVisitor {
-    private errors: CompileError[];
+    protected errors: CompileError[];
 
     constructor(sourceMap: SourceMap, errors: CompileError[]) {
         super(sourceMap);

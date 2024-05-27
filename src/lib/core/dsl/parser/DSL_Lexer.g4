@@ -41,6 +41,7 @@ If    : 'if';
 Then  : 'then';
 When  : 'when';
 Do    : 'do';
+Begin : 'begin';
 End   : 'end';
 ON    : 'ON';
 OFF   : 'OFF';

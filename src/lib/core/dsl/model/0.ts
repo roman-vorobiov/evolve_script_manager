@@ -92,9 +92,24 @@ export type ExpressionDefinition = {
     parameterized: boolean
 }
 
+export type StatementDefinition = {
+    type: "StatementDefinition",
+    name: Identifier,
+    params: Identifier[],
+    body: Statement[]
+}
+
+export type FunctionCall = {
+    type: "FunctionCall",
+    name: Identifier,
+    args: Expression[]
+}
+
 export type Statement =
     SettingAssignment |
     SettingShift |
     ConditionBlock |
     Trigger |
-    ExpressionDefinition;
+    ExpressionDefinition |
+    StatementDefinition |
+    FunctionCall;

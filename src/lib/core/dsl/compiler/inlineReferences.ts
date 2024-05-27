@@ -21,7 +21,7 @@ function validateType<T>(node: Before.Expression, reference: T, ...expectedTypes
     }
 }
 
-type ScopeDefinitions = Record<string, Before.ExpressionDefinition>;
+type ScopeDefinitions = Record<string, (Before.ExpressionDefinition | Before.StatementDefinition & { scope: ScopeDefinitions })>;
 
 export class ReferenceInliner extends ExpressionVisitor {
     constructor(sourceMap: SourceMap, private scope: ScopeDefinitions) {
@@ -54,20 +54,24 @@ export class ReferenceInliner extends ExpressionVisitor {
 
     onIdentifier(expression: Before.Identifier, parent?: Before.Expression): After.Expression | Before.ExpressionDefinition | undefined {
         if (expression.value.startsWith("$")) {
-            const replacement = this.scope[expression.value.slice(1)];
-            if (replacement === undefined) {
+            const definition = this.scope[expression.value.slice(1)];
+            if (definition === undefined) {
                 throw new CompileError(`'${expression.value.slice(1)}' is not defined`, expression);
             }
 
-            if (!replacement.parameterized) {
-                return this.deriveLocation(expression, replacement.body);
+            if (definition.type === "StatementDefinition") {
+                throw new CompileError("Statements cannot appear inside expressions", expression);
+            }
+
+            if (!definition.parameterized) {
+                return this.deriveLocation(expression, definition.body);
             }
 
             if (!(parent?.type === "Subscript" && parent.base === expression)) {
-                throw new CompileError(`Missing arguments for '${replacement.name.value}'`, expression);
+                throw new CompileError(`Missing arguments for '${definition.name.value}'`, expression);
             }
 
-            return replacement;
+            return definition;
         }
     }
 
@@ -90,45 +94,76 @@ export class ReferenceInliner extends ExpressionVisitor {
 }
 
 class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
-    private scope: ScopeDefinitions[] = [{}];
+    private scope: ScopeDefinitions[];
 
-    constructor(sourceMap: SourceMap, errors: CompileError[], private warnings: CompileWarning[]) {
+    constructor(
+        sourceMap: SourceMap,
+        errors: CompileError[],
+        private warnings: CompileWarning[],
+        parentScope: ScopeDefinitions = {},
+        private callStack: string[] = []
+    ) {
         super(sourceMap, errors);
-    }
-
-    private validateDefinition(statement: Before.ExpressionDefinition) {
-        if (statement.parameterized) {
-            let numberOfPlaceholders = 0;
-            const validator = new PlaceholderResolver(this.sourceMap, (node) => {
-                ++numberOfPlaceholders;
-                return node;
-            });
-            validator.visit(statement.body);
-
-            if (numberOfPlaceholders === 0) {
-                throw new CompileError("Definition is parameterized but no placeholders were found inside the body", statement);
-            }
-        }
-        else {
-            const validator = new PlaceholderResolver(this.sourceMap);
-            validator.visit(statement.body);
-        }
+        this.scope = [parentScope];
     }
 
     *onExpressionDefinition(statement: Before.ExpressionDefinition): IterableIterator<never> {
-        if (statement.name.value in this.currentScope) {
-            this.warnings.push(new CompileWarning(`Redefinition of '${statement.name.value}'`, statement, [
-                ["Previously defined here", this.currentScope[statement.name.value]]
-            ]));
-        }
-
-        this.validateDefinition(statement);
+        this.validateUniqueName(statement);
+        this.validateExpressionParameters(statement);
 
         const visitor = new ReferenceInliner(this.sourceMap, this.currentScope);
         const body = visitor.visit(statement.body);
 
-        const definition = body !== statement.body ? this.derived(statement, { body }) : statement;
-        this.currentScope[statement.name.value] = definition;
+        this.currentScope[statement.name.value] = this.derived(statement, { body });
+    }
+
+    *onStatementDefinition(statement: Before.StatementDefinition): IterableIterator<never> {
+        this.validateUniqueName(statement);
+
+        this.currentScope[statement.name.value] = { ...statement, scope: this.currentScope };
+    }
+
+    *onFunctionCall(statement: Before.FunctionCall): IterableIterator<After.Statement> {
+        if (!statement.name.value.startsWith("$")) {
+            throw new CompileError(`Unknown identifier '${statement.name.value}'`, statement.name);
+        }
+
+        const id = statement.name.value.slice(1);
+
+        if (this.callStack.includes(id)) {
+            throw new CompileError("Recursion is not allowed", statement);
+        }
+
+        const definition = this.currentScope[id];
+        if (definition === undefined) {
+            throw new CompileError(`'${id}' is not defined`, statement.name);
+        }
+
+        if (definition.type === "ExpressionDefinition") {
+            throw new CompileError("Expressions cannot appear outside of a statement", statement);
+        }
+
+        if (definition.params.length !== statement.args.length) {
+            throw new CompileError(`Expected ${definition.params.length} arguments, got ${statement.args.length}`, statement);
+        }
+
+        const expressionVisitor = new ReferenceInliner(this.sourceMap, this.currentScope);
+        const args = statement.args.map(arg => expressionVisitor.visit(arg));
+
+        const callStack = [...this.callStack, definition.name.value]
+
+        const functionScope = shallowClone(definition.scope);
+        for (let i = 0; i != args.length; ++i) {
+            functionScope[definition.params[i].value] = {
+                type: "ExpressionDefinition",
+                name: definition.params[i],
+                body: args[i],
+                parameterized: false
+            };
+        }
+
+        const statementVisitor = new Impl(this.sourceMap, this.errors, this.warnings, functionScope, callStack);
+        yield* statementVisitor.visitAll(definition.body);
     }
 
     *visitConditionBlock(statement: Before.ConditionBlock): IterableIterator<After.Statement> {
@@ -190,6 +225,33 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         count && validateType(count, arg.count, "Number");
 
         return this.derived(arg, { id, count }) as After.TriggerArgument;
+    }
+
+    private validateExpressionParameters(statement: Before.ExpressionDefinition) {
+        if (statement.parameterized) {
+            let numberOfPlaceholders = 0;
+            const validator = new PlaceholderResolver(this.sourceMap, (node) => {
+                ++numberOfPlaceholders;
+                return node;
+            });
+            validator.visit(statement.body);
+
+            if (numberOfPlaceholders === 0) {
+                throw new CompileError("Definition is parameterized but no placeholders were found inside the body", statement);
+            }
+        }
+        else {
+            const validator = new PlaceholderResolver(this.sourceMap);
+            validator.visit(statement.body);
+        }
+    }
+
+    private validateUniqueName(statement: Before.ExpressionDefinition | Before.StatementDefinition) {
+        if (statement.name.value in this.currentScope) {
+            this.warnings.push(new CompileWarning(`Redefinition of '${statement.name.value}'`, statement, [
+                ["Previously defined here", this.currentScope[statement.name.value]]
+            ]));
+        }
     }
 
     private get currentScope(): ScopeDefinitions {

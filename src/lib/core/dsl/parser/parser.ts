@@ -256,6 +256,45 @@ class Visitor extends DSLVisitor<void> {
         this.nodes.push(node);
     }
 
+    visitStatementDefinition = (ctx: Context.StatementDefinitionContext) => {
+        const name = this.expressionGetter.visit(ctx.identifier(0)!);
+        const params = ctx.identifier().slice(1).map(i => this.expressionGetter.visit(i));
+
+        const node: Parser.StatementDefinition = {
+            type: "StatementDefinition",
+            name,
+            params,
+            body: []
+        };
+
+        this.sourceMap.addLocation(node, ctx);
+        this.nodes.push(node);
+
+        const outerScope = this.nodes;
+        this.nodes = node.body;
+
+        try {
+            ctx.statement().forEach(s => this.visit(s));
+        }
+        finally {
+            this.nodes = outerScope;
+        }
+    }
+
+    visitCallStatement = (ctx: Context.CallStatementContext) => {
+        const name = this.expressionGetter.visit(ctx.identifier());
+        const args = ctx.listItem().map(i => this.expressionGetter.visit(i));
+
+        const node: Parser.FunctionCall = {
+            type: "FunctionCall",
+            name,
+            args
+        };
+
+        this.sourceMap.addLocation(node, ctx);
+        this.nodes.push(node);
+    }
+
     visitConditionBlock = (ctx: Context.ConditionBlockContext) => {
         const node: Parser.ConditionBlock = {
             type: "ConditionBlock",
@@ -270,7 +309,7 @@ class Visitor extends DSLVisitor<void> {
         this.nodes = node.body;
 
         try {
-            ctx.settingStatement().forEach(s => this.visit(s));
+            ctx.conditionBlockBody().children.forEach(s => this.visit(s));
         }
         finally {
             this.nodes = outerScope;

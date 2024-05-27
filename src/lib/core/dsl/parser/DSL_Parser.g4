@@ -15,32 +15,45 @@ statements
     ;
 
 statement
-    : settingStatement
+    : definitionStatement
+    | settingStatement
     | triggerStatement
+    | callStatement
     ;
 
-settingStatement
-    : expressionDefinition
-    | settingAssignment
-    | settingShift
-    | conditionBlock
-    ;
-
-triggerStatement
-    : trigger
-    | triggerChain
+callStatement
+    : identifier '(' listItem* ')'
     ;
 
 // Definitions
+
+definitionStatement
+    : expressionDefinition
+    | statementDefinition
+    ;
 
 expressionDefinition
     : 'def' identifier ('[' placeholder ']')? '=' (expression | listExpression)
     ;
 
+statementDefinition
+    : 'def' identifier '(' args=identifier* ')' 'begin' (statement? EOL)* 'end'
+    ;
+
 // Settings
 
+settingStatement
+    : settingAssignment
+    | settingShift
+    | conditionBlock
+    ;
+
 conditionBlock
-    : 'if' expression 'then' EOL (settingStatement? EOL)* 'end'
+    : 'if' expression 'then' conditionBlockBody 'end'
+    ;
+
+conditionBlockBody
+    : ((settingStatement | definitionStatement | callStatement)? EOL)*
     ;
 
 settingAssignment
@@ -61,6 +74,11 @@ settingShift
     ;
 
 // Triggers
+
+triggerStatement
+    : trigger
+    | triggerChain
+    ;
 
 trigger
     : triggerAction 'when' triggerCondition
