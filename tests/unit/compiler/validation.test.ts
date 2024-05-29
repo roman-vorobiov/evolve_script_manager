@@ -200,25 +200,6 @@ describe("Compiler", () => {
             expect(errors[0].offendingEntity).toBe(originalNode.condition.base);
         });
 
-        it("should throw on unknown suffixes", () => {
-            const originalNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "sellCopper" },
-                value: { type: "Boolean", value: true },
-                condition: {
-                    type: "Subscript",
-                    base: { type: "Identifier", value: "ResourceDemanded" },
-                    key: { type: "Identifier", value: "hello" }
-                }
-            };
-
-            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
-            expect(errors.length).toEqual(1);
-
-            expect(errors[0].message).toEqual("'hello' is not a valid resource");
-            expect(errors[0].offendingEntity).toBe(originalNode.condition.key);
-        });
-
         it("should throw on wrong value types", () => {
             const originalNode = {
                 type: "SettingAssignment",

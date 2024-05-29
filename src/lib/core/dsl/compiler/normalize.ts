@@ -6,14 +6,8 @@ import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/9";
 import type * as After from "../model/10";
 
-function convertSimpleExpression(expression: Before.SimpleExpression | undefined, idx: 1 | 2) {
-    if (expression === undefined) {
-        return {
-            [`type${idx}`]: "Boolean",
-            [`arg${idx}`]: true
-        }
-    }
-    else if (expression.type === "Subscript") {
+function convertSimpleExpression(expression: Before.SimpleExpression, idx: 1 | 2) {
+    if (expression.type === "Subscript") {
         return {
             [`type${idx}`]: expression.base.value,
             [`arg${idx}`]: expression.key.value
@@ -29,17 +23,26 @@ function convertSimpleExpression(expression: Before.SimpleExpression | undefined
 
 function convertBinaryExpression(expression: Before.Expression) {
     if (expression.type === "Expression") {
-        return {
-            ...convertSimpleExpression(expression.args[0], 1),
-            cmp: expression.operator.toUpperCase(),
-            ...convertSimpleExpression(expression.args[1], 2),
+        if (expression.operator === "not") {
+            return {
+                ...convertSimpleExpression(expression.args[0], 1),
+                cmp: "==",
+                ...convertSimpleExpression({ type: "Boolean", value: false }, 2),
+            }
+        }
+        else {
+            return {
+                ...convertSimpleExpression(expression.args[0], 1),
+                cmp: expression.operator.toUpperCase(),
+                ...convertSimpleExpression(expression.args[1], 2),
+            }
         }
     }
     else {
         return {
             ...convertSimpleExpression(expression, 1),
             cmp: "==",
-            ...convertSimpleExpression(undefined, 2),
+            ...convertSimpleExpression({ type: "Boolean", value: true }, 2),
         }
     }
 }
@@ -49,11 +52,13 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
 
     onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | After.Override {
         if (!isConstant(statement.value)) {
+            const condition = <Before.SimpleExpression> statement.condition ?? { type: "Boolean", value: true };
+
             return this.deriveLocation(statement, <After.Override> {
                 type: "Override",
                 setting: statement.setting.value,
                 value: {
-                    ...convertSimpleExpression(statement.condition as Before.SimpleExpression, 1),
+                    ...convertSimpleExpression(condition, 1),
                     cmp: "A?B",
                     ...convertSimpleExpression(statement.value, 2),
                     ret: null

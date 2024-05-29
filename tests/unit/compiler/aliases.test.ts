@@ -93,6 +93,22 @@ describe("Compiler", () => {
                     expect(error.offendingEntity).toBe(originalNode);
                 }
             });
+
+
+            it("should throw on unknown suffixes", () => {
+                const originalNode: Parser.Subscript = {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceDemanded" },
+                    key: { type: "Identifier", value: "hello" }
+                };
+
+                const error = getExcepion(() => processExpression(originalNode));
+                expect(error).toBeInstanceOf(CompileError);
+                if (error instanceof CompileError) {
+                    expect(error.message).toEqual("'hello' is not a valid resource");
+                    expect(error.offendingEntity).toBe(originalNode.key);
+                }
+            });
         });
 
         describe("Statements", () => {

@@ -56,11 +56,6 @@ export class Validator {
                 throw new CompileError("Unknown identifier", expression.base);
             }
 
-            // allowedValues is only null for Eval which isn't a subscript
-            if (!info.allowedValues!.includes(expression.key.value)) {
-                throw new CompileError(`'${expression.key.value}' is not a valid ${info.valueDescription}`, expression.key);
-            }
-
             return info.type as string;
         }
     }

@@ -17,7 +17,7 @@ const resources = Object.keys(resourceNames);
 const jobs = [...Object.keys(jobNames), ...Object.keys(crafterJobsNames)];
 const servantJobs = Object.keys(servantJobNames);
 const resetTypes = Object.keys(enums.resetTypes);
-const races = [...Object.keys(raceNames), ...Object.keys(pseudoRaces)];
+const races = [...Object.values(raceNames), ...Object.keys(pseudoRaces)];
 const traits = Object.keys(traitNames);
 const queueTypes = Object.keys(enums.queueTypes);
 
@@ -27,6 +27,10 @@ function speciesAlias(value: string): string {
 
 function queueAlias(value: string): string {
     return enums.queueTypes[value as keyof typeof enums.queueTypes] ?? value;
+}
+
+function arpaAlias(value: string): string {
+    return `arpa${value}`;
 }
 
 export type ExpressionType = {
@@ -48,9 +52,9 @@ export const expressions: Record<string, ExpressionType> = {
     BuildingDisabled:     { type: "boolean", valueDescription: "building", allowedValues: buildings },
     BuildingQueued:       { type: "boolean", valueDescription: "building", allowedValues: buildings },
 
-    ProjectUnlocked:      { type: "boolean", valueDescription: "project", allowedValues: projects },
-    ProjectCount:         { type: "number",  valueDescription: "project", allowedValues: projects },
-    ProjectProgress:      { type: "number",  valueDescription: "project", allowedValues: projects },
+    ProjectUnlocked:      { type: "boolean", valueDescription: "project", allowedValues: projects, alias: arpaAlias },
+    ProjectCount:         { type: "number",  valueDescription: "project", allowedValues: projects, alias: arpaAlias },
+    ProjectProgress:      { type: "number",  valueDescription: "project", allowedValues: projects, alias: arpaAlias },
 
     JobUnlocked:          { type: "boolean", valueDescription: "job", allowedValues: jobs },
     JobCount:             { type: "number",  valueDescription: "job", allowedValues: jobs },

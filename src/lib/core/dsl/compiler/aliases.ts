@@ -23,6 +23,11 @@ export class AliasResolver extends ExpressionVisitor {
             }
         }
 
+        // allowedValues is only null for Eval which isn't a subscript
+        if (!info.allowedValues!.includes(expression.key.value)) {
+            throw new CompileError(`'${expression.key.value}' is not a valid ${info.valueDescription}`, expression.key);
+        }
+
         return expression;
     }
 

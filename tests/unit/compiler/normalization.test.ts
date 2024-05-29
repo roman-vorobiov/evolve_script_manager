@@ -107,7 +107,77 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should generate overrides if condition exists", () => {
+        it("should generate overrides if condition exists (nullary)", () => {
+            const originalNode = {
+                type: "SettingAssignment",
+                setting: { type: "Identifier", value: "hello" },
+                value: { type: "Number", value: 123 },
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceDemanded" },
+                    key: { type: "Identifier", value: "Copper" }
+                }
+            };
+
+            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingAssignment[]);
+
+            const expectedNode = from(originalNode, {
+                type: "Override",
+                setting: "hello",
+                value: {
+                    type1: "ResourceDemanded",
+                    arg1: "Copper",
+                    cmp: "==",
+                    type2: "Boolean",
+                    arg2: true,
+                    ret: 123
+                }
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should generate overrides if condition exists (unary)", () => {
+            const originalNode = {
+                type: "SettingAssignment",
+                setting: { type: "Identifier", value: "hello" },
+                value: { type: "Number", value: 123 },
+                condition: {
+                    type: "Expression",
+                    operator: "not",
+                    args: [
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceDemanded" },
+                            key: { type: "Identifier", value: "Copper" }
+                        }
+                    ]
+                }
+            };
+
+            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingAssignment[]);
+
+            const expectedNode = from(originalNode, {
+                type: "Override",
+                setting: "hello",
+                value: {
+                    type1: "ResourceDemanded",
+                    arg1: "Copper",
+                    cmp: "==",
+                    type2: "Boolean",
+                    arg2: false,
+                    ret: 123
+                }
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should generate overrides if condition exists (binary)", () => {
             const originalNode = {
                 type: "SettingAssignment",
                 setting: { type: "Identifier", value: "hello" },

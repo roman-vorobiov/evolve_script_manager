@@ -70,6 +70,7 @@ describe("Compilation", () => {
     it("should handle aliases", () => {
         const { config, errors } = fromSource(`
             sellCoal = ON if BrokenCars > 1
+            sellCopper = ON if RacePillared.Deify
         `);
 
         expect(errors).toStrictEqual([]);
@@ -82,6 +83,16 @@ describe("Compilation", () => {
                         cmp: ">",
                         type2: "Number",
                         arg2: 1,
+                        ret: true
+                    }
+                ],
+                sellCopper: [
+                    {
+                        type1: "RacePillared",
+                        arg1: "old_gods",
+                        cmp: "==",
+                        type2: "Boolean",
+                        arg2: true,
                         ret: true
                     }
                 ]
