@@ -53,11 +53,11 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         return statement as After.SettingShift;
     }
 
-    onConditionBlock(statement: Before.ConditionBlock): After.ConditionBlock {
+    onConditionBlock(statement: Before.ConditionBlock, body: After.Statement[]): After.ConditionBlock {
         const visitor = new PlaceholderResolver(this.sourceMap, throwOnPlaceholder);
         visitor.visit(statement.condition);
 
-        return statement as After.ConditionBlock;
+        return this.derived(statement, { body }) as After.ConditionBlock;
     }
 }
 

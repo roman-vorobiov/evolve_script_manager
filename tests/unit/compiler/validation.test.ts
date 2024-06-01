@@ -255,7 +255,7 @@ describe("Compiler", () => {
             expect(errors[0].offendingEntity).toBe(originalNode.condition);
         });
 
-        it("should throw on wrong condition types in blocks", () => {
+        it("should throw on wrong condition types inside block condition", () => {
             const originalNode = {
                 type: "ConditionBlock",
                 condition: {
@@ -271,6 +271,31 @@ describe("Compiler", () => {
 
             expect(errors[0].message).toEqual("Expected boolean, got number");
             expect(errors[0].offendingEntity).toBe(originalNode.condition);
+        });
+
+        it("should throw on wrong condition types inside block body", () => {
+            const originalNode = {
+                type: "ConditionBlock",
+                condition: { type: "Boolean", value: true },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "sellCopper" },
+                        value: { type: "Boolean", value: true },
+                        condition: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceQuantity" },
+                            key: { type: "Identifier", value: "Copper" }
+                        }
+                    }
+                ]
+            };
+
+            const { errors } = validateTypes(originalNode as Parser.ConditionBlock);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Expected boolean, got number");
+            expect(errors[0].offendingEntity).toBe(originalNode.body[0].condition);
         });
 
         it.each(["==", "!="])("should throw on mismatched expression types ('%s')", (op) => {

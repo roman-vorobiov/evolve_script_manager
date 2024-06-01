@@ -177,7 +177,7 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should resolve setting prefixes in condition blocks", () => {
+        it("should resolve setting prefixes in condition block conditions", () => {
             const originalNode = {
                 type: "ConditionBlock",
                 condition: {
@@ -198,6 +198,41 @@ describe("Compiler", () => {
                 condition: from(originalNode.condition, {
                     key: from(originalNode.condition.key.key, { value: "sellCopper" })
                 })
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should resolve setting prefixes in condition block body", () => {
+            const originalNode = {
+                type: "ConditionBlock",
+                condition: { type: "Boolean", value: true },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "AutoSell" },
+                            key: { type: "Identifier", value: "Copper" }
+                        },
+                        value: { type: "Boolean", value: false }
+                    }
+                ]
+            };
+
+            const { nodes, from } = resolvePrefixes(originalNode as Parser.ConditionBlock);
+
+            const expectedNode = from(originalNode, {
+                body: [
+                    from(originalNode.body[0], {
+                        setting: from(originalNode.body[0].setting.key, {
+                            type: "Identifier",
+                            value: "sellCopper"
+                        })
+                    })
+                ]
             });
 
             expect(nodes.length).toEqual(1);

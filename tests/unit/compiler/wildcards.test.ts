@@ -133,6 +133,48 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
+        it("should resolve wildcards inside condition block body", () => {
+            const originalNode = {
+                type: "ConditionBlock",
+                condition: { type: "Boolean", value: true },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "SmelterFuelPriority" },
+                            key: { type: "Wildcard" }
+                        },
+                        value: { type: "Number", value: 123 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = resolveWildcards(originalNode as Parser.ConditionBlock);
+
+            const expectedNode = from(originalNode, {
+                body: [
+                    from(originalNode.body[0], {
+                        setting: from(originalNode.body[0].setting, {
+                            key: from(originalNode.body[0].setting.key, {
+                                type: "List",
+                                values: [
+                                    from(originalNode.body[0].setting.key, { type: "Identifier", value: "Oil" }),
+                                    from(originalNode.body[0].setting.key, { type: "Identifier", value: "Coal" }),
+                                    from(originalNode.body[0].setting.key, { type: "Identifier", value: "Wood" }),
+                                    from(originalNode.body[0].setting.key, { type: "Identifier", value: "Inferno" }),
+                                ]
+                            })
+                        })
+                    })
+                ]
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
         it("should resolve wildcards in nested setting prefixes", () => {
             const originalNode = {
                 type: "SettingAssignment",

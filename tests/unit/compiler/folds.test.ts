@@ -1102,7 +1102,7 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
             });
 
-            it("should resolve folds inside condition blocks", () => {
+            it("should resolve folds inside condition block conditions", () => {
                 const originalNode = {
                     type: "ConditionBlock",
                     condition: {
@@ -1140,6 +1140,61 @@ describe("Compiler", () => {
                             from(originalNode.condition, { key: originalNode.condition.key.values[2] })
                         ]
                     })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(originsOf(nodes[0])).toStrictEqual(originsOf(expectedNode));
+            });
+
+            it("should resolve folds inside condition block body", () => {
+                const originalNode = {
+                    type: "ConditionBlock",
+                    condition: { type: "Boolean", value: true },
+                    body: [
+                        {
+                            type: "SettingAssignment",
+                            setting: { type: "Identifier", value: "hello" },
+                            value: { type: "Number", value: 123 },
+                            condition: {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "ResourceDemanded" },
+                                key: {
+                                    type: "List",
+                                    fold: "or",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" },
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                const { nodes, from } = resolveFolds(originalNode as Parser.ConditionBlock);
+                expect(nodes.length).toEqual(1);
+
+                const expectedNode = from(originalNode, {
+                    body: [
+                        from(originalNode.body[0], {
+                            condition: from(originalNode.body[0].condition, {
+                                type: "Expression",
+                                operator: "or",
+                                args: [
+                                    from(originalNode.body[0].condition, {
+                                        type: "Expression",
+                                        operator: "or",
+                                        args: [
+                                            from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.values[0] }),
+                                            from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.values[1] })
+                                        ]
+                                    }),
+                                    from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.values[2] })
+                                ]
+                            })
+                        })
+                    ]
                 });
 
                 expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));

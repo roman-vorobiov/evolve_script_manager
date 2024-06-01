@@ -216,7 +216,7 @@ describe("Compiler", () => {
             expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1].key);
         });
 
-        it("should throw on unresolveded placeholders inside condition blocks", () => {
+        it("should throw on unresolveded placeholders inside condition block conditions", () => {
             const originalNode = {
                 type: "ConditionBlock",
                 condition: {
@@ -243,6 +243,44 @@ describe("Compiler", () => {
 
             expect(errors[0].message).toEqual("Placeholder used without the context to resolve it");
             expect(errors[0].offendingEntity).toBe(originalNode.condition.args[1].key);
+        });
+
+        it("should resolve placeholders inside condition block body", () => {
+            const originalNode = {
+                type: "ConditionBlock",
+                condition: { type: "Boolean", value: true },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "AutoSell" },
+                            key: { type: "Identifier", value: "Copper" }
+                        },
+                        value: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "ResourceDemanded" },
+                            key: { type: "Placeholder" }
+                        }
+                    }
+                ]
+            };
+
+            const { nodes, from } = resolvePlaceholders(originalNode as Parser.ConditionBlock);
+
+            const expectedNode = from(originalNode, {
+                body: [
+                    from(originalNode.body[0], {
+                        value: from(originalNode.body[0].value, {
+                            key: originalNode.body[0].setting.key
+                        })
+                    })
+                ]
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
     });
 });

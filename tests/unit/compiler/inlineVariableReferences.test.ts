@@ -255,7 +255,7 @@ describe("Compiler", () => {
             expect(warnings[0].details[0][1]).toBe(defNode1);
         });
 
-        it("should repace references inside condition blocks", () => {
+        it("should repace references inside condition block conditions", () => {
             const defNode: Parser.ExpressionDefinition = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
@@ -274,6 +274,41 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 condition: defNode.body
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should repace references inside condition block body", () => {
+            const defNode: Parser.ExpressionDefinition = {
+                type: "ExpressionDefinition",
+                name: { type: "Identifier", value: "foo" },
+                body: { type: "Number", value: 123 },
+                parameterized: false
+            };
+
+            const originalNode: Parser.ConditionBlock = {
+                type: "ConditionBlock",
+                condition: { type: "Boolean", value: true },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "hello" },
+                        value: { type: "Identifier", value: "$foo" }
+                    }
+                ]
+            };
+
+            const { nodes, from } = inlineReferences([defNode, originalNode]);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
+                body: [
+                    from(originalNode.body[0], {
+                        value: defNode.body
+                    })
+                ]
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));

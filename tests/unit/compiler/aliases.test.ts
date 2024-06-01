@@ -94,7 +94,6 @@ describe("Compiler", () => {
                 }
             });
 
-
             it("should throw on unknown suffixes", () => {
                 const originalNode: Parser.Subscript = {
                     type: "Subscript",
@@ -189,7 +188,7 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
             });
 
-            it("should resolve aliases in condition blocks", () => {
+            it("should resolve aliases in condition block conditions", () => {
                 const originalNode = {
                     type: "ConditionBlock",
                     condition: {
@@ -206,6 +205,40 @@ describe("Compiler", () => {
                     condition: from(originalNode.condition, {
                         key: from(originalNode.condition.key, { value: "srace" })
                     })
+                });
+
+                expect(nodes.length).toEqual(1);
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+            });
+
+            it("should resolve aliases in condition block body", () => {
+                const originalNode = {
+                    type: "ConditionBlock",
+                    condition: { type: "Boolean", value: true },
+                    body: [
+                        {
+                            type: "SettingAssignment",
+                            setting: { type: "Identifier", value: "hello" },
+                            value: {
+                                type: "Subscript",
+                                base: { type: "Identifier", value: "RacePillared" },
+                                key: { type: "Identifier", value: "Imitation" }
+                            }
+                        }
+                    ]
+                };
+
+                const { nodes, from } = resolveAliases(originalNode as Parser.ConditionBlock);
+
+                const expectedNode = from(originalNode, {
+                    body: [
+                        from(originalNode.body[0], {
+                            value: from(originalNode.body[0].value, {
+                                key: from(originalNode.body[0].value.key, { value: "srace" })
+                            })
+                        })
+                    ]
                 });
 
                 expect(nodes.length).toEqual(1);
