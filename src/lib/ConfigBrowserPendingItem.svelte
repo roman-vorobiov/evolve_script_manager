@@ -1,4 +1,6 @@
 <script lang="ts">
+    import defaultSource from "$lib/assets/defaultSource.txt?raw";
+
     import ConfigBrowserItemForm from "./ConfigBrowserItemForm.svelte";
     import { File } from "lucide-svelte";
 
@@ -9,7 +11,7 @@
 
     let config: Config = {
         name: "",
-        source: ""
+        source: defaultSource
     }
 
     function onFinishedEditing() {

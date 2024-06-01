@@ -1,0 +1,5 @@
+researchIgnore << tech-purify
+
+Build space-moon_base    when Built space-moon_mission
+Build space-iridium_mine when Built space-moon_base
+Build space-helium_mine  when Built space-moon_base
