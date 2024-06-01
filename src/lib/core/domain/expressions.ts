@@ -48,8 +48,8 @@ export const expressions: Record<string, ExpressionType> = {
     BuildingClickable:    { type: "boolean", valueDescription: "building", allowedValues: buildings },
     BuildingAffordable:   { type: "boolean", valueDescription: "building", allowedValues: buildings },
     BuildingCount:        { type: "number",  valueDescription: "building", allowedValues: buildings },
-    BuildingEnabled:      { type: "boolean", valueDescription: "building", allowedValues: buildings },
-    BuildingDisabled:     { type: "boolean", valueDescription: "building", allowedValues: buildings },
+    BuildingEnabled:      { type: "number",  valueDescription: "building", allowedValues: buildings },
+    BuildingDisabled:     { type: "number",  valueDescription: "building", allowedValues: buildings },
     BuildingQueued:       { type: "boolean", valueDescription: "building", allowedValues: buildings },
 
     ProjectUnlocked:      { type: "boolean", valueDescription: "project", allowedValues: projects, alias: arpaAlias },
