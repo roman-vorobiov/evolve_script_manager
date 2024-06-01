@@ -1,7 +1,7 @@
 import { type State, initialState } from "$lib/core/state";
 import * as Storage from "./storage";
 
-const currentVersion = 1;
+const currentVersion = 2;
 
 type Versioned = { version: Number, state: any };
 
@@ -11,6 +11,23 @@ function serialize(state: State): Versioned {
 
 function deserialize({ version, state }: Versioned): State {
     if (version === 1) {
+        return {
+            configs: [
+                {
+                    name: "My config",
+                    source: state.config
+                },
+                {
+                    name: "dummy",
+                    source: "AutoSell.Copper = ON"
+                }
+            ],
+            activeConfig: "My config",
+            browserOpen: false,
+            previewOpen: false
+        };
+    }
+    else if (version === 2) {
         return state as State;
     }
     else {

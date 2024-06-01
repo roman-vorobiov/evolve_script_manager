@@ -4,10 +4,10 @@
 
     import { loadMonaco, type Monaco } from "$lib/editor/monaco";
 
-    import type { State } from "$lib/core/state";
+    import type { Config } from "$lib/core/state";
     import type { ProblemInfo } from "$lib/core/dsl";
 
-    export let state: State;
+    export let config: Config;
     export let errors: ProblemInfo[] = [];
 
     let editor: Monaco.editor.IStandaloneCodeEditor;
@@ -25,18 +25,18 @@
             automaticLayout: true
         });
 
-        const model = monaco.editor.createModel(state.config, "DSL");
+        const model = monaco.editor.createModel(config.source, "DSL");
         model.updateOptions({
             tabSize: 4
         });
 
-        model.onDidChangeContent(debounce(readCurrentValue, 500));
+        model.onDidChangeContent(debounce(() => config.source = editor.getValue(), 500));
 
         editor.setModel(model);
     });
 
     onDestroy(() => {
-        monaco?.editor.getModels().forEach(model => model.dispose());
+        editor.getModel()?.dispose();
         editor?.dispose();
     });
 
@@ -75,12 +75,6 @@
             return monaco.MarkerSeverity.Info;
         }
     }
-
-    function readCurrentValue() {
-        state.config = editor.getValue();
-    }
 </script>
 
-<div class="size-full">
-    <div class="size-full" bind:this={editorContainer}></div>
-</div>
+<div class="size-full min-w-0" bind:this={editorContainer}></div>

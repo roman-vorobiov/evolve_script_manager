@@ -1,7 +1,18 @@
+export type Config = {
+    name: string,
+    source: string
+}
+
 export type State = {
-    config: string
+    configs: Config[],
+    activeConfig: string | null,
+    previewOpen: boolean,
+    browserOpen: boolean
 };
 
-export const initialState = {
-    config: ""
+export const initialState: State = {
+    configs: [],
+    activeConfig: null,
+    previewOpen: false,
+    browserOpen: false
 };

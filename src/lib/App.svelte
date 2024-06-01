@@ -1,24 +1,44 @@
 <script lang="ts">
     import { saveState, loadState } from "$lib/core/persistence";
-    import { type State } from "$lib/core/state";
 
-    import ConfigExporter from "$lib/ConfigExporter.svelte";
-    import Workspace from "$lib/Workspace.svelte";
+    import Sidebar from "./Sidebar.svelte";
+    import Workspace from "./Workspace.svelte";
+    import ConfigBrowser from "./ConfigBrowser.svelte";
+    import ConfigPreview from "./ConfigPreview.svelte";
+    import * as Resizable from "$lib/components/ui/resizable";
+
+    import type { State } from "$lib/core/state";
 
     let state: State = loadState();
-    let config: any = {};
+    let compiledConfig: any = {};
+
+    let newConfigPending = false;
 
     $: {
         saveState(state);
     }
 </script>
 
-<div class="flex flex-col h-dvh">
-    <div class="border-b">
-        <div class="flex h-16 items-center px-4 space-x-4">
-            <ConfigExporter {config}></ConfigExporter>
-        </div>
-    </div>
+<div class="flex w-full h-dvh">
+    <Sidebar bind:state={state} {compiledConfig} bind:newConfigPending={newConfigPending}/>
 
-    <Workspace bind:state={state} bind:config={config}></Workspace>
+    <Resizable.PaneGroup direction="horizontal" autoSaveId="tabs">
+        {#if state.browserOpen || newConfigPending}
+            <Resizable.Pane order={1} defaultSize={20}>
+                <ConfigBrowser bind:state={state} bind:newConfigPending={newConfigPending}/>
+            </Resizable.Pane>
+            <Resizable.Handle withHandle/>
+        {/if}
+
+        <Resizable.Pane order={2}>
+            <Workspace bind:state={state} bind:compiledConfig={compiledConfig}/>
+        </Resizable.Pane>
+
+        {#if state.previewOpen}
+            <Resizable.Handle withHandle />
+            <Resizable.Pane order={3} defaultSize={30}>
+                <ConfigPreview config={compiledConfig}/>
+            </Resizable.Pane>
+        {/if}
+    </Resizable.PaneGroup>
 </div>

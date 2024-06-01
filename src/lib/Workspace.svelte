@@ -1,15 +1,14 @@
 <script lang="ts">
     import Compiler from "$lib/workers/compiler.worker?worker";
 
-    import Editor from "$lib/Editor.svelte";
+    import Editor from "./Editor.svelte";
 
     import type { State } from "$lib/core/state";
+    import type { Config } from "$lib/core/domain/model";
     import type { ProblemInfo, CompileResult } from "$lib/core/dsl";
 
     export let state: State;
-    export let config: any;
-
-    $: view = JSON.stringify(config, null, 4);
+    export let compiledConfig: Config;
 
     let errors: ProblemInfo[] = [];
 
@@ -17,20 +16,22 @@
     compiler.onmessage = ({ data }: MessageEvent<CompileResult>) => {
         errors = data.errors;
         if (data.config !== null) {
-            config = data.config;
+            compiledConfig = data.config;
         }
     };
 
+    $: activeConfig = state.configs.find(cfg => cfg.name === state.activeConfig);
+
     $: {
-        compiler.postMessage({ source: state.config });
+        if (activeConfig !== undefined) {
+            compiler.postMessage({ source: activeConfig.source });
+        }
     }
 </script>
 
-<div class="flex flex-row h-full">
-    <div class="w-3/5 h-full">
-        <Editor bind:state={state} {errors}></Editor>
-    </div>
-    <div class="w-2/5 h-full">
-        <p class="font-mono text-sm whitespace-pre-wrap p-6">{view}</p>
-    </div>
-</div>
+{#each state.configs as config}
+    {#if config.name === state.activeConfig}
+        <Editor bind:config={config} {errors}/>
+    {/if}
+{/each}
+
