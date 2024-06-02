@@ -16,4 +16,10 @@ export type SettingShift = Previous.SettingShift;
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
-export type Statement = Exclude<Previous.Statement, Previous.ConditionBlock>;
+export type SettingPush = {
+    type: "SettingPush",
+    setting: Identifier,
+    values: (string | object)[]
+}
+
+export type Statement = Exclude<Previous.Statement, Previous.ConditionBlock> | SettingPush;

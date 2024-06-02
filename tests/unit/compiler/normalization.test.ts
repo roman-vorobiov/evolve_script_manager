@@ -48,6 +48,82 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
+        it("should generate lists for 'evolutionQueue'", () => {
+            const originalNode = {
+                type: "SettingPush",
+                setting: { type: "Identifier", value: "evolutionQueue" },
+                values: [
+                    {
+                        targetRace: "auto",
+                        resetType: "mad",
+                        challenges: ["trade"]
+                    },
+                    {
+                        targetRace: "entish",
+                        resetType: "ascension",
+                        challenges: []
+                    }
+                ]
+            };
+
+            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingPush[]);
+
+            const expectedNode = {
+                type: "SettingAssignment",
+                setting: "evolutionQueue",
+                value: [
+                    {
+                        userEvolutionTarget: "auto",
+                        prestigeType: "mad",
+                        challenge_plasmid: false,
+                        challenge_crispr: false,
+                        challenge_trade: true,
+                        challenge_craft: false,
+                        challenge_joyless: false,
+                        challenge_steelen: false,
+                        challenge_decay: false,
+                        challenge_emfield: false,
+                        challenge_inflation: false,
+                        challenge_sludge: false,
+                        challenge_orbit_decay: false,
+                        challenge_gravity_well: false,
+                        challenge_witch_hunter: false,
+                        challenge_junker: false,
+                        challenge_cataclysm: false,
+                        challenge_banana: false,
+                        challenge_truepath: false,
+                        challenge_lone_survivor: false
+                    },
+                    {
+                        userEvolutionTarget: "entish",
+                        prestigeType: "ascension",
+                        challenge_plasmid: false,
+                        challenge_crispr: false,
+                        challenge_trade: false,
+                        challenge_craft: false,
+                        challenge_joyless: false,
+                        challenge_steelen: false,
+                        challenge_decay: false,
+                        challenge_emfield: false,
+                        challenge_inflation: false,
+                        challenge_sludge: false,
+                        challenge_orbit_decay: false,
+                        challenge_gravity_well: false,
+                        challenge_witch_hunter: false,
+                        challenge_junker: false,
+                        challenge_cataclysm: false,
+                        challenge_banana: false,
+                        challenge_truepath: false,
+                        challenge_lone_survivor: false
+                    }
+                ]
+            };
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
         it("should generate overrides if the value is not constant", () => {
             const originalNode = {
                 type: "SettingAssignment",

@@ -4,8 +4,7 @@ import { craftableResources as craftables } from "./resources";
 export const settings = Object.keys(defaultSettings).filter(id => {
     return id !== "scriptName"
         && id !== "overrides"
-        && id !== "triggers"
-        && id !== "evolutionQueue";
+        && id !== "triggers";
 });
 
 export function settingType(id: string): string | undefined {

@@ -40,7 +40,7 @@ export class PrefixResolver extends ExpressionVisitor {
             throw new CompileError(`'${expression.key.value}' is not a valid ${prefixInfo.valueDescription} for ${expression.base.value}`, expression.key);
         }
 
-        return this.derived(expression.key, { value: `${prefixInfo.prefix}${expression.key.value}` });
+        return this.derived(expression.key, { value: prefixInfo.prefix + expression.key.value });
     }
 }
 

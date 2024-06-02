@@ -12,6 +12,7 @@ export type CompoundExpression = Previous.CompoundExpression
 export type Expression = Previous.Expression;
 
 export type SettingAssignment = Previous.SettingAssignment;
+export type SettingPush = Previous.SettingPush;
 
 export type TriggerArgument = {
     type: Identifier,
@@ -25,4 +26,4 @@ export type Trigger = {
     action: TriggerArgument
 }
 
-export type Statement = SettingAssignment | Trigger;
+export type Statement = SettingAssignment | SettingPush | Trigger;

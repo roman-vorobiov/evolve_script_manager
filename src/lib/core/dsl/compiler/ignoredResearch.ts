@@ -16,8 +16,7 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
 
     *onSettingShift(statement: Parser.SettingShift): IterableIterator<Parser.SettingShift> {
         if (statement.setting.value !== "researchIgnore") {
-            yield statement;
-            return;
+            return yield statement;
         }
 
         const collection = statement.operator === "<<" ? this.pushedIds : this.poppedIds;

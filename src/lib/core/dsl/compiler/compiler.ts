@@ -8,6 +8,7 @@ import { validateTypes } from "./validation";
 import { applyConditionBlocks } from "./conditionBlocks";
 import { collectLogFilterStrings } from "./logFilter";
 import { collectIgnoredTechs } from "./ignoredResearch";
+import { buildEvolutionQueue } from "./evolutionQueue";
 import { flattenExpressions } from "./conditions";
 import { createTriggerChains } from "./triggers";
 import { normalizeStatements } from "./normalize";
@@ -48,6 +49,7 @@ function process(statements: Initial.Statement[], sourceMap: SourceMap, errors: 
         .then(applyConditionBlocks)
         .then(collectLogFilterStrings)
         .then(collectIgnoredTechs)
+        .then(buildEvolutionQueue)
         .then(flattenExpressions)
         .then(createTriggerChains)
         .then(normalizeStatements)

@@ -163,7 +163,7 @@ describe("Compiler", () => {
             const { errors } = validateTypes(originalNode as Parser.SettingShift);
             expect(errors.length).toEqual(1);
 
-            expect(errors[0].message).toEqual("List manipulation is only supported for 'logFilter' and 'researchIgnore'");
+            expect(errors[0].message).toEqual("List manipulation is only supported for 'logFilter', 'researchIgnore' and 'evolutionQueue'");
             expect(errors[0].offendingEntity).toBe(originalNode.setting);
         });
 

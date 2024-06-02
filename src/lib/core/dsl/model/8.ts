@@ -23,7 +23,9 @@ export type SettingAssignment = {
     condition?: Expression
 }
 
+export type SettingPush = Previous.SettingPush;
+
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
-export type Statement = SettingAssignment | Trigger;
+export type Statement = SettingAssignment | SettingPush | Trigger;

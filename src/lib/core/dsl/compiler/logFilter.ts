@@ -9,8 +9,7 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
 
     *onSettingShift(statement: Parser.SettingShift): IterableIterator<Parser.SettingShift> {
         if (statement.setting.value !== "logFilter") {
-            yield statement;
-            return;
+            return yield statement;
         }
 
         if (statement.condition !== undefined) {
