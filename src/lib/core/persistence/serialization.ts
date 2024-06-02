@@ -10,6 +10,10 @@ function serialize(state: State): Versioned {
 }
 
 function deserialize({ version, state }: Versioned): State {
+    if (state === undefined) {
+        return initialState;
+    }
+
     if (version === 1) {
         return {
             configs: [

@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { copyToClipboard } from "./ConfigExporter";
+    import { copyToClipboard, applyToEvolve } from "./ConfigExporter";
     import SidebarButton from "./SidebarButton.svelte";
     import {
         Files,
         Eye,
+        Upload,
         FilePlus2 as FilePlus,
         ClipboardCopy,
         Settings
@@ -19,6 +20,12 @@
     function handleCopyToClipboard() {
         if (state.activeConfig !== null) {
             copyToClipboard(compiledConfig);
+        }
+    }
+
+    function handleApplyToEvolve() {
+        if (state.activeConfig !== null) {
+            applyToEvolve(compiledConfig);
         }
     }
 </script>
@@ -54,8 +61,15 @@
     />
 
     <SidebarButton
+        description="Apply config"
+        icon={Upload}
+        on:click={handleApplyToEvolve}
+        disabled={!("sendMessageToEvolveTab" in window)}
+    />
+
+    <!-- <SidebarButton
         description="Settings"
         icon={Settings}
         disabled={true}
-    />
+    /> -->
 </div>
