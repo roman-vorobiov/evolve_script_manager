@@ -152,7 +152,7 @@ export function initializeSyntax(monaco: typeof Monaco) {
     monaco.languages.setTokensProvider("DSL", new DSLTokenProvider());
 
     monaco.languages.setLanguageConfiguration("DSL", {
-        wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+        wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
         autoClosingPairs: [
             { open: '(', close: ')' },
             { open: '{', close: '}' },

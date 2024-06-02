@@ -76,7 +76,7 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
         const expressionInfo = expressions[prefix];
         if (expressionInfo !== undefined) {
             let candidates = expressionInfo.allowedValues.filter(Boolean);
-            if (prefix === "SettingCurrent" || "SettingDefault") {
+            if (prefix === "SettingCurrent" || prefix === "SettingDefault") {
                 candidates = [...Object.keys(prefixes), ...candidates];
             }
 
@@ -86,13 +86,19 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
     else if (insideCondition(tokenStack)) {
         return Object.keys(expressions);
     }
+    else if (tokenStack.length > 1 && tokenStack[1] in triggerActions) {
+        return triggerActions[tokenStack[1] as keyof typeof triggerActions].allowedValues;
+    }
+    else if (tokenStack.length > 1 && tokenStack[1] in triggerConditions) {
+        return triggerConditions[tokenStack[1] as keyof typeof triggerConditions].allowedValues;
+    }
     else if (tokenStack.length > 0 && tokenStack[0] in triggerActions) {
         return triggerActions[tokenStack[0] as keyof typeof triggerActions].allowedValues;
     }
     else if (tokenStack.length > 0 && tokenStack[0] in triggerConditions) {
         return triggerConditions[tokenStack[0] as keyof typeof triggerConditions].allowedValues;
     }
-    else if (tokenStack.length > 0 && tokenStack[0] === "when") {
+    else if (tokenStack.length > 0 && (tokenStack[0] === "when" || tokenStack[1] === "when")) {
         return Object.keys(triggerConditions);
     }
     else if (tokenStack.length < 2) {
