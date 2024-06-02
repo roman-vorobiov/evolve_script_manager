@@ -68,6 +68,7 @@ export const expressions: Record<string, ExpressionType> = {
     ResourceUnlocked:     { type: "boolean", valueDescription: "resource", allowedValues: resources },
     ResourceQuantity:     { type: "number",  valueDescription: "resource", allowedValues: resources },
     ResourceStorage:      { type: "number",  valueDescription: "resource", allowedValues: resources },
+    ResourceMaxCost:      { type: "number",  valueDescription: "resource", allowedValues: resources },
     ResourceIncome:       { type: "number",  valueDescription: "resource", allowedValues: resources },
     ResourceRatio:        { type: "number",  valueDescription: "resource", allowedValues: resources },
     ResourceSatisfied:    { type: "boolean", valueDescription: "resource", allowedValues: resources },
