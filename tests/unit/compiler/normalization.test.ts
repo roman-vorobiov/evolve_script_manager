@@ -30,22 +30,21 @@ describe("Compiler", () => {
 
         it("should generate lists for 'researchIgnore'", () => {
             const originalNode = {
-                type: "SettingAssignment",
+                type: "SettingPush",
                 setting: { type: "Identifier", value: "researchIgnore" },
-                value: { type: "String", value: "foo,bar" }
+                values: ["foo", "bar"]
             };
 
-            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingAssignment[]);
+            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingPush[]);
 
-            const expectedNode = from(originalNode, {
+            const expectedNode = {
                 type: "SettingAssignment",
                 setting: "researchIgnore",
                 value: ["foo", "bar"]
-            });
+            };
 
             expect(nodes.length).toEqual(1);
-            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+            expect(nodes[0]).toEqual(expectedNode);
         });
 
         it("should generate lists for 'evolutionQueue'", () => {
@@ -120,8 +119,7 @@ describe("Compiler", () => {
             };
 
             expect(nodes.length).toEqual(1);
-            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+            expect(nodes[0]).toEqual(expectedNode);
         });
 
         it("should generate overrides if the value is not constant", () => {

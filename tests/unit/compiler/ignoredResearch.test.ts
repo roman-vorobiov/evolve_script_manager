@@ -46,10 +46,10 @@ describe("Compiler", () => {
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2]);
             expect(nodes.length).toEqual(1);
 
-            const expectedNode: Parser.SettingAssignment = {
-                type: "SettingAssignment",
+            const expectedNode: Parser.SettingPush = {
+                type: "SettingPush",
                 setting: { type: "Identifier", value: "researchIgnore" },
-                value: { type: "String", value: "tech-theocracy,tech-republic" }
+                values: ["tech-theocracy", "tech-republic"]
             };
 
             expect(nodes[0]).toEqual(expectedNode);
@@ -69,10 +69,10 @@ describe("Compiler", () => {
             const { nodes } = collectIgnoredTechs([originalNode]);
             expect(nodes.length).toEqual(1);
 
-            const expectedNode: Parser.SettingAssignment = {
-                type: "SettingAssignment",
+            const expectedNode: Parser.SettingPush = {
+                type: "SettingPush",
                 setting: { type: "Identifier", value: "researchIgnore" },
-                value: { type: "String", value: "tech-theocracy,tech-republic" }
+                values: ["tech-theocracy", "tech-republic"]
             };
 
             expect(nodes[0]).toEqual(expectedNode);
@@ -100,10 +100,10 @@ describe("Compiler", () => {
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2]);
             expect(nodes.length).toEqual(1);
 
-            const expectedNode: Parser.SettingAssignment = {
-                type: "SettingAssignment",
+            const expectedNode: Parser.SettingPush = {
+                type: "SettingPush",
                 setting: { type: "Identifier", value: "researchIgnore" },
-                value: { type: "String", value: "tech-theocracy" }
+                values: ["tech-theocracy"]
             };
 
             expect(nodes[0]).toEqual(expectedNode);
@@ -252,10 +252,10 @@ describe("Compiler", () => {
                 expect(nodes[0]).toEqual(expectedNode);
             }
             {
-                const expectedNode: Parser.SettingAssignment = {
-                    type: "SettingAssignment",
+                const expectedNode: Parser.SettingPush = {
+                    type: "SettingPush",
                     setting: { type: "Identifier", value: "researchIgnore" },
-                    value: { type: "String", value: "tech-republic" }
+                    values: ["tech-republic"]
                 };
 
                 expect(nodes[1]).toEqual(expectedNode);
@@ -329,10 +329,10 @@ describe("Compiler", () => {
                 expect(nodes[0]).toEqual(expectedNode);
             }
             {
-                const expectedNode: Parser.SettingAssignment = {
-                    type: "SettingAssignment",
+                const expectedNode: Parser.SettingPush = {
+                    type: "SettingPush",
                     setting: { type: "Identifier", value: "researchIgnore" },
-                    value: { type: "String", value: "tech-republic" }
+                    values: ["tech-republic"]
                 };
 
                 expect(nodes[1]).toEqual(expectedNode);
@@ -370,10 +370,10 @@ describe("Compiler", () => {
             const { nodes } = collectIgnoredTechs([originalNode1, originalNode2, originalNode3]);
             expect(nodes.length).toEqual(1);
 
-            const expectedNode: Parser.SettingAssignment = {
-                type: "SettingAssignment",
+            const expectedNode: Parser.SettingPush = {
+                type: "SettingPush",
                 setting: { type: "Identifier", value: "researchIgnore" },
-                value: { type: "String", value: "tech-republic" }
+                values: ["tech-republic"]
             };
 
             expect(nodes[0]).toEqual(expectedNode);

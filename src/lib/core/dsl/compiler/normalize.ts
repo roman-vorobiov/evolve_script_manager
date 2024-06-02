@@ -96,15 +96,6 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
                 }
             });
         }
-        else if (statement.setting.value === "researchIgnore") {
-            assert<string>(statement.value.value);
-
-            return this.deriveLocation(statement, {
-                type: "SettingAssignment",
-                setting: statement.setting.value,
-                value: statement.value.value.split(",")
-            });
-        }
         else {
             return this.deriveLocation(statement, {
                 type: "SettingAssignment",
@@ -115,11 +106,20 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     }
 
     onSettingPush(statement: Before.SettingPush): After.SettingAssignment {
-        return {
-            type: "SettingAssignment",
-            setting: statement.setting.value,
-            value: statement.values.map(value => convertEvolutionQueueItem(value as QueueItem))
-        };
+        if (statement.setting.value === "researchIgnore") {
+            return {
+                type: "SettingAssignment",
+                setting: statement.setting.value,
+                value: statement.values
+            };
+        }
+        else {
+            return {
+                type: "SettingAssignment",
+                setting: statement.setting.value,
+                value: statement.values.map(value => convertEvolutionQueueItem(value as QueueItem))
+            };
+        }
     }
 
     onTrigger(statement: Before.Trigger): After.Trigger {

@@ -47,7 +47,7 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
         return [...super.visitAll(statements), ...this.generateStatements()];
     }
 
-    private *generateStatements(): IterableIterator<Parser.SettingAssignment | Parser.SettingShift> {
+    private *generateStatements(): IterableIterator<Parser.SettingAssignment | Parser.SettingPush> {
         const defaultIgnoreList: string[] = [];
 
         for (const { tech, condition } of Object.values(this.poppedIds)) {
@@ -83,9 +83,9 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
 
         if (defaultIgnoreList.length !== 0) {
             yield {
-                type: "SettingAssignment",
+                type: "SettingPush",
                 setting: { type: "Identifier", value: "researchIgnore" },
-                value: { type: "String", value: defaultIgnoreList.join(",") }
+                values: defaultIgnoreList
             };
         }
     }
