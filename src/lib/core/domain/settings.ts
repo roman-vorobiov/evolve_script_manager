@@ -5,8 +5,7 @@ export const settings = Object.keys(defaultSettings).filter(id => {
     return id !== "scriptName"
         && id !== "overrides"
         && id !== "triggers"
-        && id !== "evolutionQueue"
-        && id !== "researchIgnore";
+        && id !== "evolutionQueue";
 });
 
 export function settingType(id: string): string | undefined {
