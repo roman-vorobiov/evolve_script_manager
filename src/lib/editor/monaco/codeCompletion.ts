@@ -1,4 +1,5 @@
 import { prefixes, settings } from "$lib/core/domain/settings";
+import settingEnums from "$lib/core/domain/settingEnums";
 import { expressions } from "$lib/core/domain/expressions";
 import { triggerActions, triggerConditions } from "$lib/core/domain/triggers";
 
@@ -63,7 +64,11 @@ function insideCondition(tokenStack: string[]): boolean {
     return tokenStack.some(token => token === "if");
 }
 
-function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Position): string[] {
+function isAssignee(tokenStack: string[]): boolean {
+    return tokenStack[0] === "=" || tokenStack[1] === "=";
+}
+
+function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Position): string[] | Record<string, string> {
     const tokenStack = tokenizeBackwards(model, position);
 
     const prefix = tryGetPrefix(tokenStack);
@@ -81,6 +86,12 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
             }
 
             return candidates;
+        }
+    }
+    else if (isAssignee(tokenStack)) {
+        const enumValues = settingEnums[tokenStack[0]] ?? settingEnums[tokenStack[1]];
+        if (enumValues !== undefined) {
+            return enumValues;
         }
     }
     else if (insideCondition(tokenStack)) {
@@ -123,14 +134,27 @@ export class CodeCompletionProvider implements Monaco.languages.CompletionItemPr
             endColumn: currentToken.endColumn
         };
 
-        return <Monaco.languages.CompletionList> {
-            incomplete: false,
-            suggestions: candidates.map(candidate => ({
-                label: candidate,
-                insertText: candidate,
-                kind: Monaco.languages.CompletionItemKind.Field,
-                range
-            }))
+        if (Array.isArray(candidates)) {
+            return <Monaco.languages.CompletionList> {
+                incomplete: false,
+                suggestions: candidates.map(candidate => ({
+                    label: candidate,
+                    insertText: candidate,
+                    kind: Monaco.languages.CompletionItemKind.Field,
+                    range
+                }))
+            }
+        }
+        else {
+            return <Monaco.languages.CompletionList> {
+                incomplete: false,
+                suggestions: Object.entries(candidates).map(([text, label]) => ({
+                    label,
+                    insertText: `"${text}"`,
+                    kind: Monaco.languages.CompletionItemKind.Field,
+                    range
+                }))
+            }
         }
     }
 }

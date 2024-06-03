@@ -214,6 +214,20 @@ describe("Compiler", () => {
             expect(errors[0].offendingEntity).toBe(originalNode.value);
         });
 
+        it("should throw on wrong enum values", () => {
+            const originalNode = {
+                type: "SettingAssignment",
+                setting: { type: "Identifier", value: "govGovernor" },
+                value: { type: "String", value: "hello" }
+            };
+
+            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("'hello' is not a valid value for 'govGovernor'");
+            expect(errors[0].offendingEntity).toBe(originalNode.value);
+        });
+
         it("should throw on wrong condition types", () => {
             const originalNode = {
                 type: "SettingAssignment",

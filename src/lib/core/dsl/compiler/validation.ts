@@ -1,10 +1,12 @@
 import { expressions, otherExpressions, otherExpressionsAliases } from "$lib/core/domain/expressions";
 import { settingType } from "$lib/core/domain/settings";
+import settingEnums from "$lib/core/domain/settingEnums";
 import { CompileError } from "../model";
 import { StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Parser from "../model/6";
+import { assert } from "$lib/core/utils/typeUtils";
 
 function getSettingType(setting: Parser.Identifier): string {
     const type = settingType(setting.value);
@@ -89,6 +91,15 @@ class Impl extends StatementVisitor<Parser.Statement> {
     onSettingAssignment(statement: Parser.SettingAssignment): Parser.SettingAssignment {
         const valueType = this.visitor.visit(statement.value);
         checkType(valueType, getSettingType(statement.setting), statement.value);
+
+        const allowedValues = settingEnums[statement.setting.value];
+        if (allowedValues !== undefined) {
+            assert<Parser.StringLiteral>(statement.value);
+
+            if (!(statement.value.value in allowedValues)) {
+                throw new CompileError(`'${statement.value.value}' is not a valid value for '${statement.setting.value}'`, statement.value);
+            }
+        }
 
         if (statement.condition) {
             const conditionType = this.visitor.visit(statement.condition);

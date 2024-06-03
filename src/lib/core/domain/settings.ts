@@ -1,11 +1,9 @@
 import defaultSettings from "$lib/assets/default.json";
 import { craftableResources as craftables } from "./resources";
 
-export const settings = Object.keys(defaultSettings).filter(id => {
-    return id !== "scriptName"
-        && id !== "overrides"
-        && id !== "triggers";
-});
+const nonSettings = ["scriptName", "overrides", "triggers", "replicatorResource"];
+
+export const settings = Object.keys(defaultSettings).filter(id => !nonSettings.includes(id));
 
 export function settingType(id: string): string | undefined {
     if (id === "researchIgnore" || id === "logFilter") {

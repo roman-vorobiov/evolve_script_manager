@@ -76,6 +76,17 @@ export const craftableResources = {
     Quantium: "Quantium",
 }
 
+export const ejectableResources = {
+    ...tradableResources,
+    ...galaxyTradableResources,
+    Water: "Water",
+    Infernite: "Infernite",
+    Orichalcum: "Orichalcum",
+    Unobtainium: "Unobtainium",
+    Materials: "Materials",
+    ...craftableResources
+}
+
 export const specialResources = {
     Corrupt_Gem: "Corrupt Gem",
     Codex: "Codex",
