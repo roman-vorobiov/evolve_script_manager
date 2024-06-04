@@ -27,7 +27,7 @@ commonStatement
     ;
 
 callStatement
-    : identifier '(' listItem* ')'
+    : identifier '(' (listItem (',' listItem)*)? ')'
     ;
 
 loopStatement
