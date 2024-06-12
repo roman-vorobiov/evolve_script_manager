@@ -1,11 +1,12 @@
 import { fromSource } from "$lib/core/dsl";
 
 type Request = {
-    source: string
+    model: Record<string, string>,
+    target: string
 }
 
 onmessage = ({ data }: MessageEvent<Request>) => {
-    postMessage(fromSource(data.source));
+    postMessage(fromSource(data.model, data.target));
 };
 
 export {};

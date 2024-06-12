@@ -46,12 +46,19 @@ export function locationOf(sourceEntity: SourceEntity): SourceLocation {
 export class SourceMap {
     private locations = new WeakMap<WeakKey, SourceLocation>();
 
+    importLocation: SourceLocation | undefined = undefined;
+
     findLocation<T extends object>(object: T): SourceLocation | undefined {
         return this.locations.get(object);
     }
 
     addLocation<T extends object>(object: T, sourceEntity: SourceEntity) {
-        this.locations.set(object, locationOf(sourceEntity));
+        if (this.importLocation !== undefined) {
+            this.locations.set(object, this.importLocation);
+        }
+        else {
+            this.locations.set(object, locationOf(sourceEntity));
+        }
     }
 
     deriveLocation<T extends object, T2 extends object>(original: T, object: T2) {

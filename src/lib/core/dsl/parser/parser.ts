@@ -3,8 +3,9 @@ import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
 import { ErrorStrategy, ErrorListener } from "./errors";
-import { SourceMap, type SourceEntity } from "./source";
+import { SourceMap, type SourceEntity, type SourceLocation } from "./source";
 import { ParseError } from "../model";
+import { locationOf } from "./source";
 
 import type * as Context from "./.antlr/DSLParser";
 import type { Initial as Parser } from "../model";
@@ -170,13 +171,24 @@ class Visitor extends DSLVisitor<void> {
     private nodes: Parser.Statement[];
     private errors: ParseError[];
 
-    constructor(sourceMap: SourceMap, nodes: Parser.Statement[], errors: ParseError[]) {
+    private model: Record<string, string>;
+    private importStack: string[];
+
+    constructor(
+        sourceMap: SourceMap,
+        nodes: Parser.Statement[],
+        errors: ParseError[],
+        model: Record<string, string>,
+        importStack: string[]
+    ) {
         super();
         this.sourceMap = sourceMap;
         this.expressionGetter = new ExpressionGetter(sourceMap);
         this.triggerGetter = new TriggerGetter(sourceMap);
         this.nodes = nodes;
         this.errors = errors;
+        this.model = model;
+        this.importStack = importStack;
     }
 
     visitRoot = (ctx: Context.RootContext) => {
@@ -362,6 +374,36 @@ class Visitor extends DSLVisitor<void> {
         this.sourceMap.addLocation(node, ctx);
         this.nodes.push(node);
     }
+
+    visitImportStatement = (ctx: Context.ImportStatementContext) => {
+        const importTarget = stringContents(ctx.stringLiteral())!;
+
+        if (this.importStack.includes(importTarget)) {
+            throw new ParseError("Circular dependency detected", locationOf(ctx));
+        }
+
+        if (!(importTarget in this.model)) {
+            throw new ParseError(`Could not find config '${importTarget}'`, locationOf(ctx.stringLiteral()));
+        }
+
+        const isRoot = this.sourceMap.importLocation === undefined;
+        if (isRoot) {
+            this.sourceMap.importLocation = locationOf(ctx);
+        }
+
+        this.importStack.push(importTarget);
+
+        const { nodes, errors } = parseSource(this.model, importTarget, this.importStack, this.sourceMap);
+
+        nodes.forEach(n => this.nodes.push(n));
+        errors.forEach(e => this.errors.push(e));
+
+        this.importStack.pop();
+
+        if (isRoot) {
+            this.sourceMap.importLocation = undefined;
+        }
+    }
 }
 
 export function prepareParser(source: string, errors: ParseError[]) {
@@ -387,15 +429,22 @@ export type ParseResult = {
     errors: ParseError[],
 }
 
-export function parseSource(source: string): ParseResult {
-    const sourceMap = new SourceMap();
+export function parseSource(model: Record<string, string>, target: string, importStack?: string[], sourceMap?: SourceMap): ParseResult {
+    const source = model[target];
+    if (source === undefined) {
+        throw new Error(`Invalid target '${target}'`);
+    }
+
     const nodes: Parser.Statement[] = [];
     const errors: ParseError[] = [];
+
+    sourceMap ??= new SourceMap();
+    importStack ??= [target];
 
     const parser = prepareParser(source, errors);
     const root = parser.root();
     if (errors.length === 0) {
-        const visitor = new Visitor(sourceMap, nodes, errors);
+        const visitor = new Visitor(sourceMap, nodes, errors, model, importStack);
         visitor.visit(root);
     }
 

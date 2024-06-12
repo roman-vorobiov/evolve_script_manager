@@ -2,12 +2,14 @@ import * as Parser from "$lib/core/dsl/parser/parser";
 
 import type { Position, SourceLocation } from "$lib/core/dsl/parser/source";
 
-function parse(source: string, impl: (source: string) => Parser.ParseResult) {
+type ParserFn = (model: Record<string, string>, target: string) => Parser.ParseResult;
+
+function parse(model: Record<string, string>, target: string, impl: ParserFn) {
     const MAX_POSITION_LITERALS = 20;
 
     const positions: { [key: number]: Position } = {};
 
-    const lines = source.split("\n");
+    const lines = model[target].split("\n");
 
     for (let [lineIdx, line] of lines.entries()) {
         for (let i = 1; i <= MAX_POSITION_LITERALS; ++i) {
@@ -22,9 +24,9 @@ function parse(source: string, impl: (source: string) => Parser.ParseResult) {
         lines[lineIdx] = line;
     }
 
-    source = lines.join("\n");
+    model[target] = lines.join("\n");
 
-    const { sourceMap, nodes, errors } = impl(source);
+    const { sourceMap, nodes, errors } = impl(model, target);
 
     nodes.forEach(decorateWithSourceMap);
 
@@ -77,15 +79,19 @@ function parse(source: string, impl: (source: string) => Parser.ParseResult) {
         return maps(value, { type: "Identifier", value });
     }
 
-    return { nodes, errors, maps }
+    return { nodes, errors, maps, locationBetween: between }
+}
+
+export function parseSources(target: string, model: Record<string, string>) {
+    return parse(model, target, Parser.parseSource);
 }
 
 export function parseSource(source: string) {
-    return parse(source, Parser.parseSource);
+    return parseSources("source", { source });
 }
 
 export function parseExpression(source: string) {
-    return parse(source, Parser.parseExpression);
+    return parse({ source }, "source", (m, t) => Parser.parseExpression(m[t]));
 }
 
 export { valuesOf, decoratorsOf as sourceMapsOf } from "../fixture";

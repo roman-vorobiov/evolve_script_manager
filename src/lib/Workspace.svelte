@@ -20,11 +20,11 @@
         }
     };
 
-    $: activeConfig = state.configs.find(cfg => cfg.name === state.activeConfig);
+    $: model = Object.fromEntries(state.configs.map(cfg => [cfg.name, cfg.source]));
 
     $: {
-        if (activeConfig !== undefined) {
-            compiler.postMessage({ source: activeConfig.source });
+        if (state.activeConfig !== null) {
+            compiler.postMessage({ model, target: state.activeConfig });
         }
     }
 </script>

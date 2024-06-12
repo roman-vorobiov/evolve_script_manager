@@ -49,8 +49,8 @@ export type CompileResult = {
     errors: ProblemInfo[],
 }
 
-export function fromSource(rawText: string): CompileResult {
-    const parseResult = parseSource(rawText);
+export function fromSource(model: Record<string, string>, target: string): CompileResult {
+    const parseResult = parseSource(model, target);
     if (parseResult.errors.length !== 0) {
         return {
             config: null,

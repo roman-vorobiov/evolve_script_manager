@@ -34,6 +34,7 @@ NOT           : 'not';
 
 // Keywords
 
+Use   : 'use';
 AnyOf : 'any of';
 AllOf : 'all of';
 Def   : 'def';

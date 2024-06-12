@@ -1,7 +1,11 @@
 import exampleConfig from "$lib/assets/example.txt?raw";
 
 import { describe, it, expect } from "vitest";
-import { fromSource } from "$lib/core/dsl";
+import { fromSource as fromSources } from "$lib/core/dsl";
+
+function fromSource(source: string) {
+    return fromSources({ source }, "source");
+}
 
 describe("Compilation", () => {
     it("should handle wildcards", () => {
@@ -405,6 +409,29 @@ describe("Compilation", () => {
             triggers: []
         });
     });
+
+    it ("should handle multiple files", () => {
+        const { config, errors } = fromSources(
+            {
+                foo: `
+                    SmelterFuelPriority[Inferno] = 1
+                    use "bar"
+                `,
+                bar: `
+                    SmelterFuelPriority[Coal] = 1
+                `
+            },
+            "foo"
+        );
+
+        expect(errors).toStrictEqual([]);
+        expect(config).toEqual({
+            overrides: {},
+            triggers: [],
+            smelter_fuel_p_Inferno: 1,
+            smelter_fuel_p_Coal: 1
+        });
+    })
 
     it("should handle large configs", () => {
         const { errors } = fromSource(exampleConfig);

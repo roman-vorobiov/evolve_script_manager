@@ -16,6 +16,7 @@ statements
 
 statement
     : definitionStatement
+    | importStatement
     | settingStatement
     | callStatement
     | loopStatement
@@ -43,6 +44,12 @@ expressionDefinition
 
 statementDefinition
     : 'def' identifier '(' (listItem (',' listItem)*)? ')' 'begin' EOL (statement? EOL)* 'end'
+    ;
+
+// Import
+
+importStatement
+    : 'use' stringLiteral
     ;
 
 // Settings
