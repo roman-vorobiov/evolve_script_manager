@@ -211,10 +211,10 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
-        const condition = this.processTriggerArgument(statement.condition);
+        const requirement = this.processTriggerArgument(statement.requirement);
         const actions = statement.actions.map(a => this.processTriggerArgument(a));
 
-        yield this.derived(statement, { condition, actions }) as After.Trigger;
+        yield this.derived(statement, { requirement, actions }) as After.Trigger;
     }
 
     private processTriggerArgument(arg: Before.TriggerArgument): After.TriggerArgument {

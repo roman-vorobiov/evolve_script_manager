@@ -14,7 +14,9 @@ export type Expression = Previous.Expression;
 export type SettingAssignment = Previous.SettingAssignment;
 export type SettingShift = Previous.SettingShift;
 export type TriggerArgument = Previous.TriggerArgument;
-export type Trigger = Previous.Trigger;
+export type Trigger = Previous.Trigger & {
+    condition: Expression | undefined,
+};
 
 export type SettingPush = {
     type: "SettingPush",

@@ -21,7 +21,7 @@ export type TriggerArgument = Modify<Previous.TriggerArgument, {
     count: NumberLiteral
 }>;
 export type Trigger = Modify<Previous.Trigger, {
-    condition: TriggerArgument,
+    requirement: TriggerArgument,
     actions: TriggerArgument[]
 }>;
 

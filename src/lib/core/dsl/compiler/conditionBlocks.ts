@@ -38,6 +38,12 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         });
     }
 
+    *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
+        yield this.derived(statement, {
+            condition: this.stack.at(-1)
+        });
+    }
+
     private conjunction(parent?: After.Expression, child?: After.Expression): After.Expression | undefined {
         if (parent === undefined) {
             return child;

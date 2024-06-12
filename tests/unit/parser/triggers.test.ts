@@ -11,7 +11,7 @@ describe("Parser", () => {
 
             const expectedNode = maps("aaa bbb when ccc ddd", {
                 type: "Trigger",
-                condition: maps("ccc ddd", { type: maps.identifier("ccc"), id: maps.identifier("ddd") }),
+                requirement: maps("ccc ddd", { type: maps.identifier("ccc"), id: maps.identifier("ddd") }),
                 actions: [maps("aaa bbb", { type: maps.identifier("aaa"), id: maps.identifier("bbb") })]
             });
 
@@ -27,7 +27,7 @@ describe("Parser", () => {
 
             const expectedNode = maps("aaa bbb (123) when ccc ddd (456)", {
                 type: "Trigger",
-                condition: maps("ccc ddd (456)", {
+                requirement: maps("ccc ddd (456)", {
                     type: maps.identifier("ccc"),
                     id: maps.identifier("ddd"),
                     count: maps("456", { type: "Number", value: 456 })
@@ -58,7 +58,7 @@ describe("Parser", () => {
 
             const expectedNode = maps([1, 2], {
                 type: "Trigger",
-                condition: maps("aaa bbb", { type: maps.identifier("aaa"), id: maps.identifier("bbb") }),
+                requirement: maps("aaa bbb", { type: maps.identifier("aaa"), id: maps.identifier("bbb") }),
                 actions: [
                     maps("ccc ddd", { type: maps.identifier("ccc"), id: maps.identifier("ddd") }),
                     maps("eee fff", { type: maps.identifier("eee"), id: maps.identifier("fff") })

@@ -23,7 +23,7 @@ function convertSimpleExpression(expression: Before.SimpleExpression, idx: 1 | 2
     }
 }
 
-function convertBinaryExpression(expression: Before.Expression) {
+function convertCompoundExpression(expression: Before.Expression) {
     if (expression.type === "Expression") {
         if (expression.operator === "not") {
             return {
@@ -91,7 +91,7 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
                 type: "Override",
                 setting: statement.setting.value,
                 value: {
-                    ...convertBinaryExpression(statement.condition),
+                    ...convertCompoundExpression(statement.condition),
                     ret: statement.value.value
                 }
             });
@@ -130,9 +130,9 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
             value: {
                 seq: triggerIdx,
                 priority: triggerIdx,
-                requirementType: statement.condition.type.value.toLowerCase(),
-                requirementId: statement.condition.id.value,
-                requirementCount: statement.condition.count.value,
+                requirementType: statement.requirement.type.value.toLowerCase(),
+                requirementId: statement.requirement.id.value,
+                requirementCount: statement.requirement.count.value,
                 actionType: statement.action.type.value.toLowerCase(),
                 actionId: statement.action.id.value,
                 actionCount: statement.action.count.value,

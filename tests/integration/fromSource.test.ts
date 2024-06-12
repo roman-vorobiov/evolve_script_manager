@@ -234,6 +234,65 @@ describe("Compilation", () => {
         });
     });
 
+    it("should handle conditional triggers", () => {
+        const { config, errors } = fromSource(`
+            if ResetType.mad then
+                when Built city-windmill do
+                    Research tech-club
+                    Build city-bank
+                end
+            end
+        `);
+
+        expect(errors).toStrictEqual([]);
+        expect(config).toEqual({
+            overrides: {
+                masterScriptToggle: [
+                    {
+                        type1: "Eval",
+                        arg1: "TriggerManager.priorityList[0].complete = !(_('ResetType', 'mad'))",
+                        cmp: "AND",
+                        type2: "Boolean",
+                        arg2: false,
+                        ret: true
+                    },
+                    {
+                        type1: "Eval",
+                        arg1: "TriggerManager.priorityList[1].complete = !(_('ResetType', 'mad'))",
+                        cmp: "AND",
+                        type2: "Boolean",
+                        arg2: false,
+                        ret: true
+                    }
+                ]
+            },
+            triggers: [
+                {
+                    seq: 0,
+                    priority: 0,
+                    requirementType: "built",
+                    requirementId: "city-windmill",
+                    requirementCount: 1,
+                    actionType: "research",
+                    actionId: "tech-club",
+                    actionCount: 1,
+                    complete: false,
+                },
+                {
+                    seq: 1,
+                    priority: 1,
+                    requirementType: "chain",
+                    requirementId: "",
+                    requirementCount: 0,
+                    actionType: "build",
+                    actionId: "city-bank",
+                    actionCount: 1,
+                    complete: false,
+                },
+            ]
+        });
+    });
+
     it("should handle logFilter", () => {
         const { config, errors } = fromSource(`
             logFilter << "hello"

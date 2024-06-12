@@ -286,5 +286,39 @@ describe("Compiler", () => {
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
+
+        it("should simplify expressions in trigger conditions", () => {
+            const originalNode = {
+                type: "Trigger",
+                requirement: {
+                    type: { type: "Identifier", value: "Built" },
+                    id: { type: "Identifier", value: "city-windmill" }
+                },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" }
+                    }
+                ],
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceDemanded" },
+                    key: { type: "Identifier", value: "Copper" }
+                }
+            };
+
+            const { nodes, from } = flattenExpressions(originalNode as Parser.Trigger);
+
+            const expectedNode = from(originalNode, {
+                condition: from(originalNode.condition, {
+                    type: "Eval",
+                    value: "_('ResourceDemanded', 'Copper')"
+                })
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
     });
 });

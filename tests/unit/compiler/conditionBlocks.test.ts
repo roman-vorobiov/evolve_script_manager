@@ -8,7 +8,7 @@ const applyConditionBlocks = (nodes: Parser.Statement[]) => processStatements(no
 
 describe("Compiler", () => {
     describe("Condition blocks", () => {
-        it("should apply conditions to nested statements", () => {
+        it("should apply conditions to nested setting assignments", () => {
             const originalNode = {
                 type: "ConditionBlock",
                 condition: {
@@ -21,6 +21,42 @@ describe("Compiler", () => {
                         type: "SettingAssignment",
                         setting: { type: "Identifier", value: "hello" },
                         value: { type: "Number", value: 123 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = applyConditionBlocks([originalNode as Parser.ConditionBlock]);
+
+            const expectedNode = from(originalNode.body[0], {
+                condition: originalNode.condition
+            });
+
+            expect(nodes.length).toEqual(1);
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should apply conditions to nested triggers", () => {
+            const originalNode = {
+                type: "ConditionBlock",
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceDemanded" },
+                    key: { type: "Identifier", value: "Copper" },
+                },
+                body: [
+                    {
+                        type: "Trigger",
+                        requirement: {
+                            type: { type: "Identifier", value: "Built" },
+                            id: { type: "Identifier", value: "city-windmill" }
+                        },
+                        actions: [
+                            {
+                                type: { type: "Identifier", value: "Build" },
+                                id: { type: "Identifier", value: "city-bank" }
+                            }
+                        ]
                     }
                 ]
             };

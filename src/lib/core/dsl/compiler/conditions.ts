@@ -45,12 +45,23 @@ export function toEvalString(expression: Before.Expression, wrap: boolean = fals
 }
 
 export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
-    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment | undefined {
+    onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
         const conditionStrategy = isConstant(statement.value) ? "toFlat" : "toSimple";
         const condition = statement.condition && this[conditionStrategy](statement.condition);
         const value = this.toSimple(statement.value);
 
         return this.derived(statement, { value, condition });
+    }
+
+    onTrigger(statement: Before.Trigger): After.Trigger | undefined {
+        if (statement.condition !== undefined) {
+            const condition: After.EvalLiteral = this.deriveLocation(statement.condition, {
+                type: "Eval",
+                value: toEvalString(statement.condition)
+            });
+
+            return this.derived(statement, { condition });
+        }
     }
 
     private toFlat(expression: Before.Expression): After.Expression {

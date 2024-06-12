@@ -334,7 +334,7 @@ class Visitor extends DSLVisitor<void> {
         this.nodes = node.body;
 
         try {
-            ctx.commonStatement().forEach(s => this.visit(s));
+            ctx.statement().forEach(s => this.visit(s));
         }
         finally {
             this.nodes = outerScope;
@@ -344,7 +344,7 @@ class Visitor extends DSLVisitor<void> {
     visitTrigger = (ctx: Context.TriggerContext) => {
         const node: Parser.Trigger = {
             type: "Trigger",
-            condition: this.triggerGetter.visit(ctx.triggerCondition())!,
+            requirement: this.triggerGetter.visit(ctx.triggerRequirement())!,
             actions: [this.triggerGetter.visit(ctx.triggerAction())!]
         };
 
@@ -355,7 +355,7 @@ class Visitor extends DSLVisitor<void> {
     visitTriggerChain = (ctx: Context.TriggerChainContext) => {
         const node: Parser.Trigger = {
             type: "Trigger",
-            condition: this.triggerGetter.visit(ctx.triggerCondition())!,
+            requirement: this.triggerGetter.visit(ctx.triggerRequirement())!,
             actions: ctx.triggerAction().map(c => this.triggerGetter.visit(c)!)
         };
 

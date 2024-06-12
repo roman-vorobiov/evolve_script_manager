@@ -81,7 +81,7 @@ export type TriggerArgument = {
 
 export type Trigger = {
     type: "Trigger",
-    condition: TriggerArgument,
+    requirement: TriggerArgument,
     actions: TriggerArgument[]
 }
 

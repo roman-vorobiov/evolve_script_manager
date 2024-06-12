@@ -589,7 +589,7 @@ describe("Compiler", () => {
 
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "$foo" }
                 },
@@ -608,7 +608,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                condition: from(originalNode.condition, {
+                requirement: from(originalNode.requirement, {
                     id: defNode.body
                 }),
                 actions: [
@@ -632,7 +632,7 @@ describe("Compiler", () => {
 
             const originalNode: Parser.Trigger = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "$foo" }
                 },
@@ -648,7 +648,7 @@ describe("Compiler", () => {
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Identifier expected, got Number");
-            expect(errors[0].offendingEntity).toBe(originalNode.condition.id);
+            expect(errors[0].offendingEntity).toBe(originalNode.requirement.id);
         });
 
         it("should repace references inside trigger counts", () => {
@@ -661,7 +661,7 @@ describe("Compiler", () => {
 
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Identifier", value: "$foo" }
@@ -682,7 +682,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                condition: from(originalNode.condition, {
+                requirement: from(originalNode.requirement, {
                     count: defNode.body
                 }),
                 actions: [
@@ -706,7 +706,7 @@ describe("Compiler", () => {
 
             const originalNode: Parser.Trigger = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Identifier", value: "$foo" }
@@ -724,7 +724,7 @@ describe("Compiler", () => {
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Number expected, got String");
-            expect(errors[0].offendingEntity).toBe(originalNode.condition.count);
+            expect(errors[0].offendingEntity).toBe(originalNode.requirement.count);
         });
     });
 });

@@ -22,8 +22,9 @@ export type TriggerArgument = {
 
 export type Trigger = {
     type: "Trigger",
-    condition: TriggerArgument,
-    action: TriggerArgument
+    requirement: TriggerArgument,
+    action: TriggerArgument,
+    condition: EvalLiteral | undefined
 }
 
 export type Statement = SettingAssignment | SettingPush | Trigger;

@@ -15,15 +15,11 @@ statements
     ;
 
 statement
-    : commonStatement
-    | triggerStatement
-    ;
-
-commonStatement
     : definitionStatement
     | settingStatement
     | callStatement
     | loopStatement
+    | triggerStatement
     ;
 
 callStatement
@@ -58,7 +54,7 @@ settingStatement
     ;
 
 conditionBlock
-    : 'if' expression 'then' EOL (commonStatement? EOL)* 'end'
+    : 'if' expression 'then' EOL (statement? EOL)* 'end'
     ;
 
 settingAssignment
@@ -86,18 +82,18 @@ triggerStatement
     ;
 
 trigger
-    : triggerAction 'when' triggerCondition
+    : triggerAction 'when' triggerRequirement
     ;
 
 triggerChain
-    : 'when' triggerCondition 'do' EOL (triggerAction? EOL)* 'end'
+    : 'when' triggerRequirement 'do' EOL (triggerAction? EOL)* 'end'
     ;
 
 triggerAction
     : triggerActionOrCondition
     ;
 
-triggerCondition
+triggerRequirement
     : triggerActionOrCondition
     ;
 

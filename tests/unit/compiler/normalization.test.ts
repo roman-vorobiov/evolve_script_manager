@@ -297,7 +297,7 @@ describe("Compiler", () => {
         it("should generate triggers", () => {
             const originalNode1 = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Number", value: 123 }
@@ -311,7 +311,7 @@ describe("Compiler", () => {
 
             const originalNode2 = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Researched" },
                     id: { type: "Identifier", value: "tech-club" },
                     count: { type: "Number", value: 456 }

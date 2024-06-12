@@ -22,16 +22,18 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
 
         yield this.deriveLocation(statement, <After.Trigger> {
             type: "Trigger",
-            condition: this.normalizeCondition(statement.condition),
-            action: this.normalizeAction(iterator.next().value)
+            requirement: this.normalizeCondition(statement.requirement),
+            action: this.normalizeAction(iterator.next().value),
+            condition: statement.condition
         });
 
         for (const tail of iterator) {
             const makeChain = () => {
                 return this.deriveLocation(statement, <After.Trigger> {
                     type: "Trigger",
-                    condition: chainCondition,
-                    action: this.normalizeAction(tail)
+                    requirement: chainCondition,
+                    action: this.normalizeAction(tail),
+                    condition: statement.condition
                 });
             };
 
@@ -75,7 +77,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const info = triggerConditions[arg.type.value as keyof typeof triggerConditions];
 
         if (info === undefined) {
-            throw new CompileError(`Unknown trigger condition '${arg.type.value}'`, arg.type);
+            throw new CompileError(`Unknown trigger requirement '${arg.type.value}'`, arg.type);
         }
 
         if (!info.allowedValues.includes(arg.id.value)) {

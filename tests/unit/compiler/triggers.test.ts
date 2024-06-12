@@ -11,7 +11,7 @@ describe("Compiler", () => {
         it("should provide default count", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" }
                 },
@@ -27,7 +27,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                condition: from(originalNode.condition, {
+                requirement: from(originalNode.requirement, {
                     count: { type: "Number", value: 1 }
                 }),
                 action: from(originalNode.actions[0], {
@@ -43,7 +43,7 @@ describe("Compiler", () => {
         it("should preserve provided count", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Number", value: 123 }
@@ -61,7 +61,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                condition: originalNode.condition,
+                requirement: originalNode.requirement,
                 action: originalNode.actions[0],
                 actions: undefined
             });
@@ -73,7 +73,7 @@ describe("Compiler", () => {
         it("should resolve arpa ids", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Number", value: 123 }
@@ -91,7 +91,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                condition: originalNode.condition,
+                requirement: originalNode.requirement,
                 action: from(originalNode.actions[0], {
                     id: from(originalNode.actions[0].id, { value: "arpalhc" })
                 }),
@@ -105,7 +105,7 @@ describe("Compiler", () => {
         it("should create trigger chains", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Number", value: 123 }
@@ -129,7 +129,7 @@ describe("Compiler", () => {
 
             {
                 const expectedNode = from(originalNode, {
-                    condition: originalNode.condition,
+                    requirement: originalNode.requirement,
                     action: originalNode.actions[0],
                     actions: undefined
                 });
@@ -139,7 +139,7 @@ describe("Compiler", () => {
             }
             {
                 const expectedNode = from(originalNode, {
-                    condition: {
+                    requirement: {
                         type: { type: "Identifier", value: "Chain" },
                         id: { type: "Identifier", value: "" },
                         count: { type: "Number", value: 0 }
@@ -156,7 +156,7 @@ describe("Compiler", () => {
         it("should throw on invalid count values", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" },
                     count: { type: "Number", value: 1.23 }
@@ -173,13 +173,13 @@ describe("Compiler", () => {
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Expected integer, got float");
-            expect(errors[0].offendingEntity).toBe(originalNode.condition.count);
+            expect(errors[0].offendingEntity).toBe(originalNode.requirement.count);
         });
 
-        it("should throw on invalid trigger condition types", () => {
+        it("should throw on invalid trigger requirement types", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Build" },
                     id: { type: "Identifier", value: "city-windmill" }
                 },
@@ -194,14 +194,14 @@ describe("Compiler", () => {
             const { errors } = createTriggerChains(originalNode as Parser.Trigger);
             expect(errors.length).toEqual(1);
 
-            expect(errors[0].message).toEqual("Unknown trigger condition 'Build'");
-            expect(errors[0].offendingEntity).toBe(originalNode.condition.type);
+            expect(errors[0].message).toEqual("Unknown trigger requirement 'Build'");
+            expect(errors[0].offendingEntity).toBe(originalNode.requirement.type);
         });
 
-        it("should throw on invalid trigger condition ids", () => {
+        it("should throw on invalid trigger requirement ids", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "tech-club" }
                 },
@@ -217,13 +217,13 @@ describe("Compiler", () => {
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Unknown building 'tech-club'");
-            expect(errors[0].offendingEntity).toBe(originalNode.condition.id);
+            expect(errors[0].offendingEntity).toBe(originalNode.requirement.id);
         });
 
         it("should throw on invalid trigger action types", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" }
                 },
@@ -245,7 +245,7 @@ describe("Compiler", () => {
         it("should throw on invalid trigger action ids", () => {
             const originalNode = {
                 type: "Trigger",
-                condition: {
+                requirement: {
                     type: { type: "Identifier", value: "Built" },
                     id: { type: "Identifier", value: "city-windmill" }
                 },
