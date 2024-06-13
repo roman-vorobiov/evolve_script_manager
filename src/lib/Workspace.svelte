@@ -31,7 +31,7 @@
 
 {#each state.configs as config}
     {#if config.name === state.activeConfig}
-        <Editor bind:config={config} {errors}/>
+        <Editor {state} bind:config={config} {errors}/>
     {/if}
 {/each}
 

@@ -4,9 +4,10 @@
 
     import { loadMonaco, type Monaco } from "$lib/editor/monaco";
 
-    import type { Config } from "$lib/core/state";
+    import type { Config, State } from "$lib/core/state";
     import type { ProblemInfo } from "$lib/core/dsl";
 
+    export let state: State;
     export let config: Config;
     export let errors: ProblemInfo[] = [];
 
@@ -15,7 +16,7 @@
     let editorContainer: HTMLElement;
 
     onMount(async () => {
-        monaco = await loadMonaco();
+        monaco = await loadMonaco(state);
 
         if (editorContainer === null) {
             return;

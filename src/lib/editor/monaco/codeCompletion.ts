@@ -4,6 +4,7 @@ import { expressions } from "$lib/core/domain/expressions";
 import { triggerActions, triggerConditions } from "$lib/core/domain/triggers";
 
 import * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
+import type { State } from "$lib/core/state";
 
 function tokenizeBackwards(model: Monaco.editor.ITextModel, position: Monaco.Position) {
     const lineContents = model.getLineContent(position.lineNumber);
@@ -64,11 +65,15 @@ function insideCondition(tokenStack: string[]): boolean {
     return tokenStack.some(token => token === "if");
 }
 
+function insideImport(tokenStack: string[]) {
+    return tokenStack[0] === "use" || tokenStack[1] === "use";
+}
+
 function isAssignee(tokenStack: string[]): boolean {
     return tokenStack[0] === "=" || tokenStack[1] === "=";
 }
 
-function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Position): string[] | Record<string, string> {
+function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Position, state: State): string[] | Record<string, string> {
     const tokenStack = tokenizeBackwards(model, position);
 
     const prefix = tryGetPrefix(tokenStack);
@@ -97,6 +102,9 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
     else if (insideCondition(tokenStack)) {
         return Object.keys(expressions);
     }
+    else if (insideImport(tokenStack)) {
+        return Object.fromEntries(state.configs.map(cfg => [cfg.name, cfg.name]));
+    }
     else if (tokenStack.length > 1 && tokenStack[1] in triggerActions) {
         return triggerActions[tokenStack[1] as keyof typeof triggerActions].allowedValues;
     }
@@ -122,8 +130,10 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
 export class CodeCompletionProvider implements Monaco.languages.CompletionItemProvider {
     readonly triggerCharacters = [".", "["];
 
+    constructor(private state: State) {}
+
     provideCompletionItems(model: Monaco.editor.ITextModel, position: Monaco.Position) {
-        const candidates = getCandidates(model, position);
+        const candidates = getCandidates(model, position, this.state);
 
         const currentToken = model.getWordUntilPosition(position);
 
