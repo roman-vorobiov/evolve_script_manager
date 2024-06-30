@@ -4,12 +4,12 @@ import type { Position, SourceLocation } from "$lib/core/dsl/parser/source";
 
 type ParserFn = (model: Record<string, string>, target: string) => Parser.ParseResult;
 
-function parse(model: Record<string, string>, target: string, impl: ParserFn) {
+type PositionMap = Record<number, { file: string, position: Position }>;
+
+function preprocess(file: string, source: string, positions: PositionMap) {
     const MAX_POSITION_LITERALS = 20;
 
-    const positions: { [key: number]: Position } = {};
-
-    const lines = model[target].split("\n");
+    const lines = source.split("\n");
 
     for (let [lineIdx, line] of lines.entries()) {
         for (let i = 1; i <= MAX_POSITION_LITERALS; ++i) {
@@ -17,14 +17,28 @@ function parse(model: Record<string, string>, target: string, impl: ParserFn) {
             const column = line.indexOf(character);
             if (column !== -1) {
                 line = line.replace(character, "");
-                positions[i] = { line: lineIdx + 1, column: column + 1 };
+                positions[i] = {
+                    file,
+                    position: { line: lineIdx + 1, column: column + 1 }
+                };
             }
         }
 
         lines[lineIdx] = line;
     }
 
-    model[target] = lines.join("\n");
+    return lines;
+}
+
+function parse(model: Record<string, string>, target: string, impl: ParserFn) {
+    const positions: PositionMap = {};
+    const modelLines: Record<string, string[]> = {};
+
+    for (const [file, source] of Object.entries(model)) {
+        modelLines[file] = preprocess(file, source, positions);
+
+        model[file] = modelLines[file].join("\n");
+    }
 
     const { sourceMap, nodes, errors } = impl(model, target);
 
@@ -46,6 +60,8 @@ function parse(model: Record<string, string>, target: string, impl: ParserFn) {
 
     function sourceOf(location: SourceLocation | undefined) {
         if (location !== undefined) {
+            const lines = modelLines[location.file];
+
             if (location.start.line === location.stop.line) {
                 return lines[location.start.line - 1].slice(location.start.column - 1, location.stop.column - 1);
             }
@@ -64,9 +80,17 @@ function parse(model: Record<string, string>, target: string, impl: ParserFn) {
     }
 
     function between(startIdx: number, stopIdx: number): SourceLocation {
+        const startFile = positions[startIdx].file;
+        const stopFile = positions[stopIdx].file;
+
+        if (startFile !== stopFile) {
+            throw new Error("Location must not span multiple files");
+        }
+
         return {
-            start: positions[startIdx],
-            stop: positions[stopIdx]
+            file: startFile,
+            start: positions[startIdx].position,
+            stop: positions[stopIdx].position
         }
     }
 

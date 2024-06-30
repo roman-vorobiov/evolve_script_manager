@@ -14,11 +14,37 @@ export type ProblemInfo = {
 type InternalError = ParseError | CompileError | CompileWarning;
 
 function* resolveError(error: InternalError, sourceMap: SourceMap): IterableIterator<ProblemInfo> {
+    function getMainInfo(importStack: SourceLocation[], originalLocation: SourceLocation) {
+        if (importStack.length === 0) {
+            return { message: error.message, location: originalLocation };
+        }
+        else {
+            return {
+                message: `In '${originalLocation?.file}': ${error.message}`,
+                location: importStack[0]
+            };
+        }
+    }
+
+    function *printImportStack(importStack: SourceLocation[], location: SourceLocation): IterableIterator<ProblemInfo> {
+        for (let i = 1; i <= importStack.length; ++i) {
+            yield {
+                type: "info",
+                message: `Imported from '${importStack.at(-i)!.file}'`,
+                location
+            };
+        }
+    }
+
     if (error instanceof CompileError || error instanceof CompileWarning) {
+        const importStack = sourceMap.getImportStack(error.offendingEntity);
+        const originalLocation = sourceMap.findLocation(error.offendingEntity);
+        const { message, location } = getMainInfo(importStack, originalLocation!);
+
         yield {
             type: error instanceof CompileError ? "error" : "warning",
-            message: error.message,
-            location: sourceMap.findLocation(error.offendingEntity)
+            message,
+            location
         };
 
         for (const [detail, entity] of error.details) {
@@ -28,13 +54,20 @@ function* resolveError(error: InternalError, sourceMap: SourceMap): IterableIter
                 location: sourceMap.findLocation(entity)
             };
         }
+
+        yield* printImportStack(importStack, location);
     }
     else {
+        const originalLocation = error.location;
+        const { message, location } = getMainInfo(error.importStack, originalLocation!);
+
         yield {
             type: "error",
-            message: error.message,
-            location: error.location
+            message,
+            location
         };
+
+        yield* printImportStack(error.importStack, location);
     }
 }
 

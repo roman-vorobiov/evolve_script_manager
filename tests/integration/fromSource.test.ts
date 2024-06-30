@@ -431,7 +431,101 @@ describe("Compilation", () => {
             smelter_fuel_p_Inferno: 1,
             smelter_fuel_p_Coal: 1
         });
-    })
+    });
+
+    it ("should convert parse error locations from other files", () => {
+        const { config, errors } = fromSources(
+            {
+                foo: `
+                    use "bar"
+                    SmelterFuelPriority[Inferno] = 1
+                `,
+                bar: `
+                    use "baz"
+                `,
+                baz: `
+                    123
+                `
+            },
+            "foo"
+        );
+
+        expect(config).toBeNull();
+
+        expect(errors).toEqual([
+            {
+                type: "error",
+                message: "In 'baz': Unexpected '123'",
+                location: {
+                    file: "foo",
+                    start: { line: 2, column: expect.any(Number) },
+                    stop: { line: 2, column: expect.any(Number) }
+                }
+            },
+            {
+                type: "info",
+                message: "Imported from 'bar'",
+                location: expect.anything()
+            },
+            {
+                type: "info",
+                message: "Imported from 'foo'",
+                location: expect.anything()
+            }
+        ]);
+
+        expect(errors[1].location).toBe(errors[0].location);
+        expect(errors[2].location).toBe(errors[0].location);
+    });
+
+    it ("should convert compiler error locations from other files", () => {
+        const { config, errors } = fromSources(
+            {
+                foo: `
+                    use "bar"
+                    SmelterFuelPriority[Inferno] = 1
+                `,
+                bar: `
+                    use "baz"
+                `,
+                baz: `
+                    SmelterFuelPriority[Coal] = ON
+                `
+            },
+            "foo"
+        );
+
+        expect(config).toEqual({
+            overrides: {},
+            triggers: [],
+            smelter_fuel_p_Inferno: 1
+        });
+
+        expect(errors).toEqual([
+            {
+                type: "error",
+                message: "In 'baz': Expected number, got boolean",
+                location: {
+                    file: "foo",
+                    start: { line: 2, column: expect.any(Number) },
+                    stop: { line: 2, column: expect.any(Number) }
+                }
+            },
+            {
+                type: "info",
+                message: "Imported from 'bar'",
+                location: expect.anything()
+            },
+            {
+                type: "info",
+                message: "Imported from 'foo'",
+                location: expect.anything()
+            }
+        ]);
+
+        expect(errors[1].location).toBe(errors[0].location);
+        expect(errors[2].location).toBe(errors[0].location);
+    });
 
     it("should handle large configs", () => {
         const { errors } = fromSource(exampleConfig);

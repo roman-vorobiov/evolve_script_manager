@@ -4,7 +4,11 @@ export type * as Initial from "./0";
 export type * as Final from "./10";
 
 export class ParseError extends Error {
-    constructor(message: string, public location?: SourceLocation) {
+    constructor(
+        message: string,
+        public location?: SourceLocation,
+        public importStack: SourceLocation[] = []
+    ) {
         super(message);
     }
 }

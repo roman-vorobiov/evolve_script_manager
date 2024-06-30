@@ -17,10 +17,10 @@ describe("Parser", () => {
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            const expectedNode = maps('use "bar"', {
+            const expectedNode = maps("hello = 123", {
                 type: "SettingAssignment",
-                setting: maps('use "bar"', { type: "Identifier", value: "hello" }),
-                value: maps('use "bar"', { type: "Number", value: 123 })
+                setting: maps.identifier("hello"),
+                value: maps("123", { type: "Number", value: 123 })
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
@@ -33,30 +33,30 @@ describe("Parser", () => {
                     use "bar"
                 `,
                 bar: `
-                    when aaa bbb do
+                    \x01when aaa bbb do
                         ccc ddd
                         eee fff
-                    end
+                    end\x02
                 `
             });
 
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            const expectedNode = maps('use "bar"', {
+            const expectedNode = maps([1, 2], {
                 type: "Trigger",
-                requirement: maps('use "bar"', {
-                    type: maps('use "bar"', { type: "Identifier", value: "aaa" }),
-                    id: maps('use "bar"', { type: "Identifier", value: "bbb" }),
+                requirement: maps("aaa bbb", {
+                    type: maps.identifier("aaa"),
+                    id: maps.identifier("bbb")
                 }),
                 actions: [
-                    maps('use "bar"', {
-                        type: maps('use "bar"', { type: "Identifier", value: "ccc" }),
-                        id: maps('use "bar"', { type: "Identifier", value: "ddd" }),
+                    maps("ccc ddd", {
+                        type: maps.identifier("ccc"),
+                        id: maps.identifier("ddd")
                     }),
-                    maps('use "bar"', {
-                        type: maps('use "bar"', { type: "Identifier", value: "eee" }),
-                        id: maps('use "bar"', { type: "Identifier", value: "fff" }),
+                    maps("eee fff", {
+                        type: maps.identifier("eee"),
+                        id: maps.identifier("fff")
                     })
                 ]
             });
@@ -71,33 +71,33 @@ describe("Parser", () => {
                     use "bar"
                 `,
                 bar: `
-                    def foo(aaa, bbb) begin
+                    \x01def foo(aaa, bbb) begin
                         hello = $a
                         bye = $b
-                    end
+                    end\x02
                 `
             });
 
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            const expectedNode = maps('use "bar"', {
+            const expectedNode = maps([1, 2], {
                 type: "StatementDefinition",
-                name: maps('use "bar"', { type: "Identifier", value: "foo" }),
+                name: maps.identifier("foo"),
                 params: [
-                    maps('use "bar"', { type: "Identifier", value: "aaa" }),
-                    maps('use "bar"', { type: "Identifier", value: "bbb" })
+                    maps.identifier("aaa"),
+                    maps.identifier("bbb")
                 ],
                 body: [
-                    maps('use "bar"', {
+                    maps('hello = $a', {
                         type: "SettingAssignment",
-                        setting: maps('use "bar"', { type: "Identifier", value: "hello" }),
-                        value: maps('use "bar"', { type: "Identifier", value: "$a" })
+                        setting: maps.identifier("hello"),
+                        value: maps.identifier("$a")
                     }),
-                    maps('use "bar"', {
+                    maps('bye = $b', {
                         type: "SettingAssignment",
-                        setting: maps('use "bar"', { type: "Identifier", value: "bye" }),
-                        value: maps('use "bar"', { type: "Identifier", value: "$b" })
+                        setting: maps.identifier("bye"),
+                        value: maps.identifier("$b")
                     })
                 ]
             });
@@ -137,19 +137,20 @@ describe("Parser", () => {
             if (errors[0] instanceof ParseError) {
                 expect(errors[0].message).toEqual("Circular dependency detected");
                 expect(errors[0].location).toEqual(locationBetween(1, 2));
+                expect(errors[0].importStack).toEqual([]);
             }
         });
 
         it("should throw on circular dependency", () => {
             const { nodes, errors, locationBetween } = parse("foo", {
                 foo: `
-                    \x01use "bar"\x02
+                    \x05use "bar"\x06
                 `,
                 bar: `
-                    use "baz"
+                    \x03use "baz"\x04
                 `,
                 baz: `
-                    use "foo"
+                    \x01use "foo"\x02
                 `
             });
 
@@ -160,6 +161,10 @@ describe("Parser", () => {
             if (errors[0] instanceof ParseError) {
                 expect(errors[0].message).toEqual("Circular dependency detected");
                 expect(errors[0].location).toEqual(locationBetween(1, 2));
+                expect(errors[0].importStack).toEqual([
+                    locationBetween(5, 6),
+                    locationBetween(3, 4)
+                ]);
             }
         });
     });

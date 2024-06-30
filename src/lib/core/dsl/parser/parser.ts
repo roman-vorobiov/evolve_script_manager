@@ -3,11 +3,11 @@ import { DSLLexer } from "./.antlr/DSLLexer";
 import { DSLParser } from "./.antlr/DSLParser";
 import { DSLVisitor } from "./.antlr/DSLVisitor";
 import { ErrorStrategy, ErrorListener } from "./errors";
-import { SourceMap, type SourceEntity, type SourceLocation } from "./source";
+import { SourceMap, locationOf } from "./source";
 import { ParseError } from "../model";
-import { locationOf } from "./source";
 
 import type * as Context from "./.antlr/DSLParser";
+import type { SourceEntity, SourceLocation } from "./source";
 import type { Initial as Parser } from "../model";
 
 function stringContents<T extends { getText(): string }>(token: T | null, quoteLength: number = 1): string | undefined {
@@ -15,10 +15,10 @@ function stringContents<T extends { getText(): string }>(token: T | null, quoteL
 }
 
 class NodeFactory {
-    constructor(private sourceMap: SourceMap) {}
+    constructor(private sourceMap: SourceMap, private currentFile: string) {}
 
     private trackLocation<T extends object>(node: T, context: SourceEntity): T {
-        this.sourceMap.addLocation(node, context);
+        this.sourceMap.addLocation(node, context, this.currentFile);
         return node;
     }
 
@@ -62,9 +62,9 @@ class NodeFactory {
 class ExpressionGetter extends DSLVisitor<any> {
     private nodeFactory: NodeFactory;
 
-    constructor(sourceMap: SourceMap) {
+    constructor(sourceMap: SourceMap, currentFile: string) {
         super();
-        this.nodeFactory = new NodeFactory(sourceMap);
+        this.nodeFactory = new NodeFactory(sourceMap, currentFile);
     }
 
     visitExpression = (ctx: Context.ExpressionContext): Parser.Expression => {
@@ -136,13 +136,15 @@ class ExpressionGetter extends DSLVisitor<any> {
 }
 
 class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
+    private currentFile: string;
     private sourceMap: SourceMap;
     private expressionGetter: ExpressionGetter;
 
-    constructor(sourceMap: SourceMap) {
+    constructor(sourceMap: SourceMap, currentFile: string) {
         super();
+        this.currentFile = currentFile;
         this.sourceMap = sourceMap;
-        this.expressionGetter = new ExpressionGetter(sourceMap);
+        this.expressionGetter = new ExpressionGetter(sourceMap, currentFile);
     }
 
     visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext): Parser.TriggerArgument => {
@@ -158,7 +160,7 @@ class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
             node.count = this.expressionGetter.visit(count);
         }
 
-        this.sourceMap.addLocation(node, ctx);
+        this.sourceMap.addLocation(node, ctx, this.currentFile);
         return node;
     }
 }
@@ -172,23 +174,34 @@ class Visitor extends DSLVisitor<void> {
     private errors: ParseError[];
 
     private model: Record<string, string>;
-    private importStack: string[];
+    private currentFile: string;
+    private importStack: SourceLocation[];
 
     constructor(
         sourceMap: SourceMap,
         nodes: Parser.Statement[],
         errors: ParseError[],
         model: Record<string, string>,
-        importStack: string[]
+        currentFile: string,
+        importStack: SourceLocation[]
     ) {
         super();
-        this.sourceMap = sourceMap;
-        this.expressionGetter = new ExpressionGetter(sourceMap);
-        this.triggerGetter = new TriggerGetter(sourceMap);
         this.nodes = nodes;
         this.errors = errors;
         this.model = model;
+        this.currentFile = currentFile;
         this.importStack = importStack;
+
+        this.sourceMap = sourceMap;
+        this.expressionGetter = new ExpressionGetter(sourceMap, this.currentFile);
+        this.triggerGetter = new TriggerGetter(sourceMap, this.currentFile);
+    }
+
+    private addNode<T extends Parser.Statement>(ctx: SourceEntity, node: T) {
+        this.sourceMap.addLocation(node, ctx, this.currentFile);
+        this.nodes.push(node);
+
+        return node;
     }
 
     visitRoot = (ctx: Context.RootContext) => {
@@ -211,33 +224,27 @@ class Visitor extends DSLVisitor<void> {
         const name = this.expressionGetter.visit(ctx.identifier());
         const body = this.expressionGetter.visit(ctx.expression() ?? ctx.listExpression()!);
 
-        const node: Parser.ExpressionDefinition = {
+        this.addNode<Parser.ExpressionDefinition>(ctx, {
             type: "ExpressionDefinition",
             name,
             body,
             parameterized: ctx.placeholder() !== null
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
     }
 
     visitSettingAssignment = (ctx: Context.SettingAssignmentContext) => {
         const settingName = this.expressionGetter.visit(ctx.settingId());
         const settingValue = this.expressionGetter.visit(ctx.settingValue());
 
-        const node: Parser.SettingAssignment = {
+        const node = this.addNode<Parser.SettingAssignment>(ctx, {
             type: "SettingAssignment",
             setting: settingName,
             value: settingValue
-        };
+        });
 
         if (ctx.expression() !== null) {
             node.condition = this.expressionGetter.visit(ctx.expression()!);
         }
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
     }
 
     visitSettingShift = (ctx: Context.SettingShiftContext) => {
@@ -252,34 +259,28 @@ class Visitor extends DSLVisitor<void> {
             settingValues = (this.expressionGetter.visit(ctx.listExpression()!) as Parser.List).values;
         }
 
-        const node: Parser.SettingShift = {
+        const node = this.addNode<Parser.SettingShift>(ctx, {
             type: "SettingShift",
             setting: settingName,
             values: settingValues,
             operator
-        };
+        });
 
         if (ctx.expression() !== null) {
             node.condition = this.expressionGetter.visit(ctx.expression()!);
         }
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
     }
 
     visitStatementDefinition = (ctx: Context.StatementDefinitionContext) => {
         const name = this.expressionGetter.visit(ctx.identifier());
         const params = ctx.listItem().map(i => this.expressionGetter.visit(i));
 
-        const node: Parser.StatementDefinition = {
+        const node = this.addNode<Parser.StatementDefinition>(ctx, {
             type: "StatementDefinition",
             name,
             params,
             body: []
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
 
         const outerScope = this.nodes;
         this.nodes = node.body;
@@ -296,14 +297,11 @@ class Visitor extends DSLVisitor<void> {
         const name = this.expressionGetter.visit(ctx.identifier());
         const args = ctx.listItem().map(i => this.expressionGetter.visit(i));
 
-        const node: Parser.FunctionCall = {
+        this.addNode<Parser.FunctionCall>(ctx, {
             type: "FunctionCall",
             name,
             args
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
     }
 
     visitLoopStatement = (ctx: Context.LoopStatementContext) => {
@@ -311,15 +309,12 @@ class Visitor extends DSLVisitor<void> {
         const variable = ctx.identifier(1) && this.expressionGetter.visit(ctx.identifier(1)!);
         const list = ctx.listExpression() && this.expressionGetter.visit(ctx.listExpression()!);
 
-        const node: Parser.Loop = {
+        const node = this.addNode<Parser.Loop>(ctx, {
             type: "Loop",
             iteratorName,
             values: variable ?? list,
             body: []
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
 
         const outerScope = this.nodes;
         this.nodes = node.body;
@@ -333,14 +328,11 @@ class Visitor extends DSLVisitor<void> {
     }
 
     visitConditionBlock = (ctx: Context.ConditionBlockContext) => {
-        const node: Parser.ConditionBlock = {
+        const node = this.addNode<Parser.ConditionBlock>(ctx, {
             type: "ConditionBlock",
             condition: this.expressionGetter.visit(ctx.expression()),
             body: []
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
 
         const outerScope = this.nodes;
         this.nodes = node.body;
@@ -354,66 +346,63 @@ class Visitor extends DSLVisitor<void> {
     }
 
     visitTrigger = (ctx: Context.TriggerContext) => {
-        const node: Parser.Trigger = {
+        this.addNode<Parser.Trigger>(ctx, {
             type: "Trigger",
             requirement: this.triggerGetter.visit(ctx.triggerRequirement())!,
             actions: [this.triggerGetter.visit(ctx.triggerAction())!]
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
     }
 
     visitTriggerChain = (ctx: Context.TriggerChainContext) => {
-        const node: Parser.Trigger = {
+        this.addNode<Parser.Trigger>(ctx, {
             type: "Trigger",
             requirement: this.triggerGetter.visit(ctx.triggerRequirement())!,
             actions: ctx.triggerAction().map(c => this.triggerGetter.visit(c)!)
-        };
-
-        this.sourceMap.addLocation(node, ctx);
-        this.nodes.push(node);
+        });
     }
 
     visitImportStatement = (ctx: Context.ImportStatementContext) => {
         const importTarget = stringContents(ctx.stringLiteral())!;
 
-        if (this.importStack.includes(importTarget)) {
-            throw new ParseError("Circular dependency detected", locationOf(ctx));
+        const importLocation = locationOf(ctx, this.currentFile);
+
+        if (this.importStack.find(l => l.file === importTarget) !== undefined || importTarget === this.currentFile) {
+            throw new ParseError("Circular dependency detected", importLocation);
         }
 
         if (!(importTarget in this.model)) {
-            throw new ParseError(`Could not find config '${importTarget}'`, locationOf(ctx.stringLiteral()));
+            throw new ParseError(`Could not find config '${importTarget}'`, locationOf(ctx.stringLiteral(), this.currentFile));
         }
 
-        const isRoot = this.sourceMap.importLocation === undefined;
-        if (isRoot) {
-            this.sourceMap.importLocation = locationOf(ctx);
+        const importStack = [...this.importStack, importLocation];
+
+        this.sourceMap.importStack = importStack;
+        const { nodes, errors } = parseSourceImpl(this.model, importTarget, importStack, this.sourceMap);
+        this.sourceMap.importStack = this.importStack;
+
+        if (errors.length === 0) {
+            nodes.forEach(n => this.nodes.push(n));
         }
+        else {
+            for (const e of errors) {
+                if (e.importStack.length === 0) {
+                    e.importStack = importStack;
+                }
 
-        this.importStack.push(importTarget);
-
-        const { nodes, errors } = parseSource(this.model, importTarget, this.importStack, this.sourceMap);
-
-        nodes.forEach(n => this.nodes.push(n));
-        errors.forEach(e => this.errors.push(e));
-
-        this.importStack.pop();
-
-        if (isRoot) {
-            this.sourceMap.importLocation = undefined;
+                this.errors.push(e);
+            }
         }
     }
 }
 
-export function prepareParser(source: string, errors: ParseError[]) {
+function prepareParser(file: string, source: string, errors: ParseError[]) {
     const chars = CharStream.fromString(source);
     const lexer = new DSLLexer(chars);
     const tokens = new CommonTokenStream(lexer);
     const parser = new DSLParser(tokens);
 
-    const errorStrategy = new ErrorStrategy();
-    const errorListener = new ErrorListener(errors);
+    const errorStrategy = new ErrorStrategy(file);
+    const errorListener = new ErrorListener(file, errors);
     lexer.removeErrorListeners();
     lexer.addErrorListener(errorListener);
     parser.removeErrorListeners();
@@ -429,7 +418,7 @@ export type ParseResult = {
     errors: ParseError[],
 }
 
-export function parseSource(model: Record<string, string>, target: string, importStack?: string[], sourceMap?: SourceMap): ParseResult {
+function parseSourceImpl(model: Record<string, string>, target: string, importStack: SourceLocation[], sourceMap: SourceMap): ParseResult {
     const source = model[target];
     if (source === undefined) {
         throw new Error(`Invalid target '${target}'`);
@@ -438,31 +427,32 @@ export function parseSource(model: Record<string, string>, target: string, impor
     const nodes: Parser.Statement[] = [];
     const errors: ParseError[] = [];
 
-    sourceMap ??= new SourceMap();
-    importStack ??= [target];
-
-    const parser = prepareParser(source, errors);
+    const parser = prepareParser(target, source, errors);
     const root = parser.root();
     if (errors.length === 0) {
-        const visitor = new Visitor(sourceMap, nodes, errors, model, importStack);
+        const visitor = new Visitor(sourceMap, nodes, errors, model, target, importStack);
         visitor.visit(root);
     }
 
     return { sourceMap, nodes, errors };
 }
 
+export function parseSource(model: Record<string, string>, target: string): ParseResult {
+    return parseSourceImpl(model, target, [], new SourceMap());
+}
+
 export function parseExpression(source: string): ParseResult {
     const sourceMap = new SourceMap();
     const errors: ParseError[] = [];
 
-    const parser = prepareParser(source, errors);
+    const parser = prepareParser("source", source, errors);
     const root = parser.expression();
     if (errors.length !== 0) {
         return { sourceMap, nodes: [], errors };
     }
 
     try {
-        const visitor = new ExpressionGetter(sourceMap);
+        const visitor = new ExpressionGetter(sourceMap, "source");
         const node = visitor.visit(root);
 
         return { sourceMap, nodes: [node], errors: [] };

@@ -81,18 +81,18 @@
     });
 
     $: {
-        const model = editor && editor.getModel();
-        if (model) {
-            monaco.editor.setModelMarkers(model, "owner", [...makeMarkers(errors)]);
+        const model = (editor !== undefined && state.activeConfig !== null) ? getModel(state.activeConfig) : null;
+        if (model !== null) {
+            monaco.editor.setModelMarkers(model, "owner", [...makeMarkers(errors, state.activeConfig!)]);
         }
     }
 
-    function* makeMarkers(errors: ProblemInfo[]): IterableIterator<Monaco.editor.IMarkerData> {
+    function* makeMarkers(errors: ProblemInfo[], file: string): IterableIterator<Monaco.editor.IMarkerData> {
         for (const e of errors) {
             if (e.location === undefined) {
                 console.error(`Unknown location: ${e.message}`);
             }
-            else {
+            else if (e.location.file === file) {
                 yield {
                     startLineNumber: e.location.start.line,
                     startColumn: e.location.start.column,

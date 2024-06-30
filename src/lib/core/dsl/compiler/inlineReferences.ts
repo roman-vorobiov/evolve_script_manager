@@ -2,6 +2,7 @@ import { CompileError, CompileWarning } from "../model";
 import { ExpressionVisitor, GeneratingStatementVisitor } from "./utils";
 import { PlaceholderResolver } from "./placeholders";
 import { shallowClone } from "$lib/core/utils";
+import { sameLocation } from "../parser/source";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/0";
@@ -124,7 +125,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         this.validateUniqueName(statement);
         this.validateFunctionParameters(statement);
 
-        this.currentScope[statement.name.value] = { ...statement, scope: this.currentScope };
+        this.currentScope[statement.name.value] = this.derived(statement, { scope: this.currentScope });
     }
 
     *onFunctionCall(statement: Before.FunctionCall): IterableIterator<After.Statement> {
@@ -260,9 +261,16 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     private validateUniqueName(statement: Before.ExpressionDefinition | Before.StatementDefinition | Before.Loop) {
         const id = statement.type === "Loop" ? statement.iteratorName : statement.name;
 
-        if (id.value in this.currentScope) {
+        const previousDefinition = this.currentScope[id.value];
+
+        // Allow the same definition to be imported multiple times
+        const previousLocation = this.sourceMap.findLocation(previousDefinition);
+        const thisLocation = this.sourceMap.findLocation(statement);
+        const sameDefinition = previousLocation && thisLocation && sameLocation(previousLocation, thisLocation);
+
+        if (previousDefinition !== undefined && !sameDefinition) {
             this.warnings.push(new CompileWarning(`Redefinition of '${id.value}'`, id, [
-                ["Previously defined here", this.currentScope[id.value]]
+                ["Previously defined here", previousDefinition]
             ]));
         }
     }
