@@ -29,9 +29,5 @@
     }
 </script>
 
-{#each state.configs as config}
-    {#if config.name === state.activeConfig}
-        <Editor {state} bind:config={config} {errors}/>
-    {/if}
-{/each}
+<Editor bind:state={state} {errors}/>
 

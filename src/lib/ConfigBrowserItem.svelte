@@ -16,7 +16,8 @@
 
     function makeActive() {
         if (!editable) {
-            state.activeConfig = config.name;
+            state.setActive(config);
+            state = state;
         }
     }
 
@@ -29,12 +30,7 @@
     }
 
     function removeConfig() {
-        const idx = state.configs.findIndex(cfg => cfg.name == config.name);
-        if (idx !== -1) {
-            if (state.activeConfig === config.name) {
-                state.activeConfig = null;
-            }
-            state.configs.splice(idx, 1);
+        if (state.removeConfig(config)) {
             state = state;
         }
     }

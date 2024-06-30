@@ -8,12 +8,41 @@
     import type { ProblemInfo } from "$lib/core/dsl";
 
     export let state: State;
-    export let config: Config;
     export let errors: ProblemInfo[] = [];
+
+    let addedCallbackID: number;
+    let removedCallbackID: number;
+    let activeChangedCallbackID: number;
 
     let editor: Monaco.editor.IStandaloneCodeEditor;
     let monaco: typeof Monaco;
     let editorContainer: HTMLElement;
+
+    function getModel(configName: string) {
+        return monaco.editor.getModel(monaco.Uri.parse(`inmemory://model/${configName}`));
+    }
+
+    function changeActiveModel(config: Config | null) {
+        editor?.setModel(config && getModel(config.name));
+    }
+
+    function addModel(config: Config) {
+        const model = monaco.editor.createModel(config.source, "DSL", monaco.Uri.from({
+            scheme: "inmemory",
+            authority: "model",
+            path: `/${config.name}`
+        }));
+
+        model.updateOptions({
+            tabSize: 4
+        });
+
+        model.onDidChangeContent(debounce(() => { config.source = editor.getValue(); state = state; }, 500));
+    }
+
+    function removeModel(config: Config) {
+        getModel(config.name)?.dispose();
+    }
 
     onMount(async () => {
         monaco = await loadMonaco(state);
@@ -26,24 +55,35 @@
             automaticLayout: true
         });
 
-        const model = monaco.editor.createModel(config.source, "DSL");
-        model.updateOptions({
-            tabSize: 4
-        });
+        for (const config of state.configs) {
+            addModel(config);
+        }
 
-        model.onDidChangeContent(debounce(() => config.source = editor.getValue(), 500));
+        if (state.activeConfig !== null) {
+            editor.setModel(getModel(state.activeConfig));
+        }
 
-        editor.setModel(model);
+        addedCallbackID = state.onConfigAdded(addModel);
+        removedCallbackID = state.onConfigRemoved(removeModel);
+        activeChangedCallbackID = state.onActiveConfigChanged(changeActiveModel);
     });
 
     onDestroy(() => {
-        editor.getModel()?.dispose();
+        state.removeConfigAddedCallback(addedCallbackID);
+        state.removeConfigRemovedCallback(removedCallbackID);
+        state.removeActiveConfigChangedCallback(activeChangedCallbackID);
+
+        for (const config of state.configs) {
+            removeModel(config);
+        }
+
         editor?.dispose();
     });
 
     $: {
-        if (editor) {
-            monaco.editor.setModelMarkers(editor.getModel()!, "owner", [...makeMarkers(errors)]);
+        const model = editor && editor.getModel();
+        if (model) {
+            monaco.editor.setModelMarkers(model, "owner", [...makeMarkers(errors)]);
         }
     }
 

@@ -13,7 +13,6 @@
 
     function onPendingStateChange() {
         newConfigPending = false;
-        state = state;
     }
 
     let menuOpen = false;

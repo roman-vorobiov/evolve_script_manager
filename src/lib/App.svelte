@@ -14,6 +14,8 @@
 
     let newConfigPending = false;
 
+    $: isEmpty = state.activeConfig === null;
+
     $: {
         saveState(state);
     }
@@ -34,7 +36,7 @@
             <Workspace bind:state={state} bind:compiledConfig={compiledConfig}/>
         </Resizable.Pane>
 
-        {#if state.previewOpen}
+        {#if !isEmpty && state.previewOpen}
             <Resizable.Handle withHandle />
             <Resizable.Pane order={3} defaultSize={30}>
                 <ConfigPreview config={compiledConfig}/>

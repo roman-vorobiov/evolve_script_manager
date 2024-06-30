@@ -34,10 +34,8 @@
         onSubmit: () => {
             pristine = false;
             if (errorMessage.length === 0) {
-                if (config.name === state.activeConfig) {
-                    state.activeConfig = formValue;
-                }
-                config.name = formValue;
+                state.renameConfig(config, formValue);
+                state = state;
                 callback();
             }
         }

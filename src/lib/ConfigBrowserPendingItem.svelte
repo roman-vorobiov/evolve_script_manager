@@ -15,8 +15,8 @@
     }
 
     function onFinishedEditing() {
-        state.configs.push(config);
-        state.activeConfig = config.name;
+        state.addConfig(config);
+        state = state;
         callback();
     }
 
@@ -38,7 +38,7 @@
         <File class="size-4 mt-[4px] mr-2 ml-1"/>
     </div>
     <ConfigBrowserItemForm
-        {state}
+        bind:state={state}
         bind:config={config}
         on:focusout={stopEditing}
         callback={onFinishedEditing}
