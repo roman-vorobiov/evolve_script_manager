@@ -873,16 +873,16 @@ describe("Compiler", () => {
                     type: "SettingAssignment",
                     setting: {
                         type: "Subscript",
-                        base: { type: "Identifier", value: "AutoBuild" },
+                        base: { type: "Identifier", value: "Challenge" },
                         key: {
                             type: "List",
                             values: [
-                                { type: "Identifier", value: "city-farm" },
-                                { type: "Identifier", value: "city-mill" },
+                                { type: "Identifier", value: "craft" },
+                                { type: "Identifier", value: "trade" },
                             ]
                         }
                     },
-                    value: { type: "Number", value: 123 }
+                    value: { type: "Boolean", value: true }
                 };
 
                 const { nodes, from } = resolveFolds(originalNode as Parser.SettingAssignment);
@@ -915,17 +915,17 @@ describe("Compiler", () => {
                     type: "SettingAssignment",
                     setting: {
                         type: "Subscript",
-                        base: { type: "Identifier", value: "AutoBuild" },
+                        base: { type: "Identifier", value: "Challenge" },
                         key: {
                             type: "List",
                             fold: "or",
                             values: [
-                                { type: "Identifier", value: "city-farm" },
-                                { type: "Identifier", value: "city-mill" },
+                                { type: "Identifier", value: "craft" },
+                                { type: "Identifier", value: "trade" },
                             ]
                         }
                     },
-                    value: { type: "Number", value: 123 }
+                    value: { type: "Boolean", value: true }
                 };
 
                 const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);

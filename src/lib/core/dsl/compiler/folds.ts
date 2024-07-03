@@ -1,6 +1,6 @@
 import { assume } from "$lib/core/utils/typeUtils";
 import { CompileError } from "../model";
-import { ExpressionVisitor, GeneratingStatementVisitor, differentLists, isBooleanExpression } from "./utils";
+import { ExpressionVisitor, GeneratingStatementVisitor, isBooleanExpression } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/2";
@@ -13,6 +13,8 @@ function validateExpressionResolved(expression: any): asserts expression is Afte
 }
 
 export class FoldResolver extends ExpressionVisitor {
+    private processingSettingId = false;
+
     onList(expression: Before.List, values: Before.List["values"]): Before.Expression {
         // Throw on nested lists
         if (values.some(value => value.type === "List")) {
@@ -21,7 +23,7 @@ export class FoldResolver extends ExpressionVisitor {
 
         const node = this.derived(expression, { values });
 
-        return this.foldIfNeeded(node, expression, isBooleanExpression(expression));
+        return this.foldIfNeeded(node, expression, !this.processingSettingId && isBooleanExpression(expression));
     }
 
     onSubscript(expression: Before.Subscript, key: Before.Subscript["key"]): Before.Expression | undefined {
@@ -36,7 +38,7 @@ export class FoldResolver extends ExpressionVisitor {
             }
 
             // If the base is a boolean setting prefix or condition expression, fold the list
-            return this.foldIfNeeded(node, expression, isBooleanExpression(expression.base, key));
+            return this.foldIfNeeded(node, expression, !this.processingSettingId && isBooleanExpression(expression.base, key));
         }
     }
 
@@ -70,7 +72,7 @@ export class FoldResolver extends ExpressionVisitor {
                 });
             }
 
-            return this.foldIfNeeded(node, expression, isBooleanExpression(expression));
+            return this.foldIfNeeded(node, expression, !this.processingSettingId && isBooleanExpression(expression));
         }
     }
 
@@ -83,7 +85,13 @@ export class FoldResolver extends ExpressionVisitor {
             throw new CompileError("Disjunction is not allowed in setting targets", expression.key);
         }
 
-        return this.visit(expression) as Before.SettingAssignment["setting"] | Before.List;
+        try {
+            this.processingSettingId = true;
+            return this.visit(expression) as Before.SettingAssignment["setting"] | Before.List;
+        }
+        finally {
+            this.processingSettingId = false;
+        }
     }
 
     private foldIfNeeded(expresson: Before.List, originalNode: Before.Expression, condition: boolean) {
