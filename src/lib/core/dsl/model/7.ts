@@ -13,15 +13,10 @@ export type Expression = Previous.Expression;
 
 export type SettingAssignment = Previous.SettingAssignment;
 export type SettingShift = Previous.SettingShift;
+export type SettingShiftBlock = Previous.SettingShiftBlock;
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger & {
-    condition: Expression | undefined,
+    condition: Expression | undefined
 };
 
-export type SettingPush = {
-    type: "SettingPush",
-    setting: Identifier,
-    values: (string | object)[]
-}
-
-export type Statement = Exclude<Previous.Statement, Previous.ConditionBlock> | SettingPush;
+export type Statement = Exclude<Previous.Statement, Previous.ConditionBlock>;

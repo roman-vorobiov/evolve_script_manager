@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { processStatements, valuesOf, originsOf } from "./fixture";
 import { createTriggerConditions as createTriggerConditionsImpl } from "$lib/core/dsl/compiler/triggerConditions";
 
-import type * as Parser from "$lib/core/dsl/model/9";
+import type * as Parser from "$lib/core/dsl/model/10";
 
 const createTriggerConditions = (nodes: Parser.Statement[]) => processStatements(nodes, createTriggerConditionsImpl);
 

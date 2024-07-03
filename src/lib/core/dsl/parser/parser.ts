@@ -204,6 +204,21 @@ class Visitor extends DSLVisitor<void> {
         return node;
     }
 
+    private collectStatements(statementContexts: Context.StatementContext[]) {
+        const innerScope: Parser.Statement[] = [];
+        const outerScope = this.nodes;
+        this.nodes = innerScope;
+
+        try {
+            statementContexts.forEach(s => this.visit(s));
+        }
+        finally {
+            this.nodes = outerScope;
+        }
+
+        return innerScope;
+    }
+
     visitRoot = (ctx: Context.RootContext) => {
         ctx.children.forEach(child => {
             try {
@@ -271,26 +286,26 @@ class Visitor extends DSLVisitor<void> {
         }
     }
 
+    visitSettingShiftBlock = (ctx: Context.SettingShiftBlockContext) => {
+        const settingName = this.expressionGetter.visit(ctx.identifier());
+
+        this.addNode<Parser.SettingShiftBlock>(ctx, {
+            type: "SettingShiftBlock",
+            setting: settingName,
+            body: this.collectStatements(ctx.statement())
+        });
+    }
+
     visitStatementDefinition = (ctx: Context.StatementDefinitionContext) => {
         const name = this.expressionGetter.visit(ctx.identifier());
         const params = ctx.listItem().map(i => this.expressionGetter.visit(i));
 
-        const node = this.addNode<Parser.StatementDefinition>(ctx, {
+        this.addNode<Parser.StatementDefinition>(ctx, {
             type: "StatementDefinition",
             name,
             params,
-            body: []
+            body: this.collectStatements(ctx.statement())
         });
-
-        const outerScope = this.nodes;
-        this.nodes = node.body;
-
-        try {
-            ctx.statement().forEach(s => this.visit(s));
-        }
-        finally {
-            this.nodes = outerScope;
-        }
     }
 
     visitCallStatement = (ctx: Context.CallStatementContext) => {
@@ -309,40 +324,20 @@ class Visitor extends DSLVisitor<void> {
         const variable = ctx.identifier(1) && this.expressionGetter.visit(ctx.identifier(1)!);
         const list = ctx.listExpression() && this.expressionGetter.visit(ctx.listExpression()!);
 
-        const node = this.addNode<Parser.Loop>(ctx, {
+        this.addNode<Parser.Loop>(ctx, {
             type: "Loop",
             iteratorName,
             values: variable ?? list,
-            body: []
+            body: this.collectStatements(ctx.statement())
         });
-
-        const outerScope = this.nodes;
-        this.nodes = node.body;
-
-        try {
-            ctx.statement().forEach(s => this.visit(s));
-        }
-        finally {
-            this.nodes = outerScope;
-        }
     }
 
     visitConditionBlock = (ctx: Context.ConditionBlockContext) => {
-        const node = this.addNode<Parser.ConditionBlock>(ctx, {
+        this.addNode<Parser.ConditionBlock>(ctx, {
             type: "ConditionBlock",
             condition: this.expressionGetter.visit(ctx.expression()),
-            body: []
+            body: this.collectStatements(ctx.statement())
         });
-
-        const outerScope = this.nodes;
-        this.nodes = node.body;
-
-        try {
-            ctx.statement().forEach(s => this.visit(s));
-        }
-        finally {
-            this.nodes = outerScope;
-        }
     }
 
     visitTrigger = (ctx: Context.TriggerContext) => {

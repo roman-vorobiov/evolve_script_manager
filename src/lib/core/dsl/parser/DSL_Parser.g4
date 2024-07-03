@@ -57,6 +57,7 @@ importStatement
 settingStatement
     : settingAssignment
     | settingShift
+    | settingShiftBlock
     | conditionBlock
     ;
 
@@ -79,6 +80,10 @@ settingValue
 
 settingShift
     : identifier op=('<<' | '>>') (listItem | listExpression) ('if' expression)?
+    ;
+
+settingShiftBlock
+    : identifier '<<' 'begin' EOL (statement? EOL)* 'end'
     ;
 
 // Triggers

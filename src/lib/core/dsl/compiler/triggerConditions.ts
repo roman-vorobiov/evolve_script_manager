@@ -2,7 +2,7 @@ import { GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type { CompileError } from "../model";
-import type * as Parser from "../model/9";
+import type * as Parser from "../model/10";
 
 function makeDummyOverride(body: string): Parser.SettingAssignment {
     return {

@@ -1,7 +1,7 @@
 import type { SourceLocation } from "../parser/source";
 
 export type * as Initial from "./0";
-export type * as Final from "./10";
+export type * as Final from "./11";
 
 export class ParseError extends Error {
     constructor(

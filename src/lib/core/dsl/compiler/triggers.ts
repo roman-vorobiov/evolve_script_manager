@@ -3,8 +3,8 @@ import { CompileError } from "../model";
 import { GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
-import type * as Before from "../model/8";
-import type * as After from "../model/9";
+import type * as Before from "../model/9";
+import type * as After from "../model/10";
 
 const chainCondition = {
     type: { type: "Identifier", value: "Chain" },

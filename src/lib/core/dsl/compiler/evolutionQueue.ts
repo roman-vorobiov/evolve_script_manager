@@ -1,56 +1,55 @@
-import { races } from "$lib/core/domain/races";
-import { resetTypes } from "$lib/core/domain/enums";
-import { prefixes } from "$lib/core/domain/settings";
 import { CompileError } from "../model";
 import { GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../model/7";
+import type * as Before from "../model/8_intermediate";
+import type * as After from "../model/8";
 
-export type QueueItem = {
-    targetRace: string,
-    resetType: string,
-    challenges: string[]
+function makeQueueEntry(statements: Before.SettingAssignment[]): object {
+    return Object.fromEntries(statements.map(s => [s.setting.value, (s.value as After.Constant).value]));
 }
 
-class Impl extends GeneratingStatementVisitor<Parser.Statement> {
-    private queue: QueueItem[] = [];
+class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
+    private queue: object[] = [];
 
-    *onSettingShift(statement: Parser.SettingShift): IterableIterator<Parser.SettingShift> {
+    *visitSettingShiftBlock(statement: Before.SettingShiftBlock): IterableIterator<never> {
         if (statement.setting.value !== "evolutionQueue") {
-            return yield statement;
+            throw new CompileError("'evolutionQueue' expected", statement.setting);
         }
 
-        if (statement.condition !== undefined) {
-            throw new CompileError("Evolution queue cannot be set conditionally", statement.condition);
-        }
+        let hasEvolutionTarget = false;
+        let hasPrestigeType = false;
 
-        if (statement.operator !== "<<") {
-            throw new CompileError("Only the push operation is supported for 'evolutionQueue'", statement);
-        }
+        for (const child of statement.body) {
+            if (child.type !== "SettingAssignment") {
+                throw new CompileError("Only setting assignments can appear inside evolution queue body", child);
+            }
 
-        if (statement.values.length < 1) {
-            throw new CompileError("Target race is not specified", statement);
-        }
+            if (child.condition !== undefined) {
+                throw new CompileError("Evolution queue settings must not have conditions", child.condition);
+            }
 
-        if (statement.values.length < 2) {
-            throw new CompileError("Target reset type is not specified", statement);
-        }
+            if (child.setting.value === "userEvolutionTarget") {
+                hasEvolutionTarget = true;
+            }
 
-        for (const value of statement.values) {
-            if (value.type !== "Identifier") {
-                throw new CompileError("Identifier expected", value);
+            if (child.setting.value === "prestigeType") {
+                hasPrestigeType = true;
             }
         }
 
-        this.queue.push({
-            targetRace: this.getTargetRace(statement.values[0] as Parser.Identifier),
-            resetType: this.getResetType(statement.values[1] as Parser.Identifier),
-            challenges: statement.values.slice(2).map(value => this.getChallenge(value as Parser.Identifier))
-        });
+        if (!hasEvolutionTarget) {
+            throw new CompileError("'userEvolutionTarget' is not specified", statement);
+        }
+
+        if (!hasPrestigeType) {
+            throw new CompileError("'prestigeType' is not specified", statement);
+        }
+
+        this.queue.push(makeQueueEntry(statement.body as Before.SettingAssignment[]));
     }
 
-    visitAll(statements: Parser.Statement[]): Parser.Statement[] {
+    visitAll(statements: Before.Statement[]): After.Statement[] {
         const result = super.visitAll(statements);
 
         if (this.queue.length !== 0) {
@@ -63,33 +62,9 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
 
         return result;
     }
-
-    private getTargetRace(value: Parser.Identifier): string {
-        if (value.value !== "auto" && !(value.value in races)) {
-            throw new CompileError(`Unknown race '${value.value}'`, value);
-        }
-
-        return value.value;
-    }
-
-    private getResetType(value: Parser.Identifier): string {
-        if (!(value.value in resetTypes)) {
-            throw new CompileError(`Unknown reset type '${value.value}'`, value);
-        }
-
-        return value.value;
-    }
-
-    private getChallenge(value: Parser.Identifier): string {
-        if (!prefixes.Challenge.allowedSuffixes.includes(value.value)) {
-            throw new CompileError(`Unknown challenge '${value.value}'`, value);
-        }
-
-        return value.value;
-    }
 }
 
-export function buildEvolutionQueue(statements: Parser.Statement[], sourceMap: SourceMap, errors: CompileError[]): Parser.Statement[] {
+export function buildEvolutionQueue(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
     const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);

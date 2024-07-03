@@ -95,9 +95,21 @@ prestigeBioseedProbes = 0
 evolutionQueueEnabled = ON
 evolutionQueueRepeat = ON
 
-evolutionQueue << [cyclops, mad]
-evolutionQueue << [custom, mad]
-evolutionQueue << [cath, ascension, trade]
+evolutionQueue << begin
+    userEvolutionTarget = "cyclops"
+    prestigeType = "mad"
+end
+
+evolutionQueue << begin
+    userEvolutionTarget = "custom"
+    prestigeType = "mad"
+end
+
+evolutionQueue << begin
+    userEvolutionTarget = "cath"
+    prestigeType = "ascension"
+    Challenge.trade = ON
+end
 
 ##### Challenges #####
 

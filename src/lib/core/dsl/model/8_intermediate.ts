@@ -1,4 +1,4 @@
-import type * as Previous from "./9";
+import type * as Previous from "./7";
 
 export type StringLiteral = Previous.StringLiteral;
 export type NumberLiteral = Previous.NumberLiteral;
@@ -7,24 +7,20 @@ export type EvalLiteral = Previous.EvalLiteral;
 export type Identifier = Previous.Identifier;
 export type Subscript = Previous.Subscript;
 export type Constant = Previous.Constant;
+export type CompoundExpression = Previous.CompoundExpression;
 export type SimpleExpression = Previous.SimpleExpression;
-export type CompoundExpression = Previous.CompoundExpression
 export type Expression = Previous.Expression;
 
 export type SettingAssignment = Previous.SettingAssignment;
-export type SettingPush = Previous.SettingPush;
+export type SettingShift = Previous.SettingShift;
+export type SettingShiftBlock = Previous.SettingShiftBlock;
+export type TriggerArgument = Previous.TriggerArgument;
+export type Trigger = Previous.Trigger;
 
-export type TriggerArgument = {
-    type: Identifier,
-    id: Identifier,
-    count: NumberLiteral
+export type SettingPush = {
+    type: "SettingPush",
+    setting: Identifier,
+    values: string[] | object[]
 }
 
-export type Trigger = {
-    type: "Trigger",
-    requirement: TriggerArgument,
-    action: TriggerArgument,
-    condition: EvalLiteral | undefined
-}
-
-export type Statement = SettingAssignment | SettingPush | Trigger;
+export type Statement = Previous.Statement | SettingPush;

@@ -38,6 +38,10 @@ export type SettingShift = Modify<Previous.SettingShift, {
     condition?: Expression
 }>
 
+export type SettingShiftBlock = Modify<Previous.SettingShiftBlock, {
+    body: Statement[]
+}>;
+
 export type ConditionBlock = Modify<Previous.ConditionBlock, {
     condition: Expression,
     body: Statement[]
@@ -46,4 +50,4 @@ export type ConditionBlock = Modify<Previous.ConditionBlock, {
 export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
-export type Statement = SettingAssignment | SettingShift | ConditionBlock | Trigger;
+export type Statement = SettingAssignment | SettingShift | SettingShiftBlock | ConditionBlock | Trigger;

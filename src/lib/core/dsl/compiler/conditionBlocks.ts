@@ -1,6 +1,6 @@
+import { CompileError } from "../model";
 import { GeneratingStatementVisitor } from "./utils";
 
-import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
 import type * as Before from "../model/6";
 import type * as After from "../model/7";
@@ -9,7 +9,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     private stack: After.Expression[] = [];
 
     *visitConditionBlock(statement: Before.ConditionBlock): IterableIterator<After.Statement> {
-        const newCondition = this.conjunction(this.stack.at(-1), statement.condition)!;
+        const newCondition = this.conjunction(this.scopeCondition(), statement.condition)!;
         this.stack.push(newCondition);
 
         try {
@@ -23,7 +23,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onSettingAssignment(statement: Before.SettingAssignment): IterableIterator<After.SettingAssignment> {
-        const parentCondition = this.stack.at(-1);
+        const parentCondition = this.scopeCondition();
 
         yield this.derived(statement, {
             condition: this.conjunction(parentCondition, statement.condition)!
@@ -31,17 +31,29 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
-        const parentCondition = this.stack.at(-1);
+        const parentCondition = this.scopeCondition();
 
         yield this.derived(statement, {
             condition: this.conjunction(parentCondition, statement.condition)!
         });
     }
 
+    *onSettingShiftBlock(statement: Before.SettingShiftBlock, body: After.Statement[]): IterableIterator<After.Statement> {
+        if (this.scopeCondition() !== undefined) {
+            throw new CompileError("Evolution queue cannot be set conditionally", statement);
+        }
+
+        yield* super.onSettingShiftBlock(statement, body);
+    }
+
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
         yield this.derived(statement, {
-            condition: this.stack.at(-1)
+            condition: this.scopeCondition()
         });
+    }
+
+    private scopeCondition() {
+        return this.stack.at(-1);
     }
 
     private conjunction(parent?: After.Expression, child?: After.Expression): After.Expression | undefined {

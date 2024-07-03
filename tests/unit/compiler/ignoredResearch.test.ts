@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { processStatements } from "./fixture";
 import { collectIgnoredTechs as collectIgnoredTechsImpl } from "$lib/core/dsl/compiler/ignoredResearch";
 
-import type * as Parser from "$lib/core/dsl/model/7";
+import type * as Parser from "$lib/core/dsl/model/8_intermediate";
 
 const collectIgnoredTechs = (nodes: Parser.Statement[]) => processStatements(nodes, collectIgnoredTechsImpl);
 

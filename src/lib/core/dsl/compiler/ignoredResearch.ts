@@ -3,7 +3,7 @@ import { CompileError } from "../model";
 import { GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../model/7";
+import type * as Parser from "../model/8_intermediate";
 
 type Entry = {
     tech: string,

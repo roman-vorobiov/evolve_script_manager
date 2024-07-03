@@ -1,12 +1,9 @@
-import { prefixes } from "$lib/core/domain/settings";
 import { StatementVisitor, isConstant } from "./utils";
-import { assert } from "$lib/core/utils/typeUtils";
 
 import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
-import type { QueueItem } from "./evolutionQueue";
-import type * as Before from "../model/9";
-import type * as After from "../model/10";
+import type * as Before from "../model/10";
+import type * as After from "../model/11";
 
 function convertSimpleExpression(expression: Before.SimpleExpression, idx: 1 | 2) {
     if (expression.type === "Subscript") {
@@ -49,25 +46,6 @@ function convertCompoundExpression(expression: Before.Expression) {
     }
 }
 
-function convertEvolutionQueueChallenges(challenges: string[]) {
-    function makeObject(challenges: string[], enabled: boolean) {
-        return Object.fromEntries(challenges.map(challenge => [prefixes.Challenge.prefix + challenge, enabled]));
-    }
-
-    return {
-        ...makeObject(prefixes.Challenge.allowedSuffixes, false),
-        ...makeObject(challenges, true)
-    }
-}
-
-function convertEvolutionQueueItem(item: QueueItem) {
-    return {
-        userEvolutionTarget: item.targetRace,
-        prestigeType: item.resetType,
-        ...convertEvolutionQueueChallenges(item.challenges)
-    };
-}
-
 class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     private triggerIdx = 0;
 
@@ -106,20 +84,11 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     }
 
     onSettingPush(statement: Before.SettingPush): After.SettingAssignment {
-        if (statement.setting.value === "researchIgnore") {
-            return {
-                type: "SettingAssignment",
-                setting: statement.setting.value,
-                value: statement.values
-            };
-        }
-        else {
-            return {
-                type: "SettingAssignment",
-                setting: statement.setting.value,
-                value: statement.values.map(value => convertEvolutionQueueItem(value as QueueItem))
-            };
-        }
+        return {
+            type: "SettingAssignment",
+            setting: statement.setting.value,
+            value: statement.values
+        };
     }
 
     onTrigger(statement: Before.Trigger): After.Trigger {

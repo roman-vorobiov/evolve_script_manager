@@ -2,8 +2,8 @@ import { StatementVisitor, isConstant } from "./utils";
 
 import type { CompileError } from "../model";
 import type { SourceMap } from "../parser/source";
-import type * as Before from "../model/7";
-import type * as After from "../model/8";
+import type * as Before from "../model/8";
+import type * as After from "../model/9";
 
 function identity<T>(value: T): T {
     return value;

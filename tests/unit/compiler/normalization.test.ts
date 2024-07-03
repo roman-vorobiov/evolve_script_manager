@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { processStatements, valuesOf, originsOf } from "./fixture";
 import { normalizeStatements as normalizeStatementsImpl } from "$lib/core/dsl/compiler/normalize";
 
-import type * as Parser from "$lib/core/dsl/model/9";
+import type * as Parser from "$lib/core/dsl/model/10";
 
 const normalizeStatements = (nodes: Parser.Statement[]) => processStatements(nodes, normalizeStatementsImpl);
 
@@ -28,93 +28,30 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should generate lists for 'researchIgnore'", () => {
+        it("should generate lists for SettingPush", () => {
             const originalNode = {
                 type: "SettingPush",
-                setting: { type: "Identifier", value: "researchIgnore" },
-                values: ["foo", "bar"]
-            };
-
-            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingPush[]);
-
-            const expectedNode = {
-                type: "SettingAssignment",
-                setting: "researchIgnore",
-                value: ["foo", "bar"]
-            };
-
-            expect(nodes.length).toEqual(1);
-            expect(nodes[0]).toEqual(expectedNode);
-        });
-
-        it("should generate lists for 'evolutionQueue'", () => {
-            const originalNode = {
-                type: "SettingPush",
-                setting: { type: "Identifier", value: "evolutionQueue" },
+                setting: { type: "Identifier", value: "hello" },
                 values: [
                     {
-                        targetRace: "auto",
-                        resetType: "mad",
-                        challenges: ["trade"]
+                        foo: "aaa",
+                        bar: "bbb"
                     },
-                    {
-                        targetRace: "entish",
-                        resetType: "ascension",
-                        challenges: []
-                    }
+                    "baz"
                 ]
             };
 
-            const { nodes, from } = normalizeStatements([originalNode] as Parser.SettingPush[]);
+            const { nodes } = normalizeStatements([originalNode] as Parser.SettingPush[]);
 
             const expectedNode = {
                 type: "SettingAssignment",
-                setting: "evolutionQueue",
+                setting: "hello",
                 value: [
                     {
-                        userEvolutionTarget: "auto",
-                        prestigeType: "mad",
-                        challenge_plasmid: false,
-                        challenge_crispr: false,
-                        challenge_trade: true,
-                        challenge_craft: false,
-                        challenge_joyless: false,
-                        challenge_steelen: false,
-                        challenge_decay: false,
-                        challenge_emfield: false,
-                        challenge_inflation: false,
-                        challenge_sludge: false,
-                        challenge_orbit_decay: false,
-                        challenge_gravity_well: false,
-                        challenge_witch_hunter: false,
-                        challenge_junker: false,
-                        challenge_cataclysm: false,
-                        challenge_banana: false,
-                        challenge_truepath: false,
-                        challenge_lone_survivor: false
+                        foo: "aaa",
+                        bar: "bbb"
                     },
-                    {
-                        userEvolutionTarget: "entish",
-                        prestigeType: "ascension",
-                        challenge_plasmid: false,
-                        challenge_crispr: false,
-                        challenge_trade: false,
-                        challenge_craft: false,
-                        challenge_joyless: false,
-                        challenge_steelen: false,
-                        challenge_decay: false,
-                        challenge_emfield: false,
-                        challenge_inflation: false,
-                        challenge_sludge: false,
-                        challenge_orbit_decay: false,
-                        challenge_gravity_well: false,
-                        challenge_witch_hunter: false,
-                        challenge_junker: false,
-                        challenge_cataclysm: false,
-                        challenge_banana: false,
-                        challenge_truepath: false,
-                        challenge_lone_survivor: false
-                    }
+                    "baz"
                 ]
             };
 

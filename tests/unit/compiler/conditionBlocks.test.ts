@@ -186,5 +186,29 @@ describe("Compiler", () => {
                 expect(originsOf(nodes[1])).toEqual(originsOf(expectedNode));
             }
         });
+
+        it("should throw on nested evolution queue declarations", () => {
+            const originalNode = {
+                type: "ConditionBlock",
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "ResourceDemanded" },
+                    key: { type: "Identifier", value: "Copper" },
+                },
+                body: [
+                    {
+                        type: "SettingShiftBlock",
+                        setting: { type: "Identifier", value: "evolutionQueue" },
+                        body: []
+                    }
+                ]
+            };
+
+            const { errors } = applyConditionBlocks([originalNode as Parser.ConditionBlock]);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Evolution queue cannot be set conditionally");
+            expect(errors[0].offendingEntity).toBe(originalNode.body[0]);
+        });
     });
 });

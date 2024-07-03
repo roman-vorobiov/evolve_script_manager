@@ -110,8 +110,8 @@ class Impl extends StatementVisitor<Parser.Statement> {
     }
 
     onSettingShift(statement: Parser.SettingShift): Parser.SettingShift {
-        if (!["logFilter", "researchIgnore", "evolutionQueue"].includes(statement.setting.value)) {
-            throw new CompileError("List manipulation is only supported for 'logFilter', 'researchIgnore' and 'evolutionQueue'", statement.setting);
+        if (!["logFilter", "researchIgnore"].includes(statement.setting.value)) {
+            throw new CompileError("List manipulation is only supported for 'logFilter' and 'researchIgnore'", statement.setting);
         }
 
         if (statement.condition) {

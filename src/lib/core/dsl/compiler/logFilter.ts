@@ -2,12 +2,13 @@ import { CompileError } from "../model";
 import { GeneratingStatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
-import type * as Parser from "../model/7";
+import type * as Before from "../model/7";
+import type * as After from "../model/8_intermediate";
 
-class Impl extends GeneratingStatementVisitor<Parser.Statement> {
+class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement> {
     private ignoredIds: string[] = [];
 
-    *onSettingShift(statement: Parser.SettingShift): IterableIterator<Parser.SettingShift> {
+    *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
         if (statement.setting.value !== "logFilter") {
             return yield statement;
         }
@@ -33,13 +34,13 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
         }
     }
 
-    visitAll(statements: Parser.Statement[]): Parser.Statement[] {
+    visitAll(statements: Before.Statement[]): After.Statement[] {
         const result = super.visitAll(statements);
 
         if (this.ignoredIds.length !== 0) {
             const logFilter = this.ignoredIds.join(", ");
 
-            result.push(<Parser.SettingAssignment> {
+            result.push(<After.SettingAssignment> {
                 type: "SettingAssignment",
                 setting: { type: "Identifier", value: "logFilter" },
                 value: { type: "String", value: logFilter }
@@ -50,7 +51,7 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
     }
 }
 
-export function collectLogFilterStrings(statements: Parser.Statement[], sourceMap: SourceMap, errors: CompileError[]): Parser.Statement[] {
+export function collectLogFilterStrings(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
     const impl = new Impl(sourceMap, errors);
 
     return impl.visitAll(statements);

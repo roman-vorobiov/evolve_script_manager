@@ -67,6 +67,12 @@ export type SettingShift = {
     condition?: Expression
 }
 
+export type SettingShiftBlock = {
+    type: "SettingShiftBlock",
+    setting: Identifier,
+    body: Statement[]
+}
+
 export type ConditionBlock = {
     type: "ConditionBlock",
     condition: Expression,
@@ -115,6 +121,7 @@ export type Loop = {
 export type Statement =
     SettingAssignment |
     SettingShift |
+    SettingShiftBlock |
     ConditionBlock |
     Trigger |
     ExpressionDefinition |

@@ -215,8 +215,12 @@ export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT exten
         if (statement.type === "ConditionBlock") {
             return this.visitConditionBlock(statement as unknown as Parser.ConditionBlock);
         }
-
-        return (this as any)[`on${statement.type}`]?.(statement) ?? statement;
+        else if (statement.type === "SettingShiftBlock") {
+            return this.visitSettingShiftBlock(statement as unknown as Parser.SettingShiftBlock);
+        }
+        else {
+            return (this as any)[`on${statement.type}`]?.(statement) ?? statement;
+        }
     }
 
     visitConditionBlock(statement: Parser.ConditionBlock): AfterT {
@@ -224,7 +228,18 @@ export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT exten
         return this.onConditionBlock(statement, body as any) ?? statement as unknown as AfterT;
     }
 
+    visitSettingShiftBlock(statement: Parser.SettingShiftBlock): AfterT {
+        const body = this.visitAll(statement.body as any);
+        return this.onSettingShiftBlock(statement, body as any) ?? statement as unknown as AfterT;
+    }
+
     onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): AfterT | undefined {
+        if (differentLists(body, statement.body)) {
+            return this.derived(statement, { body }) as unknown as AfterT;
+        }
+    }
+
+    onSettingShiftBlock(statement: Parser.SettingShiftBlock, body: Parser.SettingShiftBlock["body"]): AfterT | undefined {
         if (differentLists(body, statement.body)) {
             return this.derived(statement, { body }) as unknown as AfterT;
         }
@@ -246,6 +261,9 @@ export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, Af
         if (statement.type === "ConditionBlock") {
             yield* this.visitConditionBlock(statement as unknown as Parser.ConditionBlock);
         }
+        else if (statement.type === "SettingShiftBlock") {
+            yield* this.visitSettingShiftBlock(statement as unknown as Parser.SettingShiftBlock);
+        }
         else {
             const iterator = (this as any)[`on${statement.type}`]?.(statement);
             if (iterator !== undefined) {
@@ -263,7 +281,16 @@ export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, Af
         yield* this.onConditionBlock(statement, body as any);
     }
 
+    *visitSettingShiftBlock(statement: Parser.SettingShiftBlock): IterableIterator<AfterT> {
+        const body = this.visitAll(statement.body as any);
+        yield* this.onSettingShiftBlock(statement, body as any);
+    }
+
     *onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): IterableIterator<AfterT> {
+        yield this.derived(statement, { body }) as unknown as AfterT;
+    }
+
+    *onSettingShiftBlock(statement: Parser.SettingShiftBlock, body: Parser.SettingShiftBlock["body"]): IterableIterator<AfterT> {
         yield this.derived(statement, { body }) as unknown as AfterT;
     }
 }

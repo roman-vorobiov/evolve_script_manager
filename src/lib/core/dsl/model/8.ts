@@ -1,5 +1,4 @@
-import type { Modify } from "$lib/core/utils/typeUtils";
-import type * as Previous from "./7";
+import type * as Previous from "./8_intermediate";
 
 export type StringLiteral = Previous.StringLiteral;
 export type NumberLiteral = Previous.NumberLiteral;
@@ -8,26 +7,13 @@ export type EvalLiteral = Previous.EvalLiteral;
 export type Identifier = Previous.Identifier;
 export type Subscript = Previous.Subscript;
 export type Constant = Previous.Constant;
+export type CompoundExpression = Previous.CompoundExpression;
 export type SimpleExpression = Previous.SimpleExpression;
+export type Expression = Previous.Expression;
 
-export type CompoundExpression = Modify<Previous.CompoundExpression, {
-    args: SimpleExpression[]
-}>
-
-export type Expression = SimpleExpression | CompoundExpression;
-
-export type SettingAssignment = {
-    type: "SettingAssignment",
-    setting: Identifier,
-    value: SimpleExpression,
-    condition?: Expression
-}
-
+export type SettingAssignment = Previous.SettingAssignment;
 export type SettingPush = Previous.SettingPush;
-
 export type TriggerArgument = Previous.TriggerArgument;
-export type Trigger = Modify<Previous.Trigger, {
-    condition: EvalLiteral | undefined,
-}>;
+export type Trigger = Previous.Trigger;
 
-export type Statement = SettingAssignment | SettingPush | Trigger;
+export type Statement = Exclude<Previous.Statement, Previous.SettingShift | Previous.SettingShiftBlock>;
