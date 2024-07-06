@@ -125,7 +125,7 @@ describe("Compiler", () => {
             const { errors } = inlineReferences([defNode as Parser.ExpressionDefinition, originalNode as Parser.SettingAssignment]);
             expect(errors.length).toEqual(1);
 
-            expect(errors[0].message).toEqual("Identifier, Subscript or List expected, got Number");
+            expect(errors[0].message).toEqual("Identifier, Subscript, List or Fold expected, got Number");
             expect(errors[0].offendingEntity).toBe(originalNode.value.key);
         });
 
@@ -471,9 +471,12 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "$foo" },
-                values: [
-                    { type: "String", value: "123" }
-                ]
+                value: {
+                    type: "List",
+                    values: [
+                        { type: "String", value: "123" }
+                    ]
+                }
             };
 
             const { nodes, from } = inlineReferences([
@@ -483,7 +486,8 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                setting: defNode.body
+                setting: defNode.body,
+                values: originalNode.value.values
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
@@ -502,9 +506,12 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "$foo" },
-                values: [
-                    { type: "String", value: "456" }
-                ]
+                value: {
+                    type: "List",
+                    values: [
+                        { type: "String", value: "456" }
+                    ]
+                }
             };
 
             const { errors } = inlineReferences([defNode, originalNode as Parser.SettingShift]);
@@ -526,9 +533,12 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "hello" },
-                values: [
-                    { type: "Identifier", value: "$foo" }
-                ]
+                value: {
+                    type: "List",
+                    values: [
+                        { type: "Identifier", value: "$foo" }
+                    ]
+                }
             };
 
             const { nodes, from } = inlineReferences([
@@ -559,9 +569,12 @@ describe("Compiler", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: { type: "Identifier", value: "hello" },
-                values: [
-                    { type: "String", value: "asd" }
-                ],
+                value: {
+                    type: "List",
+                    values: [
+                        { type: "String", value: "asd" }
+                    ]
+                },
                 condition: { type: "Identifier", value: "$foo" }
             };
 
@@ -572,7 +585,8 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                condition: defNode.body
+                condition: defNode.body,
+                values: originalNode.value.values
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));

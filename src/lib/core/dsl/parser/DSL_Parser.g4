@@ -24,11 +24,15 @@ statement
     ;
 
 callStatement
-    : identifier '(' (listItem (',' listItem)*)? ')'
+    : identifier '(' EOL* listContents? EOL* ')'
     ;
 
 loopStatement
     : 'for' identifier 'in' (listExpression | identifier) 'do' EOL (statement? EOL)* 'end'
+    ;
+
+importStatement
+    : 'use' stringLiteral
     ;
 
 // Definitions
@@ -43,13 +47,11 @@ expressionDefinition
     ;
 
 statementDefinition
-    : 'def' identifier '(' (listItem (',' listItem)*)? ')' 'begin' EOL (statement? EOL)* 'end'
+    : 'def' identifier '(' (EOL* definitionParameters)? EOL* ')' 'begin' EOL (statement? EOL)* 'end'
     ;
 
-// Import
-
-importStatement
-    : 'use' stringLiteral
+definitionParameters
+    : identifier (EOL* ',' EOL* identifier)*
     ;
 
 // Settings
@@ -110,7 +112,7 @@ triggerRequirement
     ;
 
 triggerActionOrCondition
-    : identifier identifier ('(' numberLiteral ')')?
+    : identifier identifier ('(' (numberLiteral | identifier) ')')?
     ;
 
 // Expressions
@@ -123,31 +125,43 @@ expression
     | expression op=(EQ | NEQ) expression
     | expression op=AND expression
     | expression op=OR expression
+    | nullaryExpression
     | '(' expression ')'
-    | unaryExpression
     ;
 
-unaryExpression
+nullaryExpression
     : identifier
-    | subscriptExpression
     | literal
+    | subscriptExpression
+    | listExpression
+    | prefixedFoldExpression
     ;
 
 // Lists
 
-listExpression
-    : '[' EOL* listItem (',' EOL* listItem)* EOL* ']'
+foldExpression
+    : prefixedFoldExpression
+    | foldedListContents
+    ;
+
+prefixedFoldExpression
+    : (conjunction='all of' | disjunction='any of') (identifier | listExpression)
+    ;
+
+foldedListContents
+    : listItem (EOL* ',' EOL* listItem)* EOL* fold=(AND | OR) listItem
     ;
 
 listContents
-    : listItem (',' listItem)+
-    | listItem (',' listItem)* fold=(AND | OR) listItem
+    : listItem (EOL* ',' EOL* listItem)*
+    ;
+
+listExpression
+    : '[' EOL* listContents? EOL* ']'
     ;
 
 listItem
-    : identifier
-    | stringLiteral
-    | subscriptExpression
+    : nullaryExpression
     ;
 
 // Identifiers
@@ -158,15 +172,16 @@ identifier
 
 subscriptExpression
     : identifier '.' identifier
-    | identifier '[' (conjunction='all of' | disjunction='any of')? subscript ']'
+    | identifier '[' EOL* subscript EOL* ']'
     ;
 
 subscript
     : identifier
+    | subscriptExpression
+    | foldExpression
     | listContents
     | placeholder
     | wildcard
-    | subscriptExpression
     ;
 
 placeholder

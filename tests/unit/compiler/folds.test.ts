@@ -17,90 +17,15 @@ describe("Compiler", () => {
     describe("Folds", () => {
         describe("Common expression rules", () => {
             describe("Lists", () => {
-                it.each(["or", "and"])("should fold lists of boolean expressions ('%s')", (fold) => {
+                it("should throw on nested lists", () => {
                     const originalNode = {
                         type: "List",
-                        fold,
-                        values: [
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceDemanded" },
-                                key: { type: "Identifier", value: "Iridium" }
-                            },
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceDemanded" },
-                                key: { type: "Identifier", value: "Alloy" }
-                            },
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceDemanded" },
-                                key: { type: "Identifier", value: "Aluminium" }
-                            }
-                        ]
-                    };
-
-                    const { node, from } = processExpression(originalNode as Parser.Expression);
-
-                    const expectedNode = from(originalNode, {
-                        type: "Expression",
-                        operator: fold,
-                        args: [
-                            from(originalNode, {
-                                type: "Expression",
-                                operator: fold,
-                                args: [
-                                    originalNode.values[0],
-                                    originalNode.values[1]
-                                ]
-                            }),
-                            originalNode.values[2]
-                        ]
-                    });
-
-                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
-                });
-
-                it.each(["or", "and"])("should not fold lists of non-boolean expressions ('%s')", (fold) => {
-                    const originalNode = {
-                        type: "List",
-                        fold,
-                        values: [
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceQuantity" },
-                                key: { type: "Identifier", value: "Iridium" }
-                            },
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceQuantity" },
-                                key: { type: "Identifier", value: "Alloy" }
-                            },
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceQuantity" },
-                                key: { type: "Identifier", value: "Aluminium" }
-                            }
-                        ]
-                    };
-
-                    const { node } = processExpression(originalNode as Parser.Expression);
-
-                    expect(node).toBe(originalNode);
-                });
-
-                it("should throw on multiple folds", () => {
-                    const originalNode = {
-                        type: "List",
-                        fold: "and",
                         values: [
                             {
                                 type: "Subscript",
                                 base: { type: "Identifier", value: "AutoBuyRatio" },
                                 key: {
                                     type: "List",
-                                    fold: "and",
                                     values: [
                                         { type: "Identifier", value: "Iridium" },
                                         { type: "Identifier", value: "Alloy" },
@@ -113,7 +38,6 @@ describe("Compiler", () => {
                                 base: { type: "Identifier", value: "AutoSellRatio" },
                                 key: {
                                     type: "List",
-                                    fold: "and",
                                     values: [
                                         { type: "Identifier", value: "Iridium" },
                                         { type: "Identifier", value: "Alloy" },
@@ -127,159 +51,35 @@ describe("Compiler", () => {
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
                     expect(error).toBeInstanceOf(CompileError);
                     if (error instanceof CompileError) {
-                        expect(error.message).toEqual("Only one fold subexpression is allowed");
-                        expect(error.offendingEntity).toBe(originalNode);
-                    }
-                });
-
-                it("should throw on ambiguous folds", () => {
-                    const originalNode = {
-                        type: "List",
-                        values: [
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceDemanded" },
-                                key: { type: "Identifier", value: "Iridium" }
-                            },
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceDemanded" },
-                                key: { type: "Identifier", value: "Alloy" }
-                            },
-                            {
-                                type: "Subscript",
-                                base: { type: "Identifier", value: "ResourceDemanded" },
-                                key: { type: "Identifier", value: "Aluminium" }
-                            }
-                        ]
-                    };
-
-                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(CompileError);
-                    if (error instanceof CompileError) {
-                        expect(error.message).toEqual("Ambiguous fold expression: use 'and' or 'or' instead of the last comma or use 'any of' or 'all of' before the list");
-                        expect(error.offendingEntity).toBe(originalNode);
+                        expect(error.message).toEqual("Nested lists are not supported");
+                        expect(error.offendingEntity).toBe(originalNode.values[0].key);
                     }
                 });
             });
 
-            describe("Subscripts", () => {
-                it.each(["or", "and"])("should fold boolean subscripts ('%s')", (fold) => {
+            describe("Fold expressions", () => {
+                it("should fold lists of boolean expressions", () => {
                     const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "ResourceDemanded" },
-                        key: {
-                            type: "List",
-                            fold,
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
-                        }
-                    };
-
-                    const { node, from } = processExpression(originalNode as Parser.Expression);
-
-                    const expectedNode = from(originalNode, {
-                        type: "Expression",
-                        operator: fold,
-                        args: [
-                            from(originalNode, {
-                                type: "Expression",
-                                operator: fold,
-                                args: [
-                                    from(originalNode, { key: originalNode.key.values[0] }),
-                                    from(originalNode, { key: originalNode.key.values[1] })
-                                ]
-                            }),
-                            from(originalNode, { key: originalNode.key.values[2] })
-                        ]
-                    });
-
-                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
-                });
-
-                it.each(["or", "and"])("should use the explicit fold operator ('%s')", (fold) => {
-                    const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "ResourceDemanded" },
-                        key: {
+                        type: "Fold",
+                        operator: "and",
+                        arg: {
                             type: "List",
                             values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
-                        },
-                        explicitKeyFold: fold
-                    };
-
-                    const { node, from } = processExpression(originalNode as Parser.Expression);
-
-                    const expectedNode = from(originalNode, {
-                        type: "Expression",
-                        operator: fold,
-                        args: [
-                            from(originalNode, {
-                                type: "Expression",
-                                operator: fold,
-                                args: [
-                                    from(originalNode, { key: originalNode.key.values[0] }),
-                                    from(originalNode, { key: originalNode.key.values[1] })
-                                ]
-                            }),
-                            from(originalNode, { key: originalNode.key.values[2] })
-                        ]
-                    });
-
-                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
-                });
-
-                it.each(["or", "and"])("should unroll non-boolean subscripts ('%s')", (fold) => {
-                    const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "ResourceQuantity" },
-                        key: {
-                            type: "List",
-                            fold,
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
-                        }
-                    };
-
-                    const { node, from } = processExpression(originalNode as Parser.Expression);
-
-                    const expectedNode = from(originalNode, {
-                        type: "List",
-                        fold,
-                        values: [
-                            from(originalNode, { key: originalNode.key.values[0] }),
-                            from(originalNode, { key: originalNode.key.values[1] }),
-                            from(originalNode, { key: originalNode.key.values[2] }),
-                        ]
-                    });
-
-                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
-                });
-
-                it("should deduce setting type (boolean)", () => {
-                    const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
-                        key: {
-                            type: "List",
-                            fold: "and",
-                            values: [
-                                { type: "Identifier", value: "buyIridium" },
-                                { type: "Identifier", value: "buyAlloy" },
-                                { type: "Identifier", value: "buyAluminium" },
+                                {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceDemanded" },
+                                    key: { type: "Identifier", value: "Iridium" }
+                                },
+                                {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceDemanded" },
+                                    key: { type: "Identifier", value: "Alloy" }
+                                },
+                                {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceDemanded" },
+                                    key: { type: "Identifier", value: "Aluminium" }
+                                }
                             ]
                         }
                     };
@@ -294,11 +94,11 @@ describe("Compiler", () => {
                                 type: "Expression",
                                 operator: "and",
                                 args: [
-                                    from(originalNode, { key: originalNode.key.values[0] }),
-                                    from(originalNode, { key: originalNode.key.values[1] })
+                                    originalNode.arg.values[0],
+                                    originalNode.arg.values[1]
                                 ]
                             }),
-                            from(originalNode, { key: originalNode.key.values[2] })
+                            originalNode.arg.values[2]
                         ]
                     });
 
@@ -306,71 +106,47 @@ describe("Compiler", () => {
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it("should deduce setting type (non-boolean)", () => {
+                it("should not fold lists of non-boolean expressions", () => {
                     const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
-                        key: {
+                        type: "Fold",
+                        operator: "and",
+                        arg: {
                             type: "List",
-                            fold: "and",
                             values: [
-                                { type: "Identifier", value: "res_buy_r_Iridium" },
-                                { type: "Identifier", value: "res_buy_r_Alloy" },
-                                { type: "Identifier", value: "res_buy_r_Aluminium" },
+                                {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceQuantity" },
+                                    key: { type: "Identifier", value: "Iridium" }
+                                },
+                                {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceQuantity" },
+                                    key: { type: "Identifier", value: "Alloy" }
+                                },
+                                {
+                                    type: "Subscript",
+                                    base: { type: "Identifier", value: "ResourceQuantity" },
+                                    key: { type: "Identifier", value: "Aluminium" }
+                                }
                             ]
                         }
                     };
 
-                    const { node, from } = processExpression(originalNode as Parser.Expression);
+                    const { node } = processExpression(originalNode as Parser.Expression);
 
-                    const expectedNode = from(originalNode, {
-                        type: "List",
-                        fold: "and",
-                        values: [
-                            from(originalNode, { key: originalNode.key.values[0] }),
-                            from(originalNode, { key: originalNode.key.values[1] }),
-                            from(originalNode, { key: originalNode.key.values[2] }),
-                        ]
-                    });
-
-                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
-                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                    expect(node).toBe(originalNode);
                 });
 
-                it("should throw on invalid settings", () => {
+                it("should throw on ambiguous folds", () => {
                     const originalNode = {
                         type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
+                        base: { type: "Identifier", value: "ResourceDemanded" },
                         key: {
                             type: "List",
-                            fold: "and",
                             values: [
-                                { type: "Identifier", value: "res_buy_r_Iridium" },
-                                { type: "Identifier", value: "hello" },
-                                { type: "Identifier", value: "res_buy_r_Aluminium" },
-                            ]
-                        }
-                    };
-
-                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
-                    expect(error).toBeInstanceOf(CompileError);
-                    if (error instanceof CompileError) {
-                        expect(error.message).toEqual("Invalid setting");
-                        expect(error.offendingEntity).toBe(originalNode.key.values[1]);
-                    }
-                });
-
-                it("should throw on heterogeneous setting lists", () => {
-                    const originalNode = {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
-                        key: {
-                            type: "List",
-                            fold: "and",
-                            values: [
-                                { type: "Identifier", value: "res_buy_r_Iridium" },
-                                { type: "Identifier", value: "buyAlloy" },
-                                { type: "Identifier", value: "res_buy_r_Aluminium" },
+                                { type: "Identifier", value: "Iridium" },
+                                { type: "Identifier", value: "Alloy" },
+                                { type: "Identifier", value: "Aluminium" }
                             ]
                         }
                     };
@@ -378,21 +154,22 @@ describe("Compiler", () => {
                     const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
                     expect(error).toBeInstanceOf(CompileError);
                     if (error instanceof CompileError) {
-                        expect(error.message).toEqual("Only values of the same type are allowed to be in the same list");
-                        expect(error.offendingEntity).toBe(originalNode.key);
+                        expect(error.message).toEqual("Lists in the subscript must be folded with either 'any of' or 'all of'");
+                        expect(error.offendingEntity).toBe(originalNode);
                     }
                 });
+            });
 
-                it.each(["or", "and"])("should fold nested boolean subscripts ('%s')", (fold) => {
+            describe("Subscripts", () => {
+                it.each(["or", "and"])("should fold boolean subscripts ('%s')", (operator) => {
                     const originalNode = {
                         type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
+                        base: { type: "Identifier", value: "ResourceDemanded" },
                         key: {
-                            type: "Subscript",
-                            base: { type: "Identifier", value: "AutoBuy" },
-                            key: {
+                            type: "Fold",
+                            operator,
+                            arg: {
                                 type: "List",
-                                fold,
                                 values: [
                                     { type: "Identifier", value: "Iridium" },
                                     { type: "Identifier", value: "Alloy" },
@@ -406,23 +183,17 @@ describe("Compiler", () => {
 
                     const expectedNode = from(originalNode, {
                         type: "Expression",
-                        operator: fold,
+                        operator,
                         args: [
                             from(originalNode, {
                                 type: "Expression",
-                                operator: fold,
+                                operator,
                                 args: [
-                                    from(originalNode, {
-                                        key: from(originalNode.key, { key: originalNode.key.key.values[0] })
-                                    }),
-                                    from(originalNode, {
-                                        key: from(originalNode.key, { key: originalNode.key.key.values[1] })
-                                    })
+                                    from(originalNode, { key: originalNode.key.arg.values[0] }),
+                                    from(originalNode, { key: originalNode.key.arg.values[1] })
                                 ]
                             }),
-                            from(originalNode, {
-                                key: from(originalNode.key, { key: originalNode.key.key.values[2] })
-                            })
+                            from(originalNode, { key: originalNode.key.arg.values[2] })
                         ]
                     });
 
@@ -430,16 +201,15 @@ describe("Compiler", () => {
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it.each(["or", "and"])("should unroll nested non-boolean subscripts ('%s')", (fold) => {
+                it.each(["or", "and"])("should unroll non-boolean subscripts ('%s')", (operator) => {
                     const originalNode = {
                         type: "Subscript",
-                        base: { type: "Identifier", value: "SettingCurrent" },
+                        base: { type: "Identifier", value: "ResourceQuantity" },
                         key: {
-                            type: "Subscript",
-                            base: { type: "Identifier", value: "AutoBuyRatio" },
-                            key: {
+                            type: "Fold",
+                            operator,
+                            arg: {
                                 type: "List",
-                                fold,
                                 values: [
                                     { type: "Identifier", value: "Iridium" },
                                     { type: "Identifier", value: "Alloy" },
@@ -452,19 +222,239 @@ describe("Compiler", () => {
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
                     const expectedNode = from(originalNode, {
-                        type: "List",
-                        fold,
-                        values: [
+                        type: "Fold",
+                        operator,
+                        arg: from(originalNode.key.arg, {
+                            values: [
+                                from(originalNode, { key: originalNode.key.arg.values[0] }),
+                                from(originalNode, { key: originalNode.key.arg.values[1] }),
+                                from(originalNode, { key: originalNode.key.arg.values[2] }),
+                            ]
+                        })
+                    });
+
+                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
+                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                });
+
+                it("should deduce setting type (boolean)", () => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "SettingCurrent" },
+                        key: {
+                            type: "Fold",
+                            operator: "and",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "buyIridium" },
+                                    { type: "Identifier", value: "buyAlloy" },
+                                    { type: "Identifier", value: "buyAluminium" },
+                                ]
+                            }
+                        }
+                    };
+
+                    const { node, from } = processExpression(originalNode as Parser.Expression);
+
+                    const expectedNode = from(originalNode, {
+                        type: "Expression",
+                        operator: "and",
+                        args: [
                             from(originalNode, {
-                                key: from(originalNode.key, { key: originalNode.key.key.values[0] })
+                                type: "Expression",
+                                operator: "and",
+                                args: [
+                                    from(originalNode, { key: originalNode.key.arg.values[0] }),
+                                    from(originalNode, { key: originalNode.key.arg.values[1] })
+                                ]
+                            }),
+                            from(originalNode, { key: originalNode.key.arg.values[2] })
+                        ]
+                    });
+
+                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
+                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                });
+
+                it("should deduce setting type (non-boolean)", () => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "SettingCurrent" },
+                        key: {
+                            type: "Fold",
+                            operator: "and",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "res_buy_r_Iridium" },
+                                    { type: "Identifier", value: "res_buy_r_Alloy" },
+                                    { type: "Identifier", value: "res_buy_r_Aluminium" },
+                                ]
+                            }
+                        }
+                    };
+
+                    const { node, from } = processExpression(originalNode as Parser.Expression);
+
+                    const expectedNode = from(originalNode, {
+                        type: "Fold",
+                        operator: "and",
+                        arg: from(originalNode.key.arg, {
+                            values: [
+                                from(originalNode, { key: originalNode.key.arg.values[0] }),
+                                from(originalNode, { key: originalNode.key.arg.values[1] }),
+                                from(originalNode, { key: originalNode.key.arg.values[2] }),
+                            ]
+                        })
+                    });
+
+                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
+                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                });
+
+                it("should throw on invalid settings", () => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "SettingCurrent" },
+                        key: {
+                            type: "Fold",
+                            operator: "and",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "res_buy_r_Iridium" },
+                                    { type: "Identifier", value: "hello" },
+                                    { type: "Identifier", value: "res_buy_r_Aluminium" },
+                                ]
+                            }
+                        }
+                    };
+
+                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
+                        expect(error.message).toEqual("Invalid setting");
+                        expect(error.offendingEntity).toBe(originalNode.key.arg.values[1]);
+                    }
+                });
+
+                it("should throw on heterogeneous setting lists", () => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "SettingCurrent" },
+                        key: {
+                            type: "Fold",
+                            operator: "and",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "res_buy_r_Iridium" },
+                                    { type: "Identifier", value: "buyAlloy" },
+                                    { type: "Identifier", value: "res_buy_r_Aluminium" },
+                                ]
+                            }
+                        }
+                    };
+
+                    const error = getExcepion(() => processExpression(originalNode as Parser.Expression));
+                    expect(error).toBeInstanceOf(CompileError);
+                    if (error instanceof CompileError) {
+                        expect(error.message).toEqual("Only values of the same type are allowed to be in the same list");
+                        expect(error.offendingEntity).toBe(originalNode.key.arg);
+                    }
+                });
+
+                it.each(["or", "and"])("should fold nested boolean subscripts ('%s')", (operator) => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "SettingCurrent" },
+                        key: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "AutoBuy" },
+                            key: {
+                                type: "Fold",
+                                operator,
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" },
+                                    ]
+                                }
+                            }
+                        }
+                    };
+
+                    const { node, from } = processExpression(originalNode as Parser.Expression);
+
+                    const expectedNode = from(originalNode, {
+                        type: "Expression",
+                        operator,
+                        args: [
+                            from(originalNode, {
+                                type: "Expression",
+                                operator,
+                                args: [
+                                    from(originalNode, {
+                                        key: from(originalNode.key, { key: originalNode.key.key.arg.values[0] })
+                                    }),
+                                    from(originalNode, {
+                                        key: from(originalNode.key, { key: originalNode.key.key.arg.values[1] })
+                                    })
+                                ]
                             }),
                             from(originalNode, {
-                                key: from(originalNode.key, { key: originalNode.key.key.values[1] })
-                            }),
-                            from(originalNode, {
-                                key: from(originalNode.key, { key: originalNode.key.key.values[2] })
+                                key: from(originalNode.key, { key: originalNode.key.key.arg.values[2] })
                             })
                         ]
+                    });
+
+                    expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
+                    expect(originsOf(node)).toEqual(originsOf(expectedNode));
+                });
+
+                it.each(["or", "and"])("should unroll nested non-boolean subscripts ('%s')", (operator) => {
+                    const originalNode = {
+                        type: "Subscript",
+                        base: { type: "Identifier", value: "SettingCurrent" },
+                        key: {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "AutoBuyRatio" },
+                            key: {
+                                type: "Fold",
+                                operator,
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" },
+                                    ]
+                                }
+                            }
+                        }
+                    };
+
+                    const { node, from } = processExpression(originalNode as Parser.Expression);
+
+                    const expectedNode = from(originalNode, {
+                        type: "Fold",
+                        operator,
+                        arg: from (originalNode.key.key.arg, {
+                            values: [
+                                from(originalNode, {
+                                    key: from(originalNode.key, { key: originalNode.key.key.arg.values[0] })
+                                }),
+                                from(originalNode, {
+                                    key: from(originalNode.key, { key: originalNode.key.key.arg.values[1] })
+                                }),
+                                from(originalNode, {
+                                    key: from(originalNode.key, { key: originalNode.key.key.arg.values[2] })
+                                })
+                            ]
+                        })
                     });
 
                     expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
@@ -479,13 +469,16 @@ describe("Compiler", () => {
                             type: "Subscript",
                             base: { type: "Identifier", value: "hello" },
                             key: {
-                                type: "List",
-                                fold: "and",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" },
-                                ]
+                                type: "Fold",
+                                operator: "and",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" },
+                                    ]
+                                }
                             }
                         }
                     };
@@ -499,19 +492,22 @@ describe("Compiler", () => {
                 });
             });
 
-            describe("Expressions", () => {
-                it.each(["or", "and"])("should always fold before 'not' ('%s')", (fold) => {
+            describe("N-ary Expressions", () => {
+                it("should always fold before 'not'", () => {
                     const originalNode = {
                         type: "Expression",
                         operator: "not",
                         args: [
                             {
-                                type: "List",
-                                fold,
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" }
-                                ]
+                                type: "Fold",
+                                operator: "and",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" }
+                                    ]
+                                }
                             }
                         ]
                     };
@@ -522,8 +518,8 @@ describe("Compiler", () => {
                         args: [
                             from(originalNode, {
                                 type: "Expression",
-                                operator: fold,
-                                args: originalNode.args[0].values
+                                operator: "and",
+                                args: originalNode.args[0].arg.values
                             })
                         ]
                     });
@@ -532,24 +528,22 @@ describe("Compiler", () => {
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it.each([
-                    "+",
-                    "-",
-                    "*",
-                    "/"
-                ])("should apply the rhs operand to each element ('%s')", (op) => {
+                it("should apply the rhs operand of an arithmetic expression to each element", () => {
                     const originalNode = {
                         type: "Expression",
-                        operator: op,
+                        operator: "+",
                         args: [
                             {
-                                type: "List",
-                                fold: "or",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" }
-                                ]
+                                type: "Fold",
+                                operator: "or",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" }
+                                    ]
+                                }
                             },
                             { type: "Number", value: 123 }
                         ]
@@ -558,53 +552,53 @@ describe("Compiler", () => {
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
                     const expectedNode = from(originalNode, {
-                        type: "List",
-                        fold: "or",
-                        values: [
-                            from(originalNode, {
-                                args: [
-                                    originalNode.args[0].values![0],
-                                    originalNode.args[1]
-                                ]
-                            }),
-                            from(originalNode, {
-                                args: [
-                                    originalNode.args[0].values![1],
-                                    originalNode.args[1]
-                                ]
-                            }),
-                            from(originalNode, {
-                                args: [
-                                    originalNode.args[0].values![2],
-                                    originalNode.args[1]
-                                ]
-                            })
-                        ]
+                        type: "Fold",
+                        operator: "or",
+                        arg: from(originalNode.args[0].arg!, {
+                            values: [
+                                from(originalNode, {
+                                    args: [
+                                        originalNode.args[0].arg!.values[0],
+                                        originalNode.args[1]
+                                    ]
+                                }),
+                                from(originalNode, {
+                                    args: [
+                                        originalNode.args[0].arg!.values[1],
+                                        originalNode.args[1]
+                                    ]
+                                }),
+                                from(originalNode, {
+                                    args: [
+                                        originalNode.args[0].arg!.values[2],
+                                        originalNode.args[1]
+                                    ]
+                                })
+                            ]
+                        })
                     });
 
                     expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it.each([
-                    "+",
-                    "-",
-                    "*",
-                    "/"
-                ])("should apply the lhs operand to each element ('%s')", (op) => {
+                it("should apply the lhs operand of an arithmetic expression to each element", () => {
                     const originalNode = {
                         type: "Expression",
-                        operator: op,
+                        operator: "+",
                         args: [
                             { type: "Number", value: 123 },
                             {
-                                type: "List",
-                                fold: "or",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" }
-                                ]
+                                type: "Fold",
+                                operator: "or",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" }
+                                    ]
+                                }
                             }
                         ]
                     };
@@ -612,55 +606,52 @@ describe("Compiler", () => {
                     const { node, from } = processExpression(originalNode as Parser.Expression);
 
                     const expectedNode = from(originalNode, {
-                        type: "List",
-                        fold: "or",
-                        values: [
-                            from(originalNode, {
-                                args: [
-                                    originalNode.args[0],
-                                    originalNode.args[1].values![0]
-                                ]
-                            }),
-                            from(originalNode, {
-                                args: [
-                                    originalNode.args[0],
-                                    originalNode.args[1].values![1]
-                                ]
-                            }),
-                            from(originalNode, {
-                                args: [
-                                    originalNode.args[0],
-                                    originalNode.args[1].values![2]
-                                ]
-                            })
-                        ]
+                        type: "Fold",
+                        operator: "or",
+                        arg: from(originalNode.args[1].arg!, {
+                            values: [
+                                from(originalNode, {
+                                    args: [
+                                        originalNode.args[0],
+                                        originalNode.args[1].arg!.values[0]
+                                    ]
+                                }),
+                                from(originalNode, {
+                                    args: [
+                                        originalNode.args[0],
+                                        originalNode.args[1].arg!.values[1]
+                                    ]
+                                }),
+                                from(originalNode, {
+                                    args: [
+                                        originalNode.args[0],
+                                        originalNode.args[1].arg!.values[2]
+                                    ]
+                                })
+                            ]
+                        })
                     });
 
                     expect(valuesOf(node)).toEqual(valuesOf(expectedNode));
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it.each([
-                    "and",
-                    "or",
-                    "<",
-                    "<=",
-                    ">",
-                    ">=",
-                    "=="
-                ])("should apply the rhs operand to each element and fold ('%s')", (op) => {
+                it("should apply the rhs operand of a logical expression to each element and fold", () => {
                     const originalNode = {
                         type: "Expression",
-                        operator: op,
+                        operator: "<",
                         args: [
                             {
-                                type: "List",
-                                fold: "or",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" }
-                                ]
+                                type: "Fold",
+                                operator: "or",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" }
+                                    ]
+                                }
                             },
                             { type: "Number", value: 123 }
                         ]
@@ -678,13 +669,13 @@ describe("Compiler", () => {
                                 args: [
                                     from(originalNode, {
                                         args: [
-                                            originalNode.args[0].values![0],
+                                            originalNode.args[0].arg!.values[0],
                                             originalNode.args[1]
                                         ]
                                     }),
                                     from(originalNode, {
                                         args: [
-                                            originalNode.args[0].values![1],
+                                            originalNode.args[0].arg!.values[1],
                                             originalNode.args[1]
                                         ]
                                     })
@@ -692,7 +683,7 @@ describe("Compiler", () => {
                             }),
                             from(originalNode, {
                                 args: [
-                                    originalNode.args[0].values![2],
+                                    originalNode.args[0].arg!.values[2],
                                     originalNode.args[1]
                                 ]
                             })
@@ -703,28 +694,23 @@ describe("Compiler", () => {
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it.each([
-                    "and",
-                    "or",
-                    "<",
-                    "<=",
-                    ">",
-                    ">=",
-                    "=="
-                ])("should apply the lhs operand to each element and fold ('%s')", (op) => {
+                it("should apply the lhs operand to each element and fold", () => {
                     const originalNode = {
                         type: "Expression",
-                        operator: op,
+                        operator: "<",
                         args: [
                             { type: "Number", value: 123 },
                             {
-                                type: "List",
-                                fold: "or",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" }
-                                ]
+                                type: "Fold",
+                                operator: "or",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" }
+                                    ]
+                                }
                             }
                         ]
                     };
@@ -742,13 +728,13 @@ describe("Compiler", () => {
                                     from(originalNode, {
                                         args: [
                                             originalNode.args[0],
-                                            originalNode.args[1].values![0]
+                                            originalNode.args[1].arg!.values![0]
                                         ]
                                     }),
                                     from(originalNode, {
                                         args: [
                                             originalNode.args[0],
-                                            originalNode.args[1].values![1]
+                                            originalNode.args[1].arg!.values[1]
                                         ]
                                     })
                                 ]
@@ -756,7 +742,7 @@ describe("Compiler", () => {
                             from(originalNode, {
                                 args: [
                                     originalNode.args[0],
-                                    originalNode.args[1].values![2]
+                                    originalNode.args[1].arg!.values[2]
                                 ]
                             })
                         ]
@@ -766,7 +752,7 @@ describe("Compiler", () => {
                     expect(originsOf(node)).toEqual(originsOf(expectedNode));
                 });
 
-                it.each(["and", "or"])("should unwrap to the nearest boolean expression ('%s')", (fold) => {
+                it("should unwrap to the nearest boolean expression", () => {
                     const originalNode = {
                         type: "Expression",
                         operator: "<",
@@ -779,13 +765,16 @@ describe("Compiler", () => {
                                         type: "Subscript",
                                         base: { type: "Identifier", value: "ResourceQuantity" },
                                         key: {
-                                            type: "List",
-                                            values: [
-                                                { type: "Identifier", value: "Iridium" },
-                                                { type: "Identifier", value: "Alloy" },
-                                                { type: "Identifier", value: "Aluminium" },
-                                            ],
-                                            fold
+                                            type: "Fold",
+                                            operator: "and",
+                                            arg: {
+                                                type: "List",
+                                                values: [
+                                                    { type: "Identifier", value: "Iridium" },
+                                                    { type: "Identifier", value: "Alloy" },
+                                                    { type: "Identifier", value: "Aluminium" }
+                                                ]
+                                            }
                                         }
                                     },
                                     { type: "Number", value: 2 }
@@ -802,7 +791,7 @@ describe("Compiler", () => {
                             from(originalNode.args[0], {
                                 args: [
                                     from(originalNode.args[0].args![0], {
-                                        key: originalNode.args[0].args![0].key!.values[i]
+                                        key: originalNode.args[0].args![0].key!.arg.values[i]
                                     }),
                                     originalNode.args[0].args![1]
                                 ]
@@ -813,11 +802,11 @@ describe("Compiler", () => {
 
                     const expectedNode = from(originalNode, {
                         type: "Expression",
-                        operator: fold,
+                        operator: "and",
                         args: [
                             from(originalNode, {
                                 type: "Expression",
-                                operator: fold,
+                                operator: "and",
                                 args: [
                                     subtree(0),
                                     subtree(1)
@@ -837,22 +826,28 @@ describe("Compiler", () => {
                         operator: "or",
                         args: [
                             {
-                                type: "List",
-                                fold: "or",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" }
-                                ]
+                                type: "Fold",
+                                operator: "or",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" }
+                                    ]
+                                }
                             },
                             {
-                                type: "List",
-                                fold: "or",
-                                values: [
-                                    { type: "Identifier", value: "Iridium" },
-                                    { type: "Identifier", value: "Alloy" },
-                                    { type: "Identifier", value: "Aluminium" }
-                                ]
+                                type: "Fold",
+                                operator: "or",
+                                arg: {
+                                    type: "List",
+                                    values: [
+                                        { type: "Identifier", value: "Iridium" },
+                                        { type: "Identifier", value: "Alloy" },
+                                        { type: "Identifier", value: "Aluminium" }
+                                    ]
+                                }
                             }
                         ]
                     };
@@ -868,7 +863,7 @@ describe("Compiler", () => {
         });
 
         describe("Setting target", () => {
-            it("should resolve folds inside setting targets", () => {
+            it("should resolve lists inside setting targets", () => {
                 const originalNode = {
                     type: "SettingAssignment",
                     setting: {
@@ -917,12 +912,15 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "Challenge" },
                         key: {
-                            type: "List",
-                            fold: "or",
-                            values: [
-                                { type: "Identifier", value: "craft" },
-                                { type: "Identifier", value: "trade" },
-                            ]
+                            type: "Fold",
+                            operator: "or",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "craft" },
+                                    { type: "Identifier", value: "trade" },
+                                ]
+                            }
                         }
                     },
                     value: { type: "Boolean", value: true }
@@ -931,7 +929,7 @@ describe("Compiler", () => {
                 const { errors } = resolveFolds(originalNode as Parser.SettingAssignment);
                 expect(errors.length).toEqual(1);
 
-                expect(errors[0].message).toEqual("Disjunction is not allowed in setting targets");
+                expect(errors[0].message).toEqual("Fold expressions are not allowed in setting targets");
                 expect(errors[0].offendingEntity).toBe(originalNode.setting.key);
             });
         });
@@ -945,13 +943,16 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceDemanded" },
                         key: {
-                            type: "List",
-                            fold: "or",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
+                            type: "Fold",
+                            operator: "or",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "Iridium" },
+                                    { type: "Identifier", value: "Alloy" },
+                                    { type: "Identifier", value: "Aluminium" },
+                                ]
+                            }
                         }
                     }
                 };
@@ -968,11 +969,11 @@ describe("Compiler", () => {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
-                                    from(originalNode.value, { key: originalNode.value.key.values[0] }),
-                                    from(originalNode.value, { key: originalNode.value.key.values[1] })
+                                    from(originalNode.value, { key: originalNode.value.key.arg.values[0] }),
+                                    from(originalNode.value, { key: originalNode.value.key.arg.values[1] })
                                 ]
                             }),
-                            from(originalNode.value, { key: originalNode.value.key.values[2] })
+                            from(originalNode.value, { key: originalNode.value.key.arg.values[2] })
                         ]
                     })
                 });
@@ -989,13 +990,16 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceQuantity" },
                         key: {
-                            type: "List",
-                            fold: "and",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
+                            type: "Fold",
+                            operator: "and",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "Iridium" },
+                                    { type: "Identifier", value: "Alloy" },
+                                    { type: "Identifier", value: "Aluminium" },
+                                ]
+                            }
                         }
                     }
                 };
@@ -1018,13 +1022,16 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceDemanded" },
                         key: {
-                            type: "List",
-                            fold: "or",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
+                            type: "Fold",
+                            operator: "or",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "Iridium" },
+                                    { type: "Identifier", value: "Alloy" },
+                                    { type: "Identifier", value: "Aluminium" },
+                                ]
+                            }
                         }
                     }
                 };
@@ -1041,11 +1048,11 @@ describe("Compiler", () => {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
-                                    from(originalNode.condition, { key: originalNode.condition.key.values[0] }),
-                                    from(originalNode.condition, { key: originalNode.condition.key.values[1] })
+                                    from(originalNode.condition, { key: originalNode.condition.key.arg.values[0] }),
+                                    from(originalNode.condition, { key: originalNode.condition.key.arg.values[1] })
                                 ]
                             }),
-                            from(originalNode.condition, { key: originalNode.condition.key.values[2] })
+                            from(originalNode.condition, { key: originalNode.condition.key.arg.values[2] })
                         ]
                     })
                 });
@@ -1066,13 +1073,16 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceDemanded" },
                         key: {
-                            type: "List",
-                            fold: "or",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
+                            type: "Fold",
+                            operator: "or",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "Iridium" },
+                                    { type: "Identifier", value: "Alloy" },
+                                    { type: "Identifier", value: "Aluminium" },
+                                ]
+                            }
                         }
                     }
                 };
@@ -1089,11 +1099,11 @@ describe("Compiler", () => {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
-                                    from(originalNode.condition, { key: originalNode.condition.key.values[0] }),
-                                    from(originalNode.condition, { key: originalNode.condition.key.values[1] })
+                                    from(originalNode.condition, { key: originalNode.condition.key.arg.values[0] }),
+                                    from(originalNode.condition, { key: originalNode.condition.key.arg.values[1] })
                                 ]
                             }),
-                            from(originalNode.condition, { key: originalNode.condition.key.values[2] })
+                            from(originalNode.condition, { key: originalNode.condition.key.arg.values[2] })
                         ]
                     })
                 });
@@ -1109,13 +1119,16 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceDemanded" },
                         key: {
-                            type: "List",
-                            fold: "or",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
+                            type: "Fold",
+                            operator: "or",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "Iridium" },
+                                    { type: "Identifier", value: "Alloy" },
+                                    { type: "Identifier", value: "Aluminium" },
+                                ]
+                            }
                         }
                     },
                     body: []
@@ -1133,11 +1146,11 @@ describe("Compiler", () => {
                                 type: "Expression",
                                 operator: "or",
                                 args: [
-                                    from(originalNode.condition, { key: originalNode.condition.key.values[0] }),
-                                    from(originalNode.condition, { key: originalNode.condition.key.values[1] })
+                                    from(originalNode.condition, { key: originalNode.condition.key.arg.values[0] }),
+                                    from(originalNode.condition, { key: originalNode.condition.key.arg.values[1] })
                                 ]
                             }),
-                            from(originalNode.condition, { key: originalNode.condition.key.values[2] })
+                            from(originalNode.condition, { key: originalNode.condition.key.arg.values[2] })
                         ]
                     })
                 });
@@ -1159,13 +1172,16 @@ describe("Compiler", () => {
                                 type: "Subscript",
                                 base: { type: "Identifier", value: "ResourceDemanded" },
                                 key: {
-                                    type: "List",
-                                    fold: "or",
-                                    values: [
-                                        { type: "Identifier", value: "Iridium" },
-                                        { type: "Identifier", value: "Alloy" },
-                                        { type: "Identifier", value: "Aluminium" },
-                                    ]
+                                    type: "Fold",
+                                    operator: "or",
+                                    arg: {
+                                        type: "List",
+                                        values: [
+                                            { type: "Identifier", value: "Iridium" },
+                                            { type: "Identifier", value: "Alloy" },
+                                            { type: "Identifier", value: "Aluminium" },
+                                        ]
+                                    }
                                 }
                             }
                         }
@@ -1186,11 +1202,11 @@ describe("Compiler", () => {
                                         type: "Expression",
                                         operator: "or",
                                         args: [
-                                            from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.values[0] }),
-                                            from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.values[1] })
+                                            from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.arg.values[0] }),
+                                            from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.arg.values[1] })
                                         ]
                                     }),
-                                    from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.values[2] })
+                                    from(originalNode.body[0].condition, { key: originalNode.body[0].condition.key.arg.values[2] })
                                 ]
                             })
                         })
@@ -1210,13 +1226,16 @@ describe("Compiler", () => {
                         type: "Subscript",
                         base: { type: "Identifier", value: "ResourceQuantity" },
                         key: {
-                            type: "List",
-                            fold: "and",
-                            values: [
-                                { type: "Identifier", value: "Iridium" },
-                                { type: "Identifier", value: "Alloy" },
-                                { type: "Identifier", value: "Aluminium" },
-                            ]
+                            type: "Fold",
+                            operator: "and",
+                            arg: {
+                                type: "List",
+                                values: [
+                                    { type: "Identifier", value: "Iridium" },
+                                    { type: "Identifier", value: "Alloy" },
+                                    { type: "Identifier", value: "Aluminium" },
+                                ]
+                            }
                         }
                     }
                 };

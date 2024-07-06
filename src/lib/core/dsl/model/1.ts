@@ -9,36 +9,53 @@ export type EvalLiteral = Previous.EvalLiteral;
 export type Identifier = Previous.Identifier;
 export type Constant = Previous.Constant;
 export type SimpleExpression = Previous.SimpleExpression;
-export type List = Previous.List;
-export type Subscript = Previous.Subscript;
-export type CompoundExpression = Previous.CompoundExpression;
-export type Expression = Previous.Expression;
 
-export type SettingAssignment = Previous.SettingAssignment;
-export type SettingShift = Previous.SettingShift;
+export type List = Modify<Previous.List, {
+    values: Expression[]
+}>
 
-export type ConditionBlock = Modify<Previous.ConditionBlock, {
-    body: Statement[]
-}>;
+export type FoldExpression = Modify<Previous.FoldExpression, {
+    arg: List
+}>
+
+export type Subscript = Modify<Previous.Subscript, {
+    key: Identifier | Symbol | Subscript | List | FoldExpression
+}>
+
+export type CompoundExpression = Modify<Previous.CompoundExpression, {
+    args: Expression[]
+}>
+
+export type Expression = SimpleExpression | Subscript | List | FoldExpression | CompoundExpression;
+
+export type SettingAssignment = {
+    type: "SettingAssignment",
+    setting: Identifier | Subscript,
+    value: Expression,
+    condition?: Expression
+}
+
+export type SettingShift = Modify<Omit<Previous.SettingShift, "value">, {
+    values: Identifier[] | StringLiteral[],
+    condition?: Expression
+}>
 
 export type SettingShiftBlock = Modify<Previous.SettingShiftBlock, {
     body: Statement[]
 }>;
 
+export type ConditionBlock = Modify<Previous.ConditionBlock, {
+    condition: Expression,
+    body: Statement[]
+}>
+
 export type TriggerArgument = Modify<Previous.TriggerArgument, {
     count: NumberLiteral
-}>;
+}>
 
 export type Trigger = Modify<Previous.Trigger, {
     requirement: TriggerArgument,
     actions: TriggerArgument[]
-}>;
-
-export type Loop = Modify<Previous.Loop, {
-    values: List,
-    body: Statement[]
 }>
 
-type PrunedStatementTypes = Previous.ExpressionDefinition | Previous.StatementDefinition | Previous.FunctionCall | Previous.Loop;
-
-export type Statement = Exclude<Previous.Statement, PrunedStatementTypes | Previous.Trigger> | Previous.Trigger;
+export type Statement = SettingAssignment | SettingShift | SettingShiftBlock | ConditionBlock | Trigger;

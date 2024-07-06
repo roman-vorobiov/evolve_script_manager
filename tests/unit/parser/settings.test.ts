@@ -113,9 +113,7 @@ describe("Parser", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: maps.identifier("foo"),
-                values: [
-                    maps('"123"', { type: "String", value: "123" })
-                ]
+                value: maps('"123"', { type: "String", value: "123" })
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
@@ -132,9 +130,7 @@ describe("Parser", () => {
                 type: "SettingShift",
                 operator: ">>",
                 setting: maps.identifier("foo"),
-                values: [
-                    maps('bar', { type: "Identifier", value: "bar" })
-                ]
+                value: maps('bar', { type: "Identifier", value: "bar" })
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
@@ -151,10 +147,13 @@ describe("Parser", () => {
                 type: "SettingShift",
                 operator: "<<",
                 setting: maps.identifier("foo"),
-                values: [
-                    maps('bar', { type: "Identifier", value: "bar" }),
-                    maps('"baz"', { type: "String", value: "baz" })
-                ]
+                value: maps('[bar, "baz"]', {
+                    type: "List",
+                    values: [
+                        maps('bar', { type: "Identifier", value: "bar" }),
+                        maps('"baz"', { type: "String", value: "baz" })
+                    ]
+                })
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));

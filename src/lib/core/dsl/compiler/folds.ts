@@ -7,43 +7,47 @@ import type * as Before from "../model/2";
 import type * as After from "../model/3";
 
 function validateExpressionResolved(expression: any): asserts expression is After.Expression {
-    if (expression.type === "List") {
+    if (expression.type === "Fold") {
         throw new CompileError("Fold expression detected outside of a boolean expression", expression);
     }
 }
 
 export class FoldResolver extends ExpressionVisitor {
-    private processingSettingId = false;
+    private insideList = false;
 
-    onList(expression: Before.List, values: Before.List["values"]): Before.Expression {
-        // Throw on nested lists
-        if (values.some(value => value.type === "List")) {
-            throw new CompileError("Only one fold subexpression is allowed", expression);
+    visitList(expression: Before.List): Before.List {
+        if (this.insideList) {
+            throw new CompileError("Nested lists are not supported", expression);
         }
 
-        const node = this.derived(expression, { values });
+        try {
+            this.insideList = true;
+            const values = this.visitAll(expression.values, expression) as Before.Expression[];
+            return this.derived(expression, { values });
+        }
+        finally {
+            this.insideList = false;
+        }
+    }
 
-        return this.foldIfNeeded(node, expression, !this.processingSettingId && isBooleanExpression(expression));
+    onFold(expression: Before.FoldExpression, arg: Before.List): Before.Expression {
+        const node = this.derived(expression, { arg });
+        return this.foldIfNeeded(node, expression, isBooleanExpression(expression));
     }
 
     onSubscript(expression: Before.Subscript, key: Before.Subscript["key"]): Before.Expression | undefined {
         if (key.type === "List") {
-            // Transform each element as the subscript of `expression.base`
-            const node = this.derived(key, {
-                values: key.values.map(value => this.derived(expression, <After.Subscript> { key: value }))
-            });
-
-            if (expression.explicitKeyFold !== undefined) {
-                node.fold = expression.explicitKeyFold;
-            }
-
-            // If the base is a boolean setting prefix or condition expression, fold the list
-            return this.foldIfNeeded(node, expression, !this.processingSettingId && isBooleanExpression(expression.base, key));
+            throw new CompileError("Lists in the subscript must be folded with either 'any of' or 'all of'", expression);
+        }
+        else if (key.type === "Fold") {
+            const node = this.derived(expression, { key });
+            const unwrapped = this.unwrap(node) as Before.FoldExpression;
+            return this.foldIfNeeded(unwrapped, expression, isBooleanExpression(expression.base, key));
         }
     }
 
     onExpression(expression: Before.CompoundExpression, args: Before.CompoundExpression["args"]): Before.Expression {
-        const numberOfFolds = args.filter(arg => arg.type === "List").length;
+        const numberOfFolds = args.filter(arg => arg.type === "Fold").length;
 
         if (numberOfFolds > 1) {
             // Instead of engaging in arbitrary combinatorics, just reject such cases
@@ -54,64 +58,77 @@ export class FoldResolver extends ExpressionVisitor {
         }
         else if (args.length === 1) {
             // This means the argument of 'not' is not boolean, but it's not this component's job to guard against that
-            return this.derived(expression, { args: [this.foldLeft(args[0] as Before.List, expression)] });
+            return this.derived(expression, { args: [this.foldLeft(args[0] as Before.FoldExpression, expression)] });
         }
         else {
-            let node: Before.List;
-            if (args[0].type === "List") {
+            let node: Before.FoldExpression;
+            if (args[0].type === "Fold") {
                 // foo[a, b] / 2 -> [foo.a / 2, foo.b / 2]
                 node = this.derived(args[0], {
-                    values: args[0].values.map(arg => this.derived(expression, { args: [arg, args[1]] }))
+                    arg: this.derived(args[0].arg, {
+                        values: args[0].arg.values.map(arg => this.derived(expression, { args: [arg, args[1]] }))
+                    })
                 });
             }
             else {
-                assume(args[1].type === "List");
+                assume(args[1].type === "Fold");
                 // 2 / foo[a, b] -> [2 / foo.a, 2 / foo.b]
                 node = this.derived(args[1], {
-                    values: args[1].values.map(arg => this.derived(expression, { args: [args[0], arg] }))
+                    arg: this.derived(args[1].arg, {
+                        values: args[1].arg.values.map(arg => this.derived(expression, { args: [args[0], arg] }))
+                    })
                 });
             }
 
-            return this.foldIfNeeded(node, expression, !this.processingSettingId && isBooleanExpression(expression));
+            return this.foldIfNeeded(node, expression, isBooleanExpression(expression));
         }
     }
 
     visitSettingId(expression: Before.Identifier | Before.Subscript): Before.SettingAssignment["setting"] | Before.List {
-        if (expression.type === "Identifier") {
-            return expression;
+        if (expression.type === "Subscript") {
+            if (expression.key.type === "Fold") {
+                throw new CompileError("Fold expressions are not allowed in setting targets", expression.key);
+            }
+            else if (expression.key.type === "List") {
+                return this.unwrap(expression) as Before.List;
+            }
         }
 
-        if (expression.key.type === "List" && expression.key.fold === "or") {
-            throw new CompileError("Disjunction is not allowed in setting targets", expression.key);
-        }
-
-        try {
-            this.processingSettingId = true;
-            return this.visit(expression) as Before.SettingAssignment["setting"] | Before.List;
-        }
-        finally {
-            this.processingSettingId = false;
-        }
+        return expression;
     }
 
-    private foldIfNeeded(expresson: Before.List, originalNode: Before.Expression, condition: boolean) {
-        if (condition) {
-            return this.foldLeft(expresson, originalNode);
+    private unwrap<T extends Before.Subscript>(expression: T): T["key"] {
+        assume(expression.key.type === "List" || expression.key.type === "Fold");
+
+        // Transform each element as the subscript of `expression.base`
+        if (expression.key.type === "List") {
+            return this.derived(expression.key, {
+                values: expression.key.values.map(v => this.derived(expression, { key: v }) as After.Subscript)
+            });
         }
         else {
-            return this.deriveLocation(originalNode, expresson);
+            return this.derived(expression.key, {
+                arg: this.derived(expression.key.arg, {
+                    values: expression.key.arg.values.map(v => this.derived(expression, { key: v }) as After.Subscript)
+                })
+            });
         }
     }
 
-    private foldLeft(expresson: Before.List, originalNode: Before.Expression): After.Expression {
-        if (expresson.fold === undefined) {
-            throw new CompileError("Ambiguous fold expression: use 'and' or 'or' instead of the last comma or use 'any of' or 'all of' before the list", expresson);
+    private foldIfNeeded(expression: Before.FoldExpression, originalNode: Before.Expression, condition: boolean) {
+        if (condition) {
+            return this.foldLeft(expression, originalNode);
         }
+        else {
+            return this.deriveLocation(originalNode, expression);
+        }
+    }
 
-        return expresson.values.reduce((l, r) => {
+    private foldLeft(expresson: Before.FoldExpression, originalNode: Before.Expression): After.Expression {
+        return expresson.arg.values.reduce((l, r) => {
             return this.deriveLocation(originalNode, <After.Expression> {
                 type: "Expression",
-                operator: expresson.fold,
+                operator: expresson.operator,
                 args: [l, r]
             });
         }) as After.Expression;

@@ -69,6 +69,108 @@ describe("Parser", () => {
             });
         });
 
+        describe("Lists", () => {
+            it("should parse empty lists", () => {
+                const { nodes, errors, maps } = parse('[]');
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps("[]", {
+                    type: "List",
+                    values: []
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            it.each([
+                { source: "any of", operator: "or" },
+                { source: "all of", operator: "and" }
+            ])("should parse fold expressions ($source variable)", ({ source, operator }) => {
+                const { nodes, errors, maps } = parse(`\x01${source} hello\x02`);
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps([1, 2], {
+                    type: "Fold",
+                    operator: operator,
+                    arg: maps.identifier("hello")
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            it.each([
+                { source: "any of", operator: "or" },
+                { source: "all of", operator: "and" }
+            ])("should parse fold expressions ($source list)", ({ source, operator }) => {
+                const { nodes, errors, maps } = parse(`\x01${source} [foo, bar]\x02`);
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps([1, 2], {
+                    type: "Fold",
+                    operator: operator,
+                    arg: maps("[foo, bar]", {
+                        type: "List",
+                        values: [
+                            maps.identifier("foo"),
+                            maps.identifier("bar")
+                        ]
+                    })
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+
+            it("should parse heterogeneous lists", () => {
+                const { nodes, errors, maps } = parse('\x01[foo, "bar", 123, aaa.bbb, [ddd, eee], any of [fff]]\x02');
+
+                expect(errors).toStrictEqual([]);
+                expect(nodes.length).toBe(1);
+
+                const expectedNode = maps([1, 2], {
+                    type: "List",
+                    values: [
+                        maps.identifier("foo"),
+                        maps('"bar"', { type: "String", value: "bar" }),
+                        maps("123", { type: "Number", value: 123 }),
+                        maps("aaa.bbb", {
+                            type: "Subscript",
+                            base: maps.identifier("aaa"),
+                            key: maps.identifier("bbb")
+                        }),
+                        maps("[ddd, eee]", {
+                            type: "List",
+                            values: [
+                                maps.identifier("ddd"),
+                                maps.identifier("eee")
+                            ]
+                        }),
+                        maps("any of [fff]", {
+                            type: "Fold",
+                            operator: "or",
+                            arg: maps("[fff]", {
+                                type: "List",
+                                values: [
+                                    maps.identifier("fff")
+                                ]
+                            })
+                        })
+                    ]
+                });
+
+                expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+                expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+            });
+        });
+
         describe("Subscript", () => {
             it("should parse 'identifier.identifier'", () => {
                 const { nodes, errors, maps } = parse("bar.baz");
@@ -102,7 +204,7 @@ describe("Parser", () => {
                 expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
             });
 
-            it("should parse a list of identifiers", () => {
+            it("should parse a list of identifiers in subscript", () => {
                 const { nodes, errors, maps } = parse("bar[aaa, bbb, ccc]");
 
                 expect(errors).toStrictEqual([]);
@@ -125,23 +227,26 @@ describe("Parser", () => {
                 expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
             });
 
-            it.each(["and", "or"])("should parse a list of identifiers (folded with '%s')", (fold) => {
-                const { nodes, errors, maps } = parse(`bar[aaa, bbb ${fold} ccc]`);
+            it.each(["and", "or"])("should parse a list of identifiers in subscript (folded with '%s')", (fold) => {
+                const { nodes, errors, maps } = parse(`\x01bar[\x03aaa, bbb ${fold} ccc\x04]\x02`);
 
                 expect(errors).toStrictEqual([]);
                 expect(nodes.length).toBe(1);
 
-                const expectedNode = maps(`bar[aaa, bbb ${fold} ccc]`, {
+                const expectedNode = maps([1, 2], {
                     type: "Subscript",
                     base: maps.identifier("bar"),
-                    key: maps(`aaa, bbb ${fold} ccc`, {
-                        type: "List",
-                        values: [
-                            maps.identifier("aaa"),
-                            maps.identifier("bbb"),
-                            maps.identifier("ccc"),
-                        ],
-                        fold: fold
+                    key: maps([3, 4], {
+                        type: "Fold",
+                        operator: fold,
+                        arg: maps([3, 4], {
+                            type: "List",
+                            values: [
+                                maps.identifier("aaa"),
+                                maps.identifier("bbb"),
+                                maps.identifier("ccc"),
+                            ]
+                        })
                     })
                 });
 

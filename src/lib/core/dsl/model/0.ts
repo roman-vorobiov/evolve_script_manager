@@ -29,15 +29,19 @@ export type Identifier = {
 
 export type List = {
     type: "List",
-    values: Expression[],
-    fold?: string
+    values: Expression[]
+}
+
+export type FoldExpression = {
+    type: "Fold",
+    operator: string,
+    arg: List | Identifier
 }
 
 export type Subscript = {
     type: "Subscript",
     base: Identifier,
-    key: Identifier | Symbol | Subscript | List,
-    explicitKeyFold?: "and" | "or"
+    key: Identifier | Symbol | Subscript | List | FoldExpression
 }
 
 export type CompoundExpression = {
@@ -50,7 +54,7 @@ export type Constant = StringLiteral | NumberLiteral | BooleanLiteral;
 
 export type SimpleExpression = Constant | EvalLiteral | Identifier;
 
-export type Expression = SimpleExpression | Subscript | List | CompoundExpression;
+export type Expression = SimpleExpression | Subscript | List | FoldExpression | CompoundExpression;
 
 export type SettingAssignment = {
     type: "SettingAssignment",
@@ -62,7 +66,7 @@ export type SettingAssignment = {
 export type SettingShift = {
     type: "SettingShift",
     setting: Identifier,
-    values: (Identifier | StringLiteral)[],
+    value: Identifier | List,
     operator: string,
     condition?: Expression
 }

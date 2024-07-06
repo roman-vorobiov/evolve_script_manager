@@ -180,7 +180,7 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should instantiate definitions with parameter packs as lists", () => {
+        it("should instantiate definitions with parameter packs as fold expressions", () => {
             const defNode = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
@@ -206,12 +206,15 @@ describe("Compiler", () => {
                     type: "Subscript",
                     base: { type: "Identifier", value: "$foo" },
                     key: {
-                        type: "List",
-                        fold: "or",
-                        values: [
-                            { type: "Identifier", value: "Copper" },
-                            { type: "Identifier", value: "Stone" },
-                        ]
+                        type: "Fold",
+                        operator: "or",
+                        arg: {
+                            type: "List",
+                            values: [
+                                { type: "Identifier", value: "Copper" },
+                                { type: "Identifier", value: "Stone" },
+                            ]
+                        }
                     }
                 }
             };
@@ -224,26 +227,28 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 value: from(originalNode.value, {
-                    type: "List",
-                    fold: originalNode.value.key.fold,
-                    values: [
-                        from(defNode.body, {
-                            args: [
-                                from(defNode.body.args[0], {
-                                    key: originalNode.value.key.values[0]
-                                }),
-                                defNode.body.args[1]
-                            ]
-                        }),
-                        from(defNode.body, {
-                            args: [
-                                from(defNode.body.args[0], {
-                                    key: originalNode.value.key.values[1]
-                                }),
-                                defNode.body.args[1]
-                            ]
-                        })
-                    ]
+                    type: "Fold",
+                    operator: "or",
+                    arg: from(originalNode.value.key.arg, {
+                        values: [
+                            from(defNode.body, {
+                                args: [
+                                    from(defNode.body.args[0], {
+                                        key: originalNode.value.key.arg.values[0]
+                                    }),
+                                    defNode.body.args[1]
+                                ]
+                            }),
+                            from(defNode.body, {
+                                args: [
+                                    from(defNode.body.args[0], {
+                                        key: originalNode.value.key.arg.values[1]
+                                    }),
+                                    defNode.body.args[1]
+                                ]
+                            })
+                        ]
+                    })
                 })
             });
 
@@ -251,8 +256,8 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should instantiate definitions with parameter packs as lists recursively", () => {
-            const defNode1: Parser.ExpressionDefinition = {
+        it("should instantiate definitions with parameter packs as fold expressions recursively", () => {
+            const defNode1 = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
                 body: {
@@ -288,12 +293,15 @@ describe("Compiler", () => {
                     type: "Subscript",
                     base: { type: "Identifier", value: "$bar" },
                     key: {
-                        type: "List",
-                        fold: "or",
-                        values: [
-                            { type: "Identifier", value: "Copper" },
-                            { type: "Identifier", value: "Stone" },
-                        ]
+                        type: "Fold",
+                        operator: "or",
+                        arg: {
+                            type: "List",
+                            values: [
+                                { type: "Identifier", value: "Copper" },
+                                { type: "Identifier", value: "Stone" },
+                            ]
+                        }
                     }
                 }
             };
@@ -307,28 +315,30 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 value: from(originalNode.value, {
-                    type: "List",
-                    fold: originalNode.value.key.fold,
-                    values: [
-                        from(defNode2.body, {
-                            args: [
-                                from(defNode2.body.args[0], {
-                                    ...defNode1.body,
-                                    key: originalNode.value.key.values[0]
-                                }),
-                                defNode2.body.args[1]
-                            ]
-                        }),
-                        from(defNode2.body, {
-                            args: [
-                                from(defNode2.body.args[0], {
-                                    ...defNode1.body,
-                                    key: originalNode.value.key.values[1]
-                                }),
-                                defNode2.body.args[1]
-                            ]
-                        })
-                    ]
+                    type: "Fold",
+                    operator: "or",
+                    arg: from (originalNode.value.key.arg, {
+                        values: [
+                            from(defNode2.body, {
+                                args: [
+                                    from(defNode2.body.args[0], {
+                                        ...defNode1.body,
+                                        key: originalNode.value.key.arg.values[0]
+                                    }),
+                                    defNode2.body.args[1]
+                                ]
+                            }),
+                            from(defNode2.body, {
+                                args: [
+                                    from(defNode2.body.args[0], {
+                                        ...defNode1.body,
+                                        key: originalNode.value.key.arg.values[1]
+                                    }),
+                                    defNode2.body.args[1]
+                                ]
+                            })
+                        ]
+                    })
                 })
             });
 
@@ -336,7 +346,7 @@ describe("Compiler", () => {
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should instantiate definitions with parameter packs from other variables as lists", () => {
+        it("should instantiate definitions with parameter packs from other variables", () => {
             const defNode1 = {
                 type: "ExpressionDefinition",
                 name: { type: "Identifier", value: "foo" },
@@ -387,66 +397,19 @@ describe("Compiler", () => {
 
             const expectedNode = from(originalNode, {
                 value: from(originalNode.value, {
-                    type: "List",
-                    values: [
-                        from(defNode2.body, {
-                            args: [
-                                from(defNode2.body.args[0], {
-                                    key: defNode1.body.values[0]
-                                }),
-                                defNode2.body.args[1]
-                            ]
+                    type: "Expression",
+                    operator: ">",
+                    args: [
+                        from(defNode2.body.args[0], {
+                            key: defNode1.body
                         }),
-                        from(defNode2.body, {
-                            args: [
-                                from(defNode2.body.args[0], {
-                                    key: defNode1.body.values[1]
-                                }),
-                                defNode2.body.args[1]
-                            ]
-                        })
+                        defNode2.body.args[1]
                     ]
                 })
             });
 
             expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
             expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
-        });
-
-        it("should throw on wildcards as arguments", () => {
-            const defNode = {
-                type: "ExpressionDefinition",
-                name: { type: "Identifier", value: "foo" },
-                body: {
-                    type: "Subscript",
-                    base: { type: "Identifier", value: "SettingCurrent" },
-                    key: {
-                        type: "Subscript",
-                        base: { type: "Identifier", value: "AutoSell" },
-                        key: { type: "Placeholder" }
-                    }
-                },
-                parameterized: true
-            };
-
-            const originalNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "hello" },
-                value: {
-                    type: "Subscript",
-                    base: { type: "Identifier", value: "$foo" },
-                    key: { type: "Wildcard" }
-                }
-            };
-
-            const { errors } = inlineReferences([
-                <Parser.ExpressionDefinition> defNode,
-                <Parser.SettingAssignment> originalNode
-            ]);
-            expect(errors.length).toEqual(1);
-
-            expect(errors[0].message).toEqual("Wildcards are only supported for setting prefixes");
-            expect(errors[0].offendingEntity).toBe(originalNode.value.key);
         });
 
         it("should throw on missing arguments", () => {

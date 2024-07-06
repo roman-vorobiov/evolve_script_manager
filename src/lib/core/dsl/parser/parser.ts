@@ -54,8 +54,12 @@ class NodeFactory {
         return this.trackLocation({ type: "Subscript", base, key }, context);
     }
 
-    list(values: Parser.Expression[], fold: string | undefined, context: SourceEntity): Parser.List {
-        return this.trackLocation({ type: "List", values, fold }, context);
+    list(values: Parser.Expression[], context: SourceEntity): Parser.List {
+        return this.trackLocation({ type: "List", values }, context);
+    }
+
+    fold(arg: Parser.List | Parser.Identifier, operator: string, context: SourceEntity): Parser.FoldExpression {
+        return this.trackLocation({ type: "Fold", arg, operator }, context);
     }
 }
 
@@ -73,7 +77,7 @@ class ExpressionGetter extends DSLVisitor<any> {
             return this.nodeFactory.expression(ctx._op.text!, args, ctx);
         }
         else {
-            const expression = (ctx.unaryExpression() || ctx.expression(0))!;
+            const expression = ctx.nullaryExpression() ?? ctx.expression(0)!;
             return this.visit(expression)!;
         }
     }
@@ -85,18 +89,10 @@ class ExpressionGetter extends DSLVisitor<any> {
     visitSubscriptExpression = (ctx: Context.SubscriptExpressionContext): Parser.Subscript => {
         const baseNode = this.visit(ctx.identifier(0)!);
 
-        const subscript = ctx.identifier(1) ?? ctx.subscript();
-        const subscriptNode = this.visit(subscript!)!;
+        const subscript = ctx.identifier(1) ?? ctx.subscript()!;
+        const subscriptNode = this.visit(subscript);
 
-        const node = this.nodeFactory.subscript(baseNode, subscriptNode, ctx);
-        if (ctx._conjunction) {
-            node.explicitKeyFold = "and";
-        }
-        else if (ctx._disjunction) {
-            node.explicitKeyFold = "or";
-        }
-
-        return node;
+        return this.nodeFactory.subscript(baseNode, subscriptNode, ctx);
     }
 
     visitWildcard = (ctx: Context.WildcardContext): Parser.Symbol => {
@@ -108,13 +104,37 @@ class ExpressionGetter extends DSLVisitor<any> {
     }
 
     visitListExpression = (ctx: Context.ListExpressionContext) => {
-        const contents = ctx.listItem().map(id => this.visit(id)!);
-        return this.nodeFactory.list(contents, undefined, ctx);
+        const contents = ctx.listContents();
+
+        if (contents !== null) {
+            return this.nodeFactory.list(contents.listItem().map(id => this.visit(id)!), ctx);
+        }
+        else {
+            return this.nodeFactory.list([], ctx);
+        }
     }
 
     visitListContents = (ctx: Context.ListContentsContext): Parser.List => {
         const contents = ctx.listItem().map(id => this.visit(id)!);
-        return this.nodeFactory.list(contents, ctx._fold?.text, ctx);
+        return this.nodeFactory.list(contents, ctx);
+    }
+
+    visitFoldedListContents = (ctx: Context.FoldedListContentsContext) => {
+        const contents = ctx.listItem().map(id => this.visit(id)!);
+        const arg = this.nodeFactory.list(contents, ctx);
+        const operator = ctx._fold!.text!;
+        return this.nodeFactory.fold(arg, operator, ctx);
+    }
+
+    visitPrefixedFoldExpression = (ctx: Context.PrefixedFoldExpressionContext) => {
+        const arg = this.visit(ctx.identifier() ?? ctx.listExpression()!);
+        const operator = ctx._conjunction ? "and" : "or";
+        return this.nodeFactory.fold(arg, operator, ctx);
+    }
+
+    visitDefinitionParameters = (ctx: Context.DefinitionParametersContext) => {
+        const contents = ctx.identifier().map(id => this.visit(id));
+        return this.nodeFactory.list(contents, ctx);
     }
 
     visitEvalLiteral = (ctx: Context.EvalLiteralContext): Parser.EvalLiteral => {
@@ -148,8 +168,9 @@ class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
     }
 
     visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext): Parser.TriggerArgument => {
-        const [type, id] = ctx.identifier();
-        const count = ctx.numberLiteral();
+        const type = ctx.identifier(0)!;
+        const id = ctx.identifier(1)!;
+        const count = ctx.numberLiteral() ?? ctx.identifier(2);
 
         let node: Parser.TriggerArgument = {
             type: this.expressionGetter.visit(type),
@@ -265,19 +286,12 @@ class Visitor extends DSLVisitor<void> {
     visitSettingShift = (ctx: Context.SettingShiftContext) => {
         const settingName = this.expressionGetter.visit(ctx.identifier());
         const operator = ctx._op!.text!;
-
-        let settingValues;
-        if (ctx.listItem() !== null) {
-            settingValues = [this.expressionGetter.visit(ctx.listItem()!)];
-        }
-        else {
-            settingValues = (this.expressionGetter.visit(ctx.listExpression()!) as Parser.List).values;
-        }
+        const value = this.expressionGetter.visit(ctx.listItem() ?? ctx.listExpression()!);
 
         const node = this.addNode<Parser.SettingShift>(ctx, {
             type: "SettingShift",
             setting: settingName,
-            values: settingValues,
+            value,
             operator
         });
 
@@ -298,7 +312,7 @@ class Visitor extends DSLVisitor<void> {
 
     visitStatementDefinition = (ctx: Context.StatementDefinitionContext) => {
         const name = this.expressionGetter.visit(ctx.identifier());
-        const params = ctx.listItem().map(i => this.expressionGetter.visit(i));
+        const params = ctx.definitionParameters() ? this.expressionGetter.visit(ctx.definitionParameters()!).values : [];
 
         this.addNode<Parser.StatementDefinition>(ctx, {
             type: "StatementDefinition",
@@ -310,7 +324,7 @@ class Visitor extends DSLVisitor<void> {
 
     visitCallStatement = (ctx: Context.CallStatementContext) => {
         const name = this.expressionGetter.visit(ctx.identifier());
-        const args = ctx.listItem().map(i => this.expressionGetter.visit(i));
+        const args = ctx.listContents() ? this.expressionGetter.visit(ctx.listContents()!).values : [];
 
         this.addNode<Parser.FunctionCall>(ctx, {
             type: "FunctionCall",

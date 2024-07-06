@@ -17,15 +17,19 @@ export type List = Modify<Previous.List, {
     values: Expression[]
 }>
 
+export type FoldExpression = Modify<Previous.FoldExpression, {
+    arg: List
+}>
+
 export type Subscript = Modify<Previous.Subscript, {
-    key: Identifier | Symbol | Subscript | List
+    key: Identifier | Symbol | Subscript | List | FoldExpression
 }>
 
 export type CompoundExpression = Modify<Previous.CompoundExpression, {
     args: Expression[]
 }>
 
-export type Expression = SimpleExpression | Subscript | List | CompoundExpression;
+export type Expression = SimpleExpression | Subscript | List | FoldExpression | CompoundExpression;
 
 export type SettingAssignment = {
     type: "SettingAssignment",

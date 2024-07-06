@@ -60,6 +60,9 @@ function expressionValueType(expression: Parser.Expression, arg?: Parser.Subscri
             if (arg.type === "List") {
                 return getCommonListType(arg, getSettingType);
             }
+            else if (arg.type === "Fold") {
+                return getCommonListType(arg.arg as Parser.List, getSettingType);
+            }
             else if (arg.type === "Identifier" || arg.type === "Subscript") {
                 return getSettingType(arg);
             }
@@ -73,6 +76,9 @@ function expressionValueType(expression: Parser.Expression, arg?: Parser.Subscri
     }
     else if (expression.type === "List") {
         return getCommonListType(expression, expressionValueType);
+    }
+    else if (expression.type === "Fold") {
+        return expressionValueType(expression.arg);
     }
     else if (expression.type === "Boolean") {
         return "boolean";
@@ -127,17 +133,12 @@ abstract class BaseVisitor {
 
 export abstract class ExpressionVisitor extends BaseVisitor {
     visit(expression: Parser.Expression | Parser.Symbol, parent?: Parser.Expression): Parser.Expression {
-        if (expression.type === "Expression") {
-            return this.visitExpression(expression as Parser.CompoundExpression, parent);
+        if (`visit${expression.type}` in this) {
+            return (this as any)[`visit${expression.type}`](expression, parent);
         }
-        else if (expression.type === "List") {
-            return this.visitList(expression as Parser.List, parent);
+        else {
+            return (this as any)[`on${expression.type}`]?.(expression, parent) ?? expression;
         }
-        else if (expression.type === "Subscript") {
-            return this.visitSubscript(expression as Parser.Subscript, parent);
-        }
-
-        return (this as any)[`on${expression.type}`]?.(expression, parent) ?? expression;
     }
 
     visitAll(expressions: Parser.Expression[], parent?: Parser.Expression): Parser.Expression[] {
@@ -155,6 +156,11 @@ export abstract class ExpressionVisitor extends BaseVisitor {
         return this.onList(expression, values, parent) ?? expression;
     }
 
+    protected visitFold(expression: Parser.FoldExpression, parent?: Parser.Expression): Parser.Expression {
+        const arg = this.visit(expression.arg, expression) as Parser.List;
+        return this.onFold(expression, arg, parent) ?? expression;
+    }
+
     protected visitSubscript(expression: Parser.Subscript, parent?: Parser.Expression): Parser.Expression {
         const key = this.visit(expression.key, expression) as Parser.Subscript["key"];
         return this.onSubscript(expression, key, parent) ?? expression;
@@ -166,6 +172,10 @@ export abstract class ExpressionVisitor extends BaseVisitor {
 
     protected onList(expression: Parser.List, values: Parser.List["values"], parent?: Parser.Expression): Parser.Expression | undefined {
         return this.derived(expression, { values });
+    }
+
+    protected onFold(expression: Parser.FoldExpression, arg: Parser.FoldExpression["arg"], parent?: Parser.Expression): Parser.Expression | undefined {
+        return this.derived(expression, { arg });
     }
 
     protected onSubscript(expression: Parser.Subscript, key: Parser.Subscript["key"], parent?: Parser.Expression): Parser.Expression | undefined {
@@ -223,23 +233,23 @@ export abstract class StatementVisitor<BeforeT extends ModelEntity, AfterT exten
         }
     }
 
-    visitConditionBlock(statement: Parser.ConditionBlock): AfterT {
+    visitConditionBlock(statement: any): AfterT {
         const body = this.visitAll(statement.body as any);
         return this.onConditionBlock(statement, body as any) ?? statement as unknown as AfterT;
     }
 
-    visitSettingShiftBlock(statement: Parser.SettingShiftBlock): AfterT {
+    visitSettingShiftBlock(statement: any): AfterT {
         const body = this.visitAll(statement.body as any);
         return this.onSettingShiftBlock(statement, body as any) ?? statement as unknown as AfterT;
     }
 
-    onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): AfterT | undefined {
+    onConditionBlock(statement: any, body: any): AfterT | undefined {
         if (differentLists(body, statement.body)) {
             return this.derived(statement, { body }) as unknown as AfterT;
         }
     }
 
-    onSettingShiftBlock(statement: Parser.SettingShiftBlock, body: Parser.SettingShiftBlock["body"]): AfterT | undefined {
+    onSettingShiftBlock(statement: any, body: any): AfterT | undefined {
         if (differentLists(body, statement.body)) {
             return this.derived(statement, { body }) as unknown as AfterT;
         }
@@ -276,21 +286,21 @@ export abstract class GeneratingStatementVisitor<BeforeT extends ModelEntity, Af
         }
     }
 
-    *visitConditionBlock(statement: Parser.ConditionBlock): IterableIterator<AfterT> {
+    *visitConditionBlock(statement: any): IterableIterator<AfterT> {
         const body = this.visitAll(statement.body as any);
         yield* this.onConditionBlock(statement, body as any);
     }
 
-    *visitSettingShiftBlock(statement: Parser.SettingShiftBlock): IterableIterator<AfterT> {
+    *visitSettingShiftBlock(statement: any): IterableIterator<AfterT> {
         const body = this.visitAll(statement.body as any);
         yield* this.onSettingShiftBlock(statement, body as any);
     }
 
-    *onConditionBlock(statement: Parser.ConditionBlock, body: Parser.ConditionBlock["body"]): IterableIterator<AfterT> {
+    *onConditionBlock(statement: any, body: any): IterableIterator<AfterT> {
         yield this.derived(statement, { body }) as unknown as AfterT;
     }
 
-    *onSettingShiftBlock(statement: Parser.SettingShiftBlock, body: Parser.SettingShiftBlock["body"]): IterableIterator<AfterT> {
+    *onSettingShiftBlock(statement: any, body: any): IterableIterator<AfterT> {
         yield this.derived(statement, { body }) as unknown as AfterT;
     }
 }

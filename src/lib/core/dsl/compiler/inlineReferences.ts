@@ -31,10 +31,15 @@ export class ReferenceInliner extends ExpressionVisitor {
         super(sourceMap);
     }
 
+    onFold(expression: Before.FoldExpression, arg: Before.FoldExpression['arg']): After.Expression {
+        validateType(arg, expression.arg, "List");
+        return this.derived(expression, { arg: arg as After.List });
+    }
+
     visitSubscript(expression: Before.Subscript): After.Expression {
         const key = this.visit(expression.key, expression);
         if (key !== expression.key) {
-            validateType(key, expression.key, "Identifier", "Subscript", "List");
+            validateType(key, expression.key, "Identifier", "Subscript", "List", "Fold");
         }
 
         const base = this.visit(expression.base, expression) as After.Expression | Before.ExpressionDefinition;
@@ -43,7 +48,7 @@ export class ReferenceInliner extends ExpressionVisitor {
                 throw new CompileError("Identifier expected", expression.base);
             }
 
-            const instance = this.instantiate(base.body, key as After.Subscript["key"], expression.explicitKeyFold);
+            const instance = this.instantiate(base.body, key, expression);
             return this.deriveLocation(expression, instance);
         }
         else {
@@ -69,7 +74,7 @@ export class ReferenceInliner extends ExpressionVisitor {
             }
 
             if (!definition.parameterized) {
-                return this.deriveLocation(expression, definition.body);
+                return this.deriveLocation(expression, definition.body) as After.Expression;
             }
 
             if (!(parent?.type === "Subscript" && parent.base === expression)) {
@@ -80,20 +85,23 @@ export class ReferenceInliner extends ExpressionVisitor {
         }
     }
 
-    private instantiate(prototype: Before.Expression, arg: Before.Subscript["key"], explicitFold?: "and" | "or"): After.Expression {
-        if (arg.type === "List") {
-            return {
-                type: "List",
-                fold: explicitFold ?? arg.fold,
-                values: arg.values.map(v => this.instantiate(prototype, v as Before.Subscript["key"]))
-            };
-        }
-        else if (arg.type === "Wildcard") {
-            throw new CompileError("Wildcards are only supported for setting prefixes", arg);
+    private instantiate(prototype: Before.Expression, arg: Before.Expression, instantiationSite: Before.Expression): After.Expression {
+        if (arg.type === "Fold") {
+            if (arg.arg.type === "Identifier") {
+                throw new CompileError("List expected, got Identifier", arg.arg);
+            }
+
+            return this.deriveLocation(instantiationSite, {
+                type: "Fold",
+                operator: arg.operator,
+                arg: this.derived(arg.arg, {
+                    values: arg.arg.values.map(v => this.instantiate(prototype, v, v))
+                })
+            });
         }
         else {
             const parameterResolver = new PlaceholderResolver(this.sourceMap, () => arg);
-            return parameterResolver.visit(prototype);
+            return parameterResolver.visit(prototype) as After.Expression;
         }
     }
 }
@@ -160,7 +168,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
     }
 
-    *onConditionBlock(statement: Before.ConditionBlock, body: After.Statement[]): IterableIterator<After.ConditionBlock> {
+    *onConditionBlock(statement: Before.ConditionBlock, body: Before.Statement[]): IterableIterator<After.ConditionBlock> {
         const condition = this.resolveReferences(statement.condition);
 
         yield this.derived(statement, { condition, body }) as After.ConditionBlock;
@@ -178,8 +186,18 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
 
     *onSettingShift(statement: Before.SettingShift): IterableIterator<After.SettingShift> {
         const setting = this.resolveReferences(statement.setting);
-        const values = this.resolveReferences(statement.values);
+        const value = this.resolveReferences(statement.value);
         const condition = statement.condition && this.resolveReferences(statement.condition);
+
+        let values: After.Identifier[] | After.StringLiteral[];
+        if (value.type === "List") {
+            value.values.forEach(v => validateType(v, statement.value, "Identifier", "String"));
+            values = value.values as After.Identifier[] | After.StringLiteral[];
+        }
+        else {
+            validateType(setting, statement.setting, "Identifier", "String");
+            values = [value] as After.Identifier[] | After.StringLiteral[];
+        }
 
         validateType(setting, statement.setting, "Identifier");
 
@@ -223,7 +241,9 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         const count = arg.count && this.resolveReferences(arg.count);
 
         validateType(id, arg.id, "Identifier");
-        count && validateType(count, arg.count, "Number");
+        if (count !== undefined) {
+            validateType(count, arg.count, "Number");
+        }
 
         return this.derived(arg, { id, count }) as After.TriggerArgument;
     }
@@ -311,7 +331,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
             return visitor.visitAll(expression);
         }
         else {
-            return visitor.visit(expression);
+            return visitor.visit(expression) as After.Expression;
         }
     }
 
