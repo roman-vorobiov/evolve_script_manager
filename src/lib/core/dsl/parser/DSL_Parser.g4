@@ -7,11 +7,15 @@ options {
 // Statements
 
 root
-    : (statements | EOL)* EOF
+    : lines EOF
     ;
 
-statements
-    : statement (EOL statement)*
+lines
+    : line (EOL line)*
+    ;
+
+line
+    : statement?
     ;
 
 statement
