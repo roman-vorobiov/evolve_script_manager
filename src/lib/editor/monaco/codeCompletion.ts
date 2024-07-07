@@ -1,6 +1,6 @@
 import { prefixes, settings } from "$lib/core/domain/settings";
 import settingEnums from "$lib/core/domain/settingEnums";
-import { expressions } from "$lib/core/domain/expressions";
+import { expressions, otherExpressions } from "$lib/core/domain/expressions";
 import { triggerActions, triggerConditions } from "$lib/core/domain/triggers";
 
 import * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
@@ -100,7 +100,7 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
         }
     }
     else if (insideCondition(tokenStack)) {
-        return Object.keys(expressions);
+        return [...Object.keys(expressions), ...Object.keys(otherExpressions)];
     }
     else if (insideImport(tokenStack)) {
         return Object.fromEntries(state.configs.map(cfg => [cfg.name, cfg.name]));
