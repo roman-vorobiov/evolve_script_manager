@@ -85,18 +85,19 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
 
         const expressionInfo = expressions[prefix];
         if (expressionInfo !== undefined) {
-            let candidates = expressionInfo.allowedValues.filter(Boolean);
+            let candidates = expressionInfo.allowedValues;
             if (prefix === "SettingCurrent" || prefix === "SettingDefault") {
-                candidates = [...Object.keys(prefixes), ...candidates];
+                return [...Object.keys(prefixes), ...Object.keys(candidates)];
             }
-
-            return candidates;
+            else {
+                return candidates;
+            }
         }
     }
     else if (isAssignee(tokenStack)) {
         const enumValues = settingEnums[tokenStack[0]] ?? settingEnums[tokenStack[1]];
         if (enumValues !== undefined) {
-            return enumValues;
+            return Object.fromEntries(Object.entries(enumValues).map(([text, label]) => [`"${text}"`, label]));
         }
     }
     else if (insideCondition(tokenStack)) {
@@ -160,7 +161,7 @@ export class CodeCompletionProvider implements Monaco.languages.CompletionItemPr
                 incomplete: false,
                 suggestions: Object.entries(candidates).map(([text, label]) => ({
                     label,
-                    insertText: `"${text}"`,
+                    insertText: text,
                     kind: Monaco.languages.CompletionItemKind.Field,
                     range
                 }))

@@ -1,19 +1,17 @@
 import buildings from "./buildings";
-import tech from "./tech";
+import techNames from "./tech";
 import projects from "./projects";
 
-const techIds = Object.keys(tech);
-const buildingIds = Object.keys(buildings);
-const projectIds = Object.keys(projects);
+const techs = Object.fromEntries(Object.entries(techNames).map(([id, names]) => [id, names[0]]));
 
 export const triggerConditions = {
-    Unlocked:   { type: "tech",     allowedValues: techIds },
-    Researched: { type: "tech",     allowedValues: techIds },
-    Built:      { type: "building", allowedValues: buildingIds }
+    Unlocked:   { type: "tech",     allowedValues: techs },
+    Researched: { type: "tech",     allowedValues: techs },
+    Built:      { type: "building", allowedValues: buildings }
 }
 
 export const triggerActions = {
-    Build:    { type: "building", allowedValues: buildingIds },
-    Research: { type: "tech",     allowedValues: techIds },
-    Arpa:     { type: "project",  allowedValues: projectIds }
+    Build:    { type: "building", allowedValues: buildings },
+    Research: { type: "tech",     allowedValues: techs },
+    Arpa:     { type: "project",  allowedValues: projects }
 }

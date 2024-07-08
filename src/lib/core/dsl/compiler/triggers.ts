@@ -80,7 +80,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
             throw new CompileError(`Unknown trigger requirement '${arg.type.value}'`, arg.type);
         }
 
-        if (!info.allowedValues.includes(arg.id.value)) {
+        if (!(arg.id.value in info.allowedValues)) {
             throw new CompileError(`Unknown ${info.type} '${arg.id.value}'`, arg.id);
         }
     }
@@ -92,7 +92,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
             throw new CompileError(`Unknown trigger action '${arg.type.value}'`, arg.type);
         }
 
-        if (!info.allowedValues.includes(arg.id.value)) {
+        if (!(arg.id.value in info.allowedValues)) {
             throw new CompileError(`Unknown ${info.type} '${arg.id.value}'`, arg.id);
         }
     }

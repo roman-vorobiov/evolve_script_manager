@@ -87,7 +87,7 @@ const tpShipSensor = fromArray([
 
 const governmentOptions = {
     none: "None",
-    ...fromArrayCapitalized(governments)
+    ...governments
 };
 
 const priorityOptions = {
@@ -107,13 +107,13 @@ const spendOptions = {
 
 const genusOptions = {
     ignore: "Ignore",
-    ...fromArrayCapitalized(mimicGenera)
+    ...mimicGenera
 };
 
 export default <Record<string, Record<string, string>>> {
     userUniverseTargetName: {
         none: "None",
-        ...fromArrayCapitalized(universes)
+        ...universes
     },
 
     userPlanetTargetName: {
@@ -222,7 +222,7 @@ export default <Record<string, Record<string, string>>> {
 
     govGovernor: {
         none: "None",
-        ...fromArrayCapitalized(governors)
+        ...governors
     },
 
     userResearchTheology_1: {

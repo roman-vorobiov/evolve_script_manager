@@ -1,25 +1,24 @@
 import { challenges } from "./challenges";
-import { races as raceNames, pseudoRaces } from "./races";
+import { races as normalRaces, pseudoRaces } from "./races";
 import { playableGenera, mimicGenera } from "./genera";
-import { traits as traitNames } from "./traits";
-import { settings } from "./settings";
-import buildingNames from "./buildings";
+import { traits } from "./traits";
+import { settings as settingIDs } from "./settings";
+import buildings from "./buildings";
 import researchNames from "./tech";
-import projectNames from "./projects";
-import { resources as resourceNames } from "./resources";
-import { jobs as jobNames, servantJobs as servantJobNames, crafters as crafterJobsNames } from "./jobs";
+import projects from "./projects";
+import { resources } from "./resources";
+import { jobs as normalJobs, servantJobs, crafters } from "./jobs";
 import * as enums from "./enums";
 
-const buildings = Object.keys(buildingNames);
-const projects = Object.keys(projectNames);
-const researches = Object.keys(researchNames);
-const resources = Object.keys(resourceNames);
-const jobs = [...Object.keys(jobNames), ...Object.keys(crafterJobsNames)];
-const servantJobs = Object.keys(servantJobNames);
-const resetTypes = Object.keys(enums.resetTypes);
-const races = [...Object.values(raceNames), ...Object.keys(pseudoRaces)];
-const traits = Object.keys(traitNames);
-const queueTypes = Object.keys(enums.queueTypes);
+function listToMap(values: string[]): Record<string, string> {
+    return Object.fromEntries(values.map(v => [v, v]))
+}
+
+const settings = listToMap(settingIDs);
+const researches = Object.fromEntries(Object.entries(researchNames).map(([key, values]) => [key, values[0]]));
+const jobs = { ...normalJobs, ...crafters };
+const races = { ...listToMap(Object.values(normalRaces)), ...listToMap(Object.keys(pseudoRaces)) };
+const queueTypes = listToMap(Object.keys(enums.queueTypes));
 
 function speciesAlias(value: string): string {
     return pseudoRaces[value as keyof typeof pseudoRaces] ?? value;
@@ -36,7 +35,7 @@ function arpaAlias(value: string): string {
 export type ExpressionType = {
     type: "string" | "number" | "boolean" | null,
     valueDescription: string,
-    allowedValues: string[],
+    allowedValues: Record<string, string>,
     alias?: (value: string) => string
 }
 
@@ -83,11 +82,11 @@ export const expressions: Record<string, ExpressionType> = {
 
     TraitLevel:           { type: "number",  valueDescription: "trait", allowedValues: traits },
 
-    ResetType:            { type: "boolean", valueDescription: "reset type", allowedValues: resetTypes },
+    ResetType:            { type: "boolean", valueDescription: "reset type", allowedValues: enums.resetTypes },
 
     Challenge:            { type: "boolean", valueDescription: "challenge", allowedValues: challenges },
 
-    Universe:             { type: "boolean", valueDescription: "universe", allowedValues: ["bigbang", ...enums.universes] },
+    Universe:             { type: "boolean", valueDescription: "universe", allowedValues: { "bigbang": "Big Bang", ...enums.universes } },
 
     PlanetBiome:          { type: "boolean", valueDescription: "biome", allowedValues: enums.planetaryBiomes },
 
@@ -95,7 +94,7 @@ export const expressions: Record<string, ExpressionType> = {
 
     Government:           { type: "boolean", valueDescription: "government", allowedValues: enums.governments },
 
-    Governor:             { type: "boolean", valueDescription: "governor", allowedValues: ["none", ...enums.governors] },
+    Governor:             { type: "boolean", valueDescription: "governor", allowedValues: { "none": "None", ...enums.governors } },
 
     Queue:                { type: "number",  valueDescription: "queue", allowedValues: queueTypes, alias: queueAlias },
 
@@ -119,12 +118,4 @@ export const otherExpressions: Record<string, OtherExpressionType> = {
     TechKnowledge:    { type: "number", aliasFor: "tknow" },
 };
 
-export const otherExpressionsAliases = {
-    rname:   "RaceName",
-    tpfleet: "FleetSize",
-    mrelay:  "MassRelayCharge",
-    satcost: "SatelliteCost",
-    bcar:    "BrokenCars",
-    alevel:  "ActiveChallenges",
-    tknow:   "TechKnowledge",
-};
+export const otherExpressionsAliases = Object.fromEntries(Object.entries(otherExpressions).map(([name, { aliasFor }]) => [aliasFor, name]));
