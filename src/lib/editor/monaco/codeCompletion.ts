@@ -79,11 +79,12 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
     const prefix = tryGetPrefix(tokenStack);
     if (prefix !== undefined) {
         const settingInfo = prefixes[prefix];
-        if (settingInfo !== undefined) {
+        const expressionInfo = expressions[prefix];
+
+        if (settingInfo !== undefined && !(expressionInfo !== undefined && insideCondition(tokenStack))) {
             return settingInfo.allowedSuffixes;
         }
 
-        const expressionInfo = expressions[prefix];
         if (expressionInfo !== undefined) {
             let candidates = expressionInfo.allowedValues;
             if (prefix === "SettingCurrent" || prefix === "SettingDefault") {
