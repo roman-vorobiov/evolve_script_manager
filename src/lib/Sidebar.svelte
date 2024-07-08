@@ -8,7 +8,7 @@
         FilePlus2 as FilePlus,
         FileDown,
         ClipboardCopy,
-        Settings
+        CircleHelp
     } from "lucide-svelte";
 
     import type { State } from "$lib/core/state";
@@ -81,9 +81,9 @@
         disabled={state.activeConfig === null || !("sendMessageToEvolveTab" in window)}
     />
 
-    <!-- <SidebarButton
-        description="Settings"
-        icon={Settings}
-        disabled={true}
-    /> -->
+    <SidebarButton
+        description="About"
+        icon={CircleHelp}
+        href="https://github.com/roman-vorobiov/evolve_script_manager"
+    />
 </div>

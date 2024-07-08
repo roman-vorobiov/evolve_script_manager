@@ -6,6 +6,7 @@ A tool to help you manage your configs for Vollch's [automation script](https://
 
 You need to add config files to the workspace - you can do this by uploading an existing JSON config (that you've exported from the game) or by creating a new one from scratch using the custom language.
 The default format is using the custom language - to opt out and use the JSON simply add the `.json` extension to the file name.
+
 Then you can browse all the configs in the workspace, preview the changes compared to the default settings, download, copy to clipboard or, if you have the helper userscript enabled, upload the selected config directly to the game tab with a single button.
 
 ## Custom language
