@@ -2,7 +2,7 @@
     import ConfigBrowserItemForm from "./ConfigBrowserItemForm.svelte";
     import * as ContextMenu from "$lib/components/ui/context-menu";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
-    import { FileText as File } from "lucide-svelte";
+    import { FileText, FileJson } from "lucide-svelte";
 
     import type { State, Config } from "./core/state";
 
@@ -13,6 +13,8 @@
     let editable = false;
 
     $: active = config.name === state.activeConfig;
+
+    $: Icon = config.name.endsWith(".json") ? FileJson : FileText;
 
     function makeActive() {
         if (!editable) {
@@ -69,7 +71,7 @@
                 on:focusout={() => removeKeyHandler(editTrigger)}
             >
                 <div>
-                    <File class="size-4 mt-[4px] mr-2 ml-1"/>
+                    <Icon class="size-4 mt-[4px] mr-2 ml-1"/>
                 </div>
                 {#if editable}
                     <ConfigBrowserItemForm

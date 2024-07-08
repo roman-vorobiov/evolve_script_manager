@@ -1,0 +1,41 @@
+{
+    "overrides": {},
+    "triggers": [
+        {
+            "seq": 0,
+            "priority": 0,
+            "requirementType": "built",
+            "requirementId": "space-moon_mission",
+            "requirementCount": 1,
+            "actionType": "build",
+            "actionId": "space-moon_base",
+            "actionCount": 1,
+            "complete": false
+        },
+        {
+            "seq": 1,
+            "priority": 1,
+            "requirementType": "built",
+            "requirementId": "space-moon_base",
+            "requirementCount": 1,
+            "actionType": "build",
+            "actionId": "space-iridium_mine",
+            "actionCount": 1,
+            "complete": false
+        },
+        {
+            "seq": 2,
+            "priority": 2,
+            "requirementType": "built",
+            "requirementId": "space-moon_base",
+            "requirementCount": 1,
+            "actionType": "build",
+            "actionId": "space-helium_mine",
+            "actionCount": 1,
+            "complete": false
+        }
+    ],
+    "researchIgnore": [
+        "tech-purify"
+    ]
+}

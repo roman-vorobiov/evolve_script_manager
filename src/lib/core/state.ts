@@ -18,8 +18,12 @@ export class State {
         public browserOpen: boolean = false
     ) {}
 
-    findConfig(configName: string) {
+    findConfig(configName: string): Config | undefined {
         return this.configs.find(cfg => cfg.name === configName);
+    }
+
+    getActiveConfig(): Config | undefined {
+        return this.activeConfig ? this.findConfig(this.activeConfig) : undefined;
     }
 
     addConfig(config: Config) {
@@ -30,7 +34,7 @@ export class State {
         this.invokeCallbacks(this.onActiveConfigChangedCallbacks, config);
     }
 
-    removeConfig(config: Config) {
+    removeConfig(config: Config): boolean {
         const idx = this.configs.indexOf(config);
         if (idx !== -1) {
             if (this.activeConfig === config.name) {
@@ -61,8 +65,6 @@ export class State {
     setActive(config: Config) {
         this.activeConfig = config.name;
         this.invokeCallbacks(this.onActiveConfigChangedCallbacks, config);
-
-        return true;
     }
 
     onConfigAdded(callback: ConfigCallback) {

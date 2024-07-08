@@ -41,9 +41,7 @@
             <ContextMenu.Trigger class="size-full"/>
             <ContextMenu.Content>
                 <ContextMenu.Item on:click={() => newConfigPending = true}>New Config</ContextMenu.Item>
-                <ContextMenu.Item disabled>Import Config</ContextMenu.Item>
             </ContextMenu.Content>
         </ContextMenu.Root>
     </div>
 </ScrollArea.Root>
-

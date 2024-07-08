@@ -6,7 +6,7 @@
         Eye,
         Upload,
         FilePlus2 as FilePlus,
-        Download,
+        FileDown,
         ClipboardCopy,
         Settings
     } from "lucide-svelte";
@@ -62,7 +62,7 @@
 
     <SidebarButton
         description="Download"
-        icon={Download}
+        icon={FileDown}
         on:click={handleDownload}
         disabled={state.activeConfig === null}
     />

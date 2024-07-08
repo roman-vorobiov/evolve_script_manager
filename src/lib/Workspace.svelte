@@ -20,11 +20,9 @@
         }
     };
 
-    $: model = Object.fromEntries(state.configs.map(cfg => [cfg.name, cfg.source]));
-
     $: {
         if (state.activeConfig !== null) {
-            compiler.postMessage({ model, target: state.activeConfig });
+            compiler.postMessage({ configs: state.configs, target: state.activeConfig });
         }
     }
 </script>

@@ -39,7 +39,7 @@
         {#if !isEmpty && state.previewOpen}
             <Resizable.Handle withHandle />
             <Resizable.Pane order={3} defaultSize={30}>
-                <ConfigPreview config={compiledConfig}/>
+                <ConfigPreview config={compiledConfig} diffOnly={state.activeConfig?.endsWith(".json")}/>
             </Resizable.Pane>
         {/if}
     </Resizable.PaneGroup>

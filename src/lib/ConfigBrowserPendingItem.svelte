@@ -1,5 +1,6 @@
 <script lang="ts">
-    import defaultSource from "$lib/assets/defaultSource.txt?raw";
+    import defaultSourceDSL from "$lib/assets/defaultSource.txt?raw";
+    import defaultSourceJSON from "$lib/assets/defaultSource.json?raw";
 
     import ConfigBrowserItemForm from "./ConfigBrowserItemForm.svelte";
     import { File } from "lucide-svelte";
@@ -9,13 +10,13 @@
     export let state: State;
     export let callback: () => void;
 
-    let config: Config = {
-        name: "",
-        source: defaultSource
-    }
+    let config: Config = { name: "", source: "" };
 
     function onFinishedEditing() {
-        state.addConfig(config);
+        state.addConfig({
+            name: config.name,
+            source: config.name.endsWith(".json") ? defaultSourceJSON : defaultSourceDSL
+        })
         state = state;
         callback();
     }

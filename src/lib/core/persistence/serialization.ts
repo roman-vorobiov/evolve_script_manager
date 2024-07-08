@@ -10,9 +10,9 @@ function serialize(state: State): Versioned {
     return { version: currentVersion, state };
 }
 
-function deserialize({ version, state }: Versioned): State {
+function deserialize({ version, state }: Versioned): State | undefined {
     if (state === undefined) {
-        return new State();
+        return;
     }
 
     if (version === 1) {
@@ -21,10 +21,6 @@ function deserialize({ version, state }: Versioned): State {
     else if (version === 2) {
         assert<State>(state);
         return new State(state.configs, state.activeConfig, state.previewOpen, state.browserOpen);
-    }
-    else {
-        console.error("Local storage corrupted. Using the default state.");
-        return new State();
     }
 }
 
@@ -47,5 +43,17 @@ export function loadState(): State {
         return new State();
     }
 
-    return deserialize(JSON.parse(raw) as Versioned);
+    const state = deserialize(JSON.parse(raw) as Versioned);
+    if (state !== undefined) {
+        return state;
+    }
+    else {
+        const backupKey = "state.backup";
+        Storage.set(backupKey, raw);
+
+        console.error("Unable to retrieve the state from localStorage");
+        console.info(`The previous storage contents have been saved into localStorage with the '${backupKey}' key`);
+
+        return new State();
+    }
 }

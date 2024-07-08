@@ -27,7 +27,9 @@
     }
 
     function addModel(config: Config) {
-        const model = monaco.editor.createModel(config.source, "DSL", monaco.Uri.from({
+        const language = config.name.endsWith(".json") ? "json" : "DSL";
+
+        const model = monaco.editor.createModel(config.source, language, monaco.Uri.from({
             scheme: "inmemory",
             authority: "model",
             path: `/${config.name}`

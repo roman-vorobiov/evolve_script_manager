@@ -12,6 +12,7 @@
     let formValue = config.name;
     let errorMessage: string = "";
     let pristine = true;
+    let finished = false;
 
     $: {
         if (formValue.length === 0) {
@@ -37,12 +38,13 @@
                 state.renameConfig(config, formValue);
                 state = state;
                 callback();
+                finished = true;
             }
         }
     });
 </script>
 
-<Tooltip.Root open={errorMessage.length !== 0 && !pristine} openDelay={100_000_000}>
+<Tooltip.Root open={errorMessage.length !== 0 && !pristine && !finished} openDelay={100_000_000}>
     <Tooltip.Trigger class="w-full">
         <form use:form class="w-full">
             <input
