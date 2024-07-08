@@ -5,6 +5,7 @@ A tool to help you manage your configs for Vollch's automation script for [Evolv
 ## How does it work?
 
 You need to add config files to the workspace - you can do this by uploading an existing JSON config (that you've exported from the game) or by creating a new one from scratch using the custom language.
+The default format is using the custom language - to opt out and use the JSON simply add the `.json` extension to a file.
 Then you can browse all the configs in the workspace, preview the changes compared to the default settings, download, copy to clipboard or, if you have the helper userscript enabled, upload the selected config directly to the game tab with a single button.
 
 ## Custom language
@@ -26,7 +27,7 @@ Basic syntax highlighting and autocomplete (triggered by `Ctrl+Space`) are imple
 
 ## Browse panel
 
-The browse panel (toggled using the button witht the files icon) shows all the configs you've added to the workspace. You can right-click on an empty space there to create or import a new config or on any of the existing ones to rename or delete it.
+The browse panel (toggled using the button witht the files icon) shows all the configs you've added to the workspace. You can right-click on an empty space there to create a new config or on any of the existing ones to rename or delete it.
 This is a flat list of files that is sorted alphabetically. While this means you can't create folders, file names can include special symbols to help you organize your configs.
 
 ## Preview panel
