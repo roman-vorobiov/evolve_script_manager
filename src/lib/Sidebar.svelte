@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { copyToClipboard, applyToEvolve } from "./ConfigExporter";
+    import { download, copyToClipboard, applyToEvolve } from "./ConfigExporter";
     import SidebarButton from "./SidebarButton.svelte";
     import {
         Files,
         Eye,
         Upload,
         FilePlus2 as FilePlus,
+        Download,
         ClipboardCopy,
         Settings
     } from "lucide-svelte";
@@ -17,9 +18,15 @@
     export let compiledConfig: Config;
     export let newConfigPending = false;
 
-    function handleCopyToClipboard() {
+    function handleDownload() {
         if (state.activeConfig !== null) {
-            copyToClipboard(compiledConfig);
+            download(compiledConfig, state.activeConfig);
+        }
+    }
+
+    async function handleCopyToClipboard() {
+        if (state.activeConfig !== null) {
+            await copyToClipboard(compiledConfig);
         }
     }
 
@@ -54,6 +61,13 @@
     />
 
     <SidebarButton
+        description="Download"
+        icon={Download}
+        on:click={handleDownload}
+        disabled={state.activeConfig === null}
+    />
+
+    <SidebarButton
         description="Copy to clipboard"
         icon={ClipboardCopy}
         on:click={handleCopyToClipboard}
@@ -64,7 +78,7 @@
         description="Apply config"
         icon={Upload}
         on:click={handleApplyToEvolve}
-        disabled={!("sendMessageToEvolveTab" in window)}
+        disabled={state.activeConfig === null || !("sendMessageToEvolveTab" in window)}
     />
 
     <!-- <SidebarButton

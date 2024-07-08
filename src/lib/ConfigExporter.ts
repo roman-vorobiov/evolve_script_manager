@@ -13,7 +13,17 @@ export async function copyToClipboard(config: Config) {
     await navigator.clipboard.writeText(serialized).then(() => toast.success("Copied!"));
 }
 
-export async function applyToEvolve(config: Config) {
+export function download(config: Config, name: string) {
+    const serialized = serialize(config);
+
+    const element = document.createElement("a");
+    element.setAttribute("href", `data:text/plain;charset=utf-8,${encodeURIComponent(serialized)}`);
+    element.setAttribute("download", name);
+
+    element.click();
+}
+
+export function applyToEvolve(config: Config) {
     const impl = (window as any).sendMessageToEvolveTab;
 
     if (impl !== undefined) {
