@@ -34,14 +34,14 @@ export class State {
         this.invokeCallbacks(this.onActiveConfigChangedCallbacks, config);
     }
 
-    removeConfig(config: Config): boolean {
-        const idx = this.configs.indexOf(config);
+    removeConfig(name: string): boolean {
+        const idx = this.configs.findIndex(cfg => cfg.name === name);
         if (idx !== -1) {
-            if (this.activeConfig === config.name) {
+            if (this.activeConfig === name) {
                 this.activeConfig = null;
                 this.invokeCallbacks(this.onActiveConfigChangedCallbacks, null);
             }
-            this.configs.splice(idx, 1);
+            const [config] = this.configs.splice(idx, 1);
             this.invokeCallbacks(this.onConfigRemovedCallbacks, config);
             return true;
         }
@@ -50,16 +50,22 @@ export class State {
         }
     }
 
-    renameConfig(config: Config, newName: string) {
+    renameConfig(oldName: string, newName: string): boolean {
+        const config = this.findConfig(oldName);
         if (config === undefined) {
-            return;
+            return false;
         }
 
-        if (config.name === this.activeConfig) {
+        if (oldName === this.activeConfig) {
             this.activeConfig = newName;
         }
 
+        this.removeConfig(oldName);
+
         config.name = newName;
+        this.addConfig(config);
+
+        return true;
     }
 
     setActive(config: Config) {

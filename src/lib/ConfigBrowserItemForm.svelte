@@ -35,7 +35,9 @@
         onSubmit: () => {
             pristine = false;
             if (errorMessage.length === 0) {
-                state.renameConfig(config, formValue);
+                if (!state.renameConfig(config.name, formValue)) {
+                    config.name = formValue;
+                }
                 state = state;
                 callback();
                 finished = true;

@@ -2,12 +2,12 @@
     import * as ScrollArea from "$lib/components/ui/scroll-area";
 
     import defaultSettings from "$lib/assets/default.json";
-    import { difference } from '$lib/core/utils';
+    import { lDifference } from '$lib/core/utils';
 
     export let config: any;
     export let diffOnly: boolean = false;
 
-    $: view = diffOnly ? difference(defaultSettings, config) : config;
+    $: view = diffOnly ? lDifference(config, defaultSettings) : config;
 
     $: str = JSON.stringify(view, null, 4);
 </script>

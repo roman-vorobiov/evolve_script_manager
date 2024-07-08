@@ -24,7 +24,7 @@ function compileJSON(source: string): CompileResult {
     catch (e: any) {
         return {
             config: null,
-            errors: [{ type: "error", message: e.message }]
+            errors: []
         };
     }
 }

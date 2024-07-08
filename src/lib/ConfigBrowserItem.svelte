@@ -32,7 +32,7 @@
     }
 
     function removeConfig() {
-        if (state.removeConfig(config)) {
+        if (state.removeConfig(config.name)) {
             state = state;
         }
     }
@@ -71,7 +71,7 @@
                 on:focusout={() => removeKeyHandler(editTrigger)}
             >
                 <div>
-                    <Icon class="size-4 mt-[4px] mr-2 ml-1"/>
+                    <svelte:component this={Icon} class="size-4 mt-[4px] mr-2 ml-1"/>
                 </div>
                 {#if editable}
                     <ConfigBrowserItemForm
