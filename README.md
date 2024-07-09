@@ -1,4 +1,4 @@
-## What is it?
+# [Evolve Script Manager](https://roman-vorobiov.github.io/evolve_script_manager/)
 
 A tool to help you manage your configs for Vollch's [automation script](https://gist.github.com/Vollch/b1a5eec305558a48b7f4575d317d7dd1) for [Evolve](https://github.com/pmotschmann/Evolve).
 
