@@ -16,6 +16,8 @@
 
     $: Icon = config.name.endsWith(".json") ? FileJson : FileText;
 
+    $: configName = config.name.length > 40 ? `${config.name.slice(0, 37)}...` : config.name;
+
     function makeActive() {
         if (!editable) {
             state.setActive(config);
@@ -96,7 +98,7 @@
 
     <AlertDialog.Content>
         <AlertDialog.Header>
-            <AlertDialog.Title>Are you sure you want to delete '{config.name}'?</AlertDialog.Title>
+            <AlertDialog.Title>Are you sure you want to delete '{configName}'?</AlertDialog.Title>
             <AlertDialog.Description>This action cannot be undone.</AlertDialog.Description>
         </AlertDialog.Header>
         <AlertDialog.Footer>

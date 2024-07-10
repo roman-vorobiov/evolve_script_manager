@@ -14,9 +14,17 @@
     let pristine = true;
     let finished = false;
 
+    const forbiddenCharacters = {
+        ['"']: "double quote",
+        ['\n']: "newline"
+    };
+
     $: {
         if (formValue.length === 0) {
-            errorMessage = "Must not be empty";
+            errorMessage = "File name must not be empty";
+        }
+        else if (Object.keys(forbiddenCharacters).some(c => formValue.includes(c))) {
+            errorMessage = "The following characters are not allowed in file names: " + Object.values(forbiddenCharacters).join(", ");
         }
         else if (state.configs.filter(cfg => cfg !== config).some(cfg => cfg.name === formValue)) {
             errorMessage = "A config with this name already exists";
