@@ -30,6 +30,7 @@ export default {
     "city-warehouse": "Container Port",
     "city-bank": "Bank",
     "city-pylon": "Pylon",
+    "city-graveyard": "Graveyard",
     "city-conceal_ward": "Conceal Ward (Witch Hunting)",
     "city-lumber_yard": "Lumber Yard",
     "city-sawmill": "Sawmill",

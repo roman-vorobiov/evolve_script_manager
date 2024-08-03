@@ -34,9 +34,7 @@ const mechSizeOptions = {
     supply: "Damage Per Supply"
 };
 
-// Todo: these have actual labels in strings.json
-
-const tpShipClass = fromArray([
+const tpShipClass = fromArrayCapitalized([
     "corvette",
     "frigate",
     "destroyer",
@@ -46,31 +44,31 @@ const tpShipClass = fromArray([
     "explorer"
 ]);
 
-const tpShipArmor = fromArray([
+const tpShipArmor = fromArrayCapitalized([
     "steel",
     "alloy",
     "neutronium"
 ]);
 
-const tpShipWeapon = fromArray([
-    "railgun",
-    "laser",
-    "p_laser",
-    "plasma",
-    "phaser",
-    "disruptor"
-]);
+const tpShipWeapon = {
+    railgun: "Railguns",
+    laser: "Lasers",
+    p_laser: "Plasma Lasers",
+    plasma: "Plasma Beans",
+    phaser: "Phasers",
+    disruptor: "Disruptors"
+};
 
-const tpShipEngine = fromArray([
-    "ion",
-    "tie",
-    "pulse",
-    "photon",
-    "vacuum",
-    "emdrive"
-]);
+const tpShipEngine = {
+    ion: "Ion Engine",
+    tie: "Twin Ion Engine",
+    pulse: "Pulse Drive",
+    photon: "Photon Drive",
+    vacuum: "Vacuum Drive",
+    emdrive: "EmDrive"
+};
 
-const tpShipPower = fromArray([
+const tpShipPower = fromArrayCapitalized([
     "solar",
     "diesel",
     "fission",
@@ -78,12 +76,12 @@ const tpShipPower = fromArray([
     "elerium"
 ]);
 
-const tpShipSensor = fromArray([
-    "visual",
-    "radar",
-    "lidar",
-    "quantum"
-]);
+const tpShipSensor = {
+    visual: "Visual Only",
+    radar: "Radar",
+    lidar: "Lidar",
+    quantum: "Quantum Scanner"
+};
 
 const governmentOptions = {
     none: "None",
@@ -267,14 +265,13 @@ export default <Record<string, Record<string, string>>> {
 
     prestigeType: resetTypeOptions,
 
-    // Todo
-    prestigeVaxStrat: fromArray([
-        "none",
-        "strat1",
-        "strat2",
-        "strat3",
-        "strat4"
-    ]),
+    prestigeVaxStrat: {
+        none: "None",
+        strat1: "Propaganda Campaign",
+        strat2: "Force Vaccination",
+        strat3: "Show the Science",
+        strat4: "Secret Vaccination"
+    },
 
     ejectMode: spendOptions,
 
@@ -295,18 +292,15 @@ export default <Record<string, Record<string, string>>> {
         tax: "Tax"
     },
 
-    // Todo
     psychicPower: {
-        none: "None",
+        none: "Ignore",
         auto: "Script Managed",
-        ...fromArray([
-            "boost",
-            "murder",
-            "assault",
-            "profit",
-            "stun",
-            "mind_break"
-        ])
+        boost: "Boost Resource Production",
+        murder: "Murder a Citizen",
+        assault: "Boost Attack Power",
+        profit: "Boost Profits",
+        stun: "Psychic Stun",
+        mind_break: "Mind Break"
     },
 
     psychicBoostRes: {

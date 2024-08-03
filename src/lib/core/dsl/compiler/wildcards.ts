@@ -15,7 +15,7 @@ export class WildcardResolver extends ExpressionVisitor {
 
         return this.deriveLocation(expression, {
             type: "List",
-            values: prefixInfo.allowedSuffixes.map(suffix => this.deriveLocation(expression, { type: "Identifier", value: suffix }))
+            values: Object.keys(prefixInfo.allowedSuffixes).map(suffix => this.deriveLocation(expression, { type: "Identifier", value: suffix }))
         });
     }
 }

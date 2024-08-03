@@ -36,7 +36,7 @@ export class PrefixResolver extends ExpressionVisitor {
             throw new CompileError(`'${expression.base.value}' is not a valid setting prefix`, expression.base);
         }
 
-        if (!prefixInfo.allowedSuffixes.includes(expression.key.value)) {
+        if (!(expression.key.value in prefixInfo.allowedSuffixes)) {
             throw new CompileError(`'${expression.key.value}' is not a valid ${prefixInfo.valueDescription} for ${expression.base.value}`, expression.key);
         }
 

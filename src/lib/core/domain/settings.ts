@@ -1,5 +1,6 @@
 import defaultSettings from "$lib/assets/default.json";
 import { craftableResources as craftables } from "./resources";
+import * as settingSuffixes from "./settingSuffixes";
 
 const nonSettings = ["scriptName", "overrides", "triggers", "replicatorResource"];
 
@@ -20,15 +21,20 @@ type PrefixDefinition = {
     prefix: string,
     type: "string" | "number" | "boolean",
     valueDescription: string,
-    allowedSuffixes: string[]
+    allowedSuffixes: Record<string, string>
 }
 
-function fillAllowedSuffixes(definitions: Record<string, Record<string, string>>) {
-    const result: Record<string, PrefixDefinition> = {};
+type EntryDefinition = {
+    prefixes: Record<string, string>,
+    suffixes: Record<string, string>
+}
 
-    for (const [category, prefixes] of Object.entries(definitions)) {
+function fillAllowedSuffixes(definitions: Record<string, EntryDefinition>): Record<string, PrefixDefinition> {
+    const result: Record<string, PrefixDefinition & { suffixKeys?: string[] }> = {};
+
+    for (const [category, { prefixes, suffixes }] of Object.entries(definitions)) {
         for (const [name, prefix] of Object.entries(prefixes)) {
-            result[name] = { prefix, type: null as any, valueDescription: category, allowedSuffixes: [] }
+            result[name] = { prefix, type: null as any, valueDescription: category, allowedSuffixes: suffixes, suffixKeys: [] }
         }
     }
 
@@ -52,11 +58,19 @@ function fillAllowedSuffixes(definitions: Record<string, Record<string, string>>
 
                 entry.type = settingType(setting) as PrefixDefinition["type"];
 
-                entry.allowedSuffixes.push(suffix);
+                entry.suffixKeys!.push(suffix);
 
                 break;
             }
         }
+    }
+
+    for (const entry of Object.values(result)) {
+        if (entry.suffixKeys!.length !== Object.entries(entry.allowedSuffixes).length) {
+            entry.allowedSuffixes = Object.fromEntries(entry.suffixKeys!.map(key => [key, entry.allowedSuffixes[key]]));
+        }
+
+        delete entry.suffixKeys;
     }
 
     return result;
@@ -64,110 +78,153 @@ function fillAllowedSuffixes(definitions: Record<string, Record<string, string>>
 
 export const prefixes = fillAllowedSuffixes({
     "challenge": {
-        Challenge:               "challenge_"
+        suffixes: settingSuffixes.challenges,
+        prefixes: {
+            Challenge: "challenge_"
+        }
     },
     "log category": {
-        Log:                     "log_"
+        suffixes: settingSuffixes.logCategories,
+        prefixes: {
+            Log: "log_"
+        }
     },
     "building": {
-        AutoBuild:               "bat",
-        AutoBuildPriority:       "bld_p_",
-        AutoBuildWeight:         "bld_w_",
-        BuildingMax:             "bld_m_",
-        AutoPower:               "bld_s_",
-        AutoPowerSmart:          "bld_s2_",
+        suffixes: settingSuffixes.buildings,
+        prefixes: {
+            AutoBuild:         "bat",
+            AutoBuildPriority: "bld_p_",
+            AutoBuildWeight:   "bld_w_",
+            BuildingMax:       "bld_m_",
+            AutoPower:         "bld_s_",
+            AutoPowerSmart:    "bld_s2_",
+        }
     },
     "project": {
-        AutoArpa:                "arpa_",
-        AutoArpaPriority:        "arpa_p_",
-        AutoArpaWeight:          "arpa_w_",
-        ProjectMax:              "arpa_m_",
+        suffixes: settingSuffixes.projects,
+        prefixes: {
+            AutoArpa:         "arpa_",
+            AutoArpaPriority: "arpa_p_",
+            AutoArpaWeight:   "arpa_w_",
+            ProjectMax:       "arpa_m_",
+        }
     },
     "resource": {
-        AutoBuy:                 "buy",
-        AutoBuyRatio:            "res_buy_r_",
-        AutoBuyPriority:         "res_buy_p_",
-        AutoSell:                "sell",
-        AutoSellRatio:           "res_sell_r_",
-        AutoTradeBuy:            "res_trade_buy_",
-        AutoTradeSell:           "res_trade_sell_",
-        AutoTradeWeight:         "res_trade_w_",
-        AutoTradePriority:       "res_trade_p_",
+        suffixes: settingSuffixes.resources,
+        prefixes: {
+            AutoBuy:                 "buy",
+            AutoBuyRatio:            "res_buy_r_",
+            AutoBuyPriority:         "res_buy_p_",
+            AutoSell:                "sell",
+            AutoSellRatio:           "res_sell_r_",
+            AutoTradeBuy:            "res_trade_buy_",
+            AutoTradeSell:           "res_trade_sell_",
+            AutoTradeWeight:         "res_trade_w_",
+            AutoTradePriority:       "res_trade_p_",
 
-        GalaxyTradePriority:     "res_galaxy_p_",
-        GalaxyTradeWeight:       "res_galaxy_w_",
+            GalaxyTradePriority:     "res_galaxy_p_",
+            GalaxyTradeWeight:       "res_galaxy_w_",
 
-        AutoAlchemy:             "res_alchemy_",
-        AutoAlchemyWeight:       "res_alchemy_w_",
+            AutoAlchemy:             "res_alchemy_",
+            AutoAlchemyWeight:       "res_alchemy_w_",
 
-        AutoCraft:               "craft",
-        AutoCraftsman:           "job_",
-        AutoFoundryWeight:       "foundry_w_",
-        AutoFoundryMinMaterials: "foundry_p_",
+            AutoCraft:               "craft",
+            AutoCraftsman:           "job_",
+            AutoFoundryWeight:       "foundry_w_",
+            AutoFoundryMinMaterials: "foundry_p_",
 
-        AutoFactory:             "production_",
-        AutoFactoryPriority:     "production_p_",
-        AutoFactoryWeight:       "production_w_",
+            AutoFactory:             "production_",
+            AutoFactoryPriority:     "production_p_",
+            AutoFactoryWeight:       "production_w_",
 
-        AutoDroidPriority:       "droid_pr_",
-        AutoDroidWeight:         "droid_w_",
+            AutoDroidPriority:       "droid_pr_",
+            AutoDroidWeight:         "droid_w_",
 
-        AutoReplicator:          "replicator_",
-        AutoReplicatorPriority:  "replicator_p_",
-        AutoReplicatorWeight:    "replicator_w_",
+            AutoReplicator:          "replicator_",
+            AutoReplicatorPriority:  "replicator_p_",
+            AutoReplicatorWeight:    "replicator_w_",
 
-        AutoStorage:             "res_storage",
-        StoragePriority:         "res_storage_p_",
-        StorageOverflow:         "res_storage_o_",
-        StorageMin:              "res_min_store",
-        StorageMax:              "res_max_store",
+            AutoStorage:             "res_storage",
+            StoragePriority:         "res_storage_p_",
+            StorageOverflow:         "res_storage_o_",
+            StorageMin:              "res_min_store",
+            StorageMax:              "res_max_store",
 
-        AutoEject:               "res_eject",
-        AutoSupply:              "res_supply",
-        AutoNanite:              "res_nanite",
+            AutoEject:               "res_eject",
+            AutoSupply:              "res_supply",
+            AutoNanite:              "res_nanite",
+        }
     },
     "ritual": {
-        AutoRitualWeight:        "spell_w_",
+        suffixes: settingSuffixes.rituals,
+        prefixes: {
+            AutoRitualWeight: "spell_w_",
+        }
     },
     "fuel type": {
-        SmelterFuelPriority:     "smelter_fuel_p_",
+        suffixes: settingSuffixes.fuelTypes,
+        prefixes: {
+            SmelterFuelPriority: "smelter_fuel_p_",
+        }
     },
     "job": {
-        AutoJob:                 "job_",
-        AutoJobPriority:         "job_p",
-        AutoJobSmart:            "job_s",
-        AutoJobPass1:            "job_b1_",
-        AutoJobPass2:            "job_b2_",
-        AutoJobPass3:            "job_b3_",
+        suffixes: settingSuffixes.jobs,
+        prefixes: {
+            AutoJob:         "job_",
+            AutoJobPriority: "job_p",
+            AutoJobSmart:    "job_s",
+            AutoJobPass1:    "job_b1_",
+            AutoJobPass2:    "job_b2_",
+            AutoJobPass3:    "job_b3_",
+        }
     },
     "planet biome": {
-        PlanetBiomeWeight:       "biome_w_",
+        suffixes: settingSuffixes.planetaryBiomes,
+        prefixes: {
+            PlanetBiomeWeight: "biome_w_",
+        }
     },
     "planet trait": {
-        PlanetTraitWeight:       "trait_w_",
+        suffixes: settingSuffixes.planetaryTraits,
+        prefixes: {
+            PlanetTraitWeight: "trait_w_",
+        }
     },
     "planet bonus": {
-        PlanetBonusWeight:       "extra_w_",
+        suffixes: settingSuffixes.planetaryBonuses,
+        prefixes: {
+            PlanetBonusWeight: "extra_w_",
+        }
     },
-    "trait": {
-        AutoTrait:               "mTrait_",
-        AutoTraitPriority:       "mTrait_p_",
-        AutoTraitWeight:         "mTrait_w_",
-
-        AutoMutatepPriority:     "mutableTrait_p_",
-        AutoMutateAdd:           "mutableTrait_gain_",
-        AutoMutateRemove:        "mutableTrait_purge_",
-        AutoMutateReset:         "mutableTrait_reset_",
+    "minor trait": {
+        suffixes: settingSuffixes.minorTraits,
+        prefixes: {
+            AutoTrait:         "mTrait_",
+            AutoTraitPriority: "mTrait_p_",
+            AutoTraitWeight:   "mTrait_w_",
+        }
+    },
+    "major trait": {
+        suffixes: settingSuffixes.majorTraits,
+        prefixes: {
+            AutoMutatepPriority: "mutableTrait_p_",
+            AutoMutateAdd:       "mutableTrait_gain_",
+            AutoMutateRemove:    "mutableTrait_purge_",
+            AutoMutateReset:     "mutableTrait_reset_",
+        }
     },
     "system": {
-        FleetPriority:           "fleet_pr_",
-
-        FleetOuterWeight:        "fleet_outer_pr_",
-        FleetouterDefend:        "fleet_outer_def_",
-        FleetouterScouts:        "fleet_outer_sc_",
+        suffixes: settingSuffixes.andromedaSystem,
+        prefixes: {
+            FleetPriority: "fleet_pr_",
+        }
     },
-    "blueprint": {
-        FleetOuterFighter:       "fleet_outer_",
-        FleetOuterScout:         "fleet_scout_",
+    "true path region": {
+        suffixes: settingSuffixes.truePathRegion,
+        prefixes: {
+            FleetOuterWeight: "fleet_outer_pr_",
+            FleetOuterDefend: "fleet_outer_def_",
+            FleetOuterScouts: "fleet_outer_sc_",
+        }
     }
 });

@@ -133,6 +133,13 @@ export const pseudoResources = {
     Spire_Support: "Spire Support",
 }
 
+export const fuelTypes = {
+    Oil: "Oil",
+    Coal: "Coal",
+    Wood: "Wood",
+    Inferno: "Inferno",
+}
+
 export const resources = {
     ...evolutionResources,
     ...baseResources,
