@@ -9,6 +9,7 @@ export const servantJobs = {
 
 export const smartJobs = {
     teamster: "Teamster",
+    meditator: "Meditator",
     hunter: "Hunter",
     farmer: "Farmer",
     lumberjack: "Lumberjack",

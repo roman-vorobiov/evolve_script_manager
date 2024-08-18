@@ -20,6 +20,7 @@ export const challenges = {
     banana: "Banana Republic",
     truepath: "The True Path",
     lone_survivor: "Lone Survivor",
+    fasting: "Fasting"
 };
 
 export const challengeAliases = {

@@ -126,6 +126,12 @@ export default <Record<string, Record<string, string>>> {
         ...races
     },
 
+    buildingConsumptionCheck: {
+        onePerTick: "Default",
+        perResource: "Non-conflicting only",
+        unlimited: "Unlimited"
+    },
+
     foreignProtect: fromArrayCapitalized([
         "never",
         "always",

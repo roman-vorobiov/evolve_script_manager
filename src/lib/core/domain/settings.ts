@@ -2,9 +2,13 @@ import defaultSettings from "$lib/assets/default.json";
 import { craftableResources as craftables } from "./resources";
 import * as settingSuffixes from "./settingSuffixes";
 
-const nonSettings = ["scriptName", "overrides", "triggers", "replicatorResource"];
+const nonSettings = ["scriptName", "overrides", "triggers"];
 
 export const settings = Object.keys(defaultSettings).filter(id => !nonSettings.includes(id));
+
+function without(suffixes: Record<string, string>, exceptions: string[]) {
+    return Object.fromEntries(Object.entries(suffixes).filter(([k, v]) => !exceptions.includes(k)));
+}
 
 export function settingType(id: string): string | undefined {
     if (id === "researchIgnore" || id === "logFilter") {
@@ -144,15 +148,19 @@ export const prefixes = fillAllowedSuffixes({
             AutoReplicatorPriority:  "replicator_p_",
             AutoReplicatorWeight:    "replicator_w_",
 
-            AutoStorage:             "res_storage",
-            StoragePriority:         "res_storage_p_",
-            StorageOverflow:         "res_storage_o_",
-            StorageMin:              "res_min_store",
-            StorageMax:              "res_max_store",
-
             AutoEject:               "res_eject",
             AutoSupply:              "res_supply",
             AutoNanite:              "res_nanite",
+        }
+    },
+    "storage": {
+        suffixes: without(settingSuffixes.resources, ["Food"]),
+        prefixes: {
+            AutoStorage:     "res_storage",
+            StoragePriority: "res_storage_p_",
+            StorageOverflow: "res_storage_o_",
+            StorageMin:      "res_min_store",
+            StorageMax:      "res_max_store",
         }
     },
     "ritual": {

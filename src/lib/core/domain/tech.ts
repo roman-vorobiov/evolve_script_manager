@@ -60,6 +60,7 @@ export default {
     "tech-carpentry": ["Carpentry"],
     "tech-demonic_craftsman": ["Master Craftsman"],
     "tech-master_craftsman": ["Master Craftsman"],
+    "tech-banquet": ["Banquet"],
     "tech-brickworks": ["Brickworks"],
     "tech-machinery": ["Machinery"],
     "tech-cnc_machine": ["CNC Machine"],

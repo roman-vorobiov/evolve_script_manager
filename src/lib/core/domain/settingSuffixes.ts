@@ -23,7 +23,8 @@ export const challenges = {
     cataclysm: "Cataclysm",
     banana: "Banana Republic",
     truepath: "The True Path",
-    lone_survivor: "Lone Survivor"
+    lone_survivor: "Lone Survivor",
+    fasting: "Fasting"
 };
 
 export const logCategories = {

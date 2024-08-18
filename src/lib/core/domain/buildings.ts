@@ -53,6 +53,7 @@ export default {
     "city-temple": "Temple",
     "city-shrine": "Shrine",
     "city-meditation": "Meditation Chamber",
+    "city-banquet": "Banquet Hall",
     "city-university": "University",
     "city-library": "Library",
     "city-wardenclyffe": "Wardenclyffe",
