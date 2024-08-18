@@ -4,7 +4,7 @@ import { validateTypes as validateTypesImpl, Validator } from "$lib/core/dsl/com
 
 import type * as Parser from "$lib/core/dsl/model/6";
 
-const processExpression = (node: Parser.Expression) => new Validator().visit(node);
+const processExpression = (node: Parser.Expression) => new Validator([]).visit(node);
 
 const validateTypes = (node: Parser.Statement) => processStatement(node, validateTypesImpl);
 
@@ -167,18 +167,21 @@ describe("Compiler", () => {
             expect(errors[0].offendingEntity).toBe(originalNode.setting);
         });
 
-        it("should throw on unknown settings", () => {
+        it("should warn on unknown settings", () => {
             const originalNode = {
                 type: "SettingAssignment",
                 setting: { type: "Identifier", value: "hello" },
                 value: { type: "Boolean", value: true }
             };
 
-            const { errors } = validateTypes(originalNode as Parser.SettingAssignment);
-            expect(errors.length).toEqual(1);
+            const { warnings, nodes } = validateTypes(originalNode as Parser.SettingAssignment);
+            expect(nodes.length).toEqual(1);
 
-            expect(errors[0].message).toEqual("Unknown setting ID 'hello'");
-            expect(errors[0].offendingEntity).toBe(originalNode.setting);
+            expect(warnings[0].message).toEqual("Unknown setting ID 'hello'");
+            expect(warnings[0].offendingEntity).toBe(originalNode.setting);
+            expect(warnings[0].details).toEqual([]);
+
+            expect(nodes[0]).toBe(originalNode);
         });
 
         it("should throw on unknown prefixes", () => {

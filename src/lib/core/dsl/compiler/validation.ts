@@ -1,20 +1,22 @@
 import { expressions, otherExpressions, otherExpressionsAliases } from "$lib/core/domain/expressions";
 import { settingType } from "$lib/core/domain/settings";
 import settingEnums from "$lib/core/domain/settingEnums";
-import { CompileError } from "../model";
+import { CompileError, CompileWarning } from "../model";
 import { StatementVisitor } from "./utils";
 
 import type { SourceMap } from "../parser/source";
 import type * as Parser from "../model/6";
 import { assert } from "$lib/core/utils/typeUtils";
 
-function getSettingType(setting: Parser.Identifier): string {
+function getSettingType(setting: Parser.Identifier, warnings: CompileWarning[]): string {
     const type = settingType(setting.value);
-    if (type === undefined) {
-        throw new CompileError(`Unknown setting ID '${setting.value}'`, setting);
+    if (type !== undefined) {
+        return type;
     }
-
-    return type;
+    else {
+        warnings.push(new CompileWarning(`Unknown setting ID '${setting.value}'`, setting));
+        return "unknown";
+    }
 }
 
 function checkType(type: string, expected: string, node: any) {
@@ -28,6 +30,8 @@ function checkType(type: string, expected: string, node: any) {
 }
 
 export class Validator {
+    constructor(private warnings: CompileWarning[]) { }
+
     visit(expression: Parser.Expression): string {
         if (expression.type === "Expression") {
             return this.visitExpression(expression);
@@ -50,7 +54,7 @@ export class Validator {
             return otherExpressions[alias].type;
         }
         else if (expression.base.value === "SettingCurrent" || expression.base.value === "SettingDefault") {
-            return getSettingType(expression.key);
+            return getSettingType(expression.key, this.warnings);
         }
         else {
             const info = expressions[expression.base.value];
@@ -86,11 +90,23 @@ export class Validator {
 }
 
 class Impl extends StatementVisitor<Parser.Statement> {
-    private visitor = new Validator();
+    private warnings: CompileWarning[];
+    private visitor : Validator;
+
+    constructor(
+        sourceMap: SourceMap,
+        errors: CompileError[],
+        warnings: CompileWarning[]
+    ) {
+        super(sourceMap, errors);
+
+        this.warnings = warnings;
+        this.visitor = new Validator(this.warnings);
+    }
 
     onSettingAssignment(statement: Parser.SettingAssignment): Parser.SettingAssignment {
         const valueType = this.visitor.visit(statement.value);
-        checkType(valueType, getSettingType(statement.setting), statement.value);
+        checkType(valueType, getSettingType(statement.setting, this.warnings), statement.value);
 
         const allowedValues = settingEnums[statement.setting.value];
         if (allowedValues !== undefined) {
@@ -130,8 +146,13 @@ class Impl extends StatementVisitor<Parser.Statement> {
     }
 };
 
-export function validateTypes(statements: Parser.Statement[], sourceMap: SourceMap, errors: CompileError[]): Parser.Statement[] {
-    const impl = new Impl(sourceMap, errors);
+export function validateTypes(
+    statements: Parser.Statement[],
+    sourceMap: SourceMap,
+    errors: CompileError[],
+    warnings: CompileWarning[]
+): Parser.Statement[] {
+    const impl = new Impl(sourceMap, errors, warnings);
 
     return impl.visitAll(statements);
 }
