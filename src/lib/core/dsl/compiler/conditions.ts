@@ -44,6 +44,25 @@ export function toEvalString(expression: Before.Expression, wrap: boolean = fals
     }
 }
 
+export function toEvalExpression(expression: Before.Expression): After.EvalLiteral {
+    return {
+        type: "Eval",
+        value: toEvalString(expression)
+    };
+}
+
+export function toSimpleExpression(expression: Before.Expression): After.SimpleExpression {
+    if (expression.type === "Expression") {
+        return {
+            type: "Eval",
+            value: toEvalString(expression)
+        };
+    }
+    else {
+        return expression;
+    }
+}
+
 export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
     onSettingAssignment(statement: Before.SettingAssignment): After.SettingAssignment {
         const conditionStrategy = isConstant(statement.value) ? "toFlat" : "toSimple";
@@ -51,17 +70,6 @@ export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
         const value = this.toSimple(statement.value);
 
         return this.derived(statement, { value, condition });
-    }
-
-    onTrigger(statement: Before.Trigger): After.Trigger | undefined {
-        if (statement.condition !== undefined) {
-            const condition: After.EvalLiteral = this.deriveLocation(statement.condition, {
-                type: "Eval",
-                value: toEvalString(statement.condition)
-            });
-
-            return this.derived(statement, { condition });
-        }
     }
 
     private toFlat(expression: Before.Expression): After.Expression {
@@ -77,10 +85,7 @@ export class Impl extends StatementVisitor<Before.Statement, After.Statement> {
 
     private toSimple(expression: Before.Expression): After.SimpleExpression {
         if (expression.type === "Expression") {
-            return this.deriveLocation(expression, {
-                type: "Eval",
-                value: toEvalString(expression)
-            });
+            return this.deriveLocation(expression, toSimpleExpression(expression));
         }
         else {
             return expression;

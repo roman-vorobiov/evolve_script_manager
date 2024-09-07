@@ -1,4 +1,5 @@
 import { expressions, otherExpressions, otherExpressionsAliases } from "$lib/core/domain/expressions";
+import { triggerActions } from "$lib/core/domain/triggers";
 import { settingType } from "$lib/core/domain/settings";
 import settingEnums from "$lib/core/domain/settingEnums";
 import { CompileError, CompileWarning } from "../model";
@@ -143,6 +144,20 @@ class Impl extends StatementVisitor<Parser.Statement> {
         checkType(conditionType, "boolean", statement.condition);
 
         return this.derived(statement, { body });
+    }
+
+    onTrigger(statement: Parser.Trigger) {
+        for (const action of statement.actions) {
+            const info = triggerActions[action.type.value as keyof typeof triggerActions];
+
+            if (info === undefined) {
+                throw new CompileError(`Unknown trigger action '${action.type.value}'`, action.type);
+            }
+
+            if (!(action.id.value in info.allowedValues)) {
+                throw new CompileError(`Unknown ${info.type} '${action.id.value}'`, action.id);
+            }
+        }
     }
 };
 

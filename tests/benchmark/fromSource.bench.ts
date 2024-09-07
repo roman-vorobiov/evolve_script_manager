@@ -18,7 +18,6 @@ import { collectIgnoredTechs }     from "$lib/core/dsl/compiler/ignoredResearch"
 import { buildEvolutionQueue }     from "$lib/core/dsl/compiler/evolutionQueue";
 import { flattenExpressions }      from "$lib/core/dsl/compiler/conditions";
 import { createTriggerChains }     from "$lib/core/dsl/compiler/triggers";
-import { createTriggerConditions } from "$lib/core/dsl/compiler/triggerConditions";
 import { normalizeStatements }     from "$lib/core/dsl/compiler/normalize";
 
 const steps = [
@@ -35,7 +34,6 @@ const steps = [
     buildEvolutionQueue,
     flattenExpressions,
     createTriggerChains,
-    createTriggerConditions,
     normalizeStatements,
 ];
 

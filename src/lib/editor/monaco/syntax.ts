@@ -21,7 +21,6 @@ const tokenMap = makeTokenMap({
         "Def",
         "For",
         "In",
-        "When",
         "Do",
         "If",
         "Then",

@@ -33,10 +33,8 @@ describe("Parser", () => {
                     use "bar"
                 `,
                 bar: `
-                    \x01when aaa bbb do
-                        ccc ddd
-                        eee fff
-                    end\x02
+                    \x01aaa bbb then
+                    ccc ddd\x02
                 `
             });
 
@@ -45,18 +43,14 @@ describe("Parser", () => {
 
             const expectedNode = maps([1, 2], {
                 type: "Trigger",
-                requirement: maps("aaa bbb", {
-                    type: maps.identifier("aaa"),
-                    id: maps.identifier("bbb")
-                }),
                 actions: [
+                    maps("aaa bbb", {
+                        type: maps.identifier("aaa"),
+                        id: maps.identifier("bbb")
+                    }),
                     maps("ccc ddd", {
                         type: maps.identifier("ccc"),
                         id: maps.identifier("ddd")
-                    }),
-                    maps("eee fff", {
-                        type: maps.identifier("eee"),
-                        id: maps.identifier("fff")
                     })
                 ]
             });

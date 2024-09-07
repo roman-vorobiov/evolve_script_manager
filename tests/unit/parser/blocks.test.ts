@@ -78,7 +78,7 @@ describe("Parser", () => {
         it("should parse triggers", () => {
             const { nodes, errors, maps } = parse(`
                 \x01if aaa then
-                    \x03foo bbb when bar ccc\x04
+                    \x03foo bbb\x04
                 end\x02
             `);
 
@@ -91,35 +91,6 @@ describe("Parser", () => {
                 body: [
                     maps([3, 4], {
                         type: "Trigger",
-                        requirement: maps("bar ccc", { type: maps.identifier("bar"), id: maps.identifier("ccc") }),
-                        actions: [maps("foo bbb", { type: maps.identifier("foo"), id: maps.identifier("bbb") })]
-                    })
-                ]
-            });
-
-            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
-            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
-        });
-
-        it("should parse nested trigger blocks", () => {
-            const { nodes, errors, maps } = parse(`
-                \x01if aaa then
-                    \x03when bar ccc do
-                        foo bbb
-                    end\x04
-                end\x02
-            `);
-
-            expect(errors).toStrictEqual([]);
-            expect(nodes.length).toBe(1);
-
-            const expectedNode = maps([1, 2], {
-                type: "ConditionBlock",
-                condition: maps.identifier("aaa"),
-                body: [
-                    maps([3, 4], {
-                        type: "Trigger",
-                        requirement: maps("bar ccc", { type: maps.identifier("bar"), id: maps.identifier("ccc") }),
                         actions: [maps("foo bbb", { type: maps.identifier("foo"), id: maps.identifier("bbb") })]
                     })
                 ]

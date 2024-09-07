@@ -25,9 +25,8 @@ export type SettingAssignment = {
 
 export type SettingPush = Previous.SettingPush;
 
-export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Modify<Previous.Trigger, {
-    condition: EvalLiteral | undefined,
+    condition: Expression | undefined,
 }>;
 
 export type Statement = SettingAssignment | SettingPush | Trigger;

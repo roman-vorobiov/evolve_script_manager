@@ -14,7 +14,6 @@ export type Expression = Previous.Expression;
 export type SettingAssignment = Previous.SettingAssignment;
 export type SettingShift = Previous.SettingShift;
 export type SettingShiftBlock = Previous.SettingShiftBlock;
-export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
 export type SettingPush = {

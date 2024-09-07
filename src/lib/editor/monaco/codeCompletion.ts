@@ -1,7 +1,7 @@
 import { prefixes, settings } from "$lib/core/domain/settings";
 import settingEnums from "$lib/core/domain/settingEnums";
 import { expressions, otherExpressions } from "$lib/core/domain/expressions";
-import { triggerActions, triggerConditions } from "$lib/core/domain/triggers";
+import { triggerActions } from "$lib/core/domain/triggers";
 
 import * as Monaco from "monaco-editor/esm/vs/editor/editor.api";
 import type { State } from "$lib/core/state";
@@ -110,17 +110,8 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
     else if (tokenStack.length > 1 && tokenStack[1] in triggerActions) {
         return triggerActions[tokenStack[1] as keyof typeof triggerActions].allowedValues;
     }
-    else if (tokenStack.length > 1 && tokenStack[1] in triggerConditions) {
-        return triggerConditions[tokenStack[1] as keyof typeof triggerConditions].allowedValues;
-    }
     else if (tokenStack.length > 0 && tokenStack[0] in triggerActions) {
         return triggerActions[tokenStack[0] as keyof typeof triggerActions].allowedValues;
-    }
-    else if (tokenStack.length > 0 && tokenStack[0] in triggerConditions) {
-        return triggerConditions[tokenStack[0] as keyof typeof triggerConditions].allowedValues;
-    }
-    else if (tokenStack.length > 0 && (tokenStack[0] === "when" || tokenStack[1] === "when")) {
-        return Object.keys(triggerConditions);
     }
     else if (tokenStack.length < 2) {
         return [...Object.keys(prefixes), ...settings, ...Object.keys(triggerActions)];

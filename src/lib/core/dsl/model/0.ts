@@ -83,7 +83,7 @@ export type ConditionBlock = {
     body: Statement[]
 }
 
-export type TriggerArgument = {
+export type TriggerAction = {
     type: Identifier,
     id: Identifier,
     count?: NumberLiteral | Identifier
@@ -91,8 +91,7 @@ export type TriggerArgument = {
 
 export type Trigger = {
     type: "Trigger",
-    requirement: TriggerArgument,
-    actions: TriggerArgument[]
+    actions: TriggerAction[]
 }
 
 export type ExpressionDefinition = {

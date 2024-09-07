@@ -13,7 +13,6 @@ export type Expression = Previous.Expression;
 
 export type SettingAssignment = Previous.SettingAssignment;
 export type SettingPush = Previous.SettingPush;
-export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
 export type Statement = Exclude<Previous.Statement, Previous.SettingShift | Previous.SettingShiftBlock>;

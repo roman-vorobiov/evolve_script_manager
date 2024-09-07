@@ -6,15 +6,17 @@ import type * as Parser from "$lib/core/dsl/model/9";
 
 const createTriggerChains = (node: Parser.Statement) => processStatement(node, createTriggerChainsImpl);
 
+export const defaultRequirement = {
+    type: { type: "Identifier", value: "Boolean" },
+    id: { type: "Boolean", value: true },
+    count: { type: "Number", value: 1 }
+};
+
 describe("Compiler", () => {
     describe("Triggers", () => {
         it("should provide default count", () => {
             const originalNode = {
                 type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" }
-                },
                 actions: [
                     {
                         type: { type: "Identifier", value: "Build" },
@@ -27,9 +29,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                requirement: from(originalNode.requirement, {
-                    count: { type: "Number", value: 1 }
-                }),
+                requirement: defaultRequirement,
                 action: from(originalNode.actions[0], {
                     count: { type: "Number", value: 1 }
                 }),
@@ -43,11 +43,6 @@ describe("Compiler", () => {
         it("should preserve provided count", () => {
             const originalNode = {
                 type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
-                    count: { type: "Number", value: 123 }
-                },
                 actions: [
                     {
                         type: { type: "Identifier", value: "Build" },
@@ -61,7 +56,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                requirement: originalNode.requirement,
+                requirement: defaultRequirement,
                 action: originalNode.actions[0],
                 actions: undefined
             });
@@ -73,11 +68,6 @@ describe("Compiler", () => {
         it("should resolve arpa ids", () => {
             const originalNode = {
                 type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
-                    count: { type: "Number", value: 123 }
-                },
                 actions: [
                     {
                         type: { type: "Identifier", value: "Arpa" },
@@ -91,7 +81,7 @@ describe("Compiler", () => {
             expect(nodes.length).toEqual(1);
 
             const expectedNode = from(originalNode, {
-                requirement: originalNode.requirement,
+                requirement: defaultRequirement,
                 action: from(originalNode.actions[0], {
                     id: from(originalNode.actions[0].id, { value: "arpalhc" })
                 }),
@@ -105,11 +95,6 @@ describe("Compiler", () => {
         it("should create trigger chains", () => {
             const originalNode = {
                 type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
-                    count: { type: "Number", value: 123 }
-                },
                 actions: [
                     {
                         type: { type: "Identifier", value: "Research" },
@@ -129,7 +114,7 @@ describe("Compiler", () => {
 
             {
                 const expectedNode = from(originalNode, {
-                    requirement: originalNode.requirement,
+                    requirement: defaultRequirement,
                     action: originalNode.actions[0],
                     actions: undefined
                 });
@@ -140,7 +125,7 @@ describe("Compiler", () => {
             {
                 const expectedNode = from(originalNode, {
                     requirement: {
-                        type: { type: "Identifier", value: "Chain" },
+                        type: { type: "Identifier", value: "chain" },
                         id: { type: "Identifier", value: "" },
                         count: { type: "Number", value: 0 }
                     },
@@ -156,15 +141,11 @@ describe("Compiler", () => {
         it("should throw on invalid count values", () => {
             const originalNode = {
                 type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
-                    count: { type: "Number", value: 1.23 }
-                },
                 actions: [
                     {
                         type: { type: "Identifier", value: "Build" },
-                        id: { type: "Identifier", value: "city-bank" }
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 1.23 }
                     }
                 ]
             };
@@ -173,95 +154,7 @@ describe("Compiler", () => {
             expect(errors.length).toEqual(1);
 
             expect(errors[0].message).toEqual("Expected integer, got float");
-            expect(errors[0].offendingEntity).toBe(originalNode.requirement.count);
-        });
-
-        it("should throw on invalid trigger requirement types", () => {
-            const originalNode = {
-                type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Build" },
-                    id: { type: "Identifier", value: "city-windmill" }
-                },
-                actions: [
-                    {
-                        type: { type: "Identifier", value: "Build" },
-                        id: { type: "Identifier", value: "city-bank" }
-                    }
-                ]
-            };
-
-            const { errors } = createTriggerChains(originalNode as Parser.Trigger);
-            expect(errors.length).toEqual(1);
-
-            expect(errors[0].message).toEqual("Unknown trigger requirement 'Build'");
-            expect(errors[0].offendingEntity).toBe(originalNode.requirement.type);
-        });
-
-        it("should throw on invalid trigger requirement ids", () => {
-            const originalNode = {
-                type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "tech-club" }
-                },
-                actions: [
-                    {
-                        type: { type: "Identifier", value: "Build" },
-                        id: { type: "Identifier", value: "city-bank" }
-                    }
-                ]
-            };
-
-            const { errors } = createTriggerChains(originalNode as Parser.Trigger);
-            expect(errors.length).toEqual(1);
-
-            expect(errors[0].message).toEqual("Unknown building 'tech-club'");
-            expect(errors[0].offendingEntity).toBe(originalNode.requirement.id);
-        });
-
-        it("should throw on invalid trigger action types", () => {
-            const originalNode = {
-                type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" }
-                },
-                actions: [
-                    {
-                        type: { type: "Identifier", value: "Built" },
-                        id: { type: "Identifier", value: "city-bank" }
-                    }
-                ]
-            };
-
-            const { errors } = createTriggerChains(originalNode as Parser.Trigger);
-            expect(errors.length).toEqual(1);
-
-            expect(errors[0].message).toEqual("Unknown trigger action 'Built'");
-            expect(errors[0].offendingEntity).toBe(originalNode.actions[0].type);
-        });
-
-        it("should throw on invalid trigger action ids", () => {
-            const originalNode = {
-                type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" }
-                },
-                actions: [
-                    {
-                        type: { type: "Identifier", value: "Build" },
-                        id: { type: "Identifier", value: "tech-club" }
-                    }
-                ]
-            };
-
-            const { errors } = createTriggerChains(originalNode as Parser.Trigger);
-            expect(errors.length).toEqual(1);
-
-            expect(errors[0].message).toEqual("Unknown building 'tech-club'");
-            expect(errors[0].offendingEntity).toBe(originalNode.actions[0].id);
+            expect(errors[0].offendingEntity).toBe(originalNode.actions[0].count);
         });
     });
 });

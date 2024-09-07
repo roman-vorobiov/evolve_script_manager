@@ -661,16 +661,16 @@ You can't pop from it or use conditions.
 
 ## Triggers
 
-You can add triggers using the following syntax: `Action id (count) when Requirement id (count)`. The `count` is optional and is defaulted to `1`.
+You can add triggers using the following syntax: `Action id (count)`. The `count` is optional and is defaulted to `1`.
 
 ```
-Research tech-arpa when Unlocked tech-arpa
+Research tech-arpa
 
-Build space-iridium_mine when Built space-moon_base
+if BuildingCount.space-moon_base >= 1 then
+    Build space-iridium_mine
+end
 
-Build galaxy-dreadnought when Built galaxy-dreadnought (0)
-
-Build portal-vault (2) when Built portal-vault (0)
+Build portal-vault (2)
 ```
 
 ```json
@@ -679,8 +679,8 @@ Build portal-vault (2) when Built portal-vault (0)
         {
             "seq": 0,
             "priority": 0,
-            "requirementType": "unlocked",
-            "requirementId": "tech-arpa",
+            "requirementType": "Boolean",
+            "requirementId": true,
             "requirementCount": 1,
             "actionType": "research",
             "actionId": "tech-arpa",
@@ -690,8 +690,8 @@ Build portal-vault (2) when Built portal-vault (0)
         {
             "seq": 1,
             "priority": 1,
-            "requirementType": "built",
-            "requirementId": "space-moon_base",
+            "requirementType": "Eval",
+            "requirementId": "_('BuildingCount', 'space-moon_base') >= 1",
             "requirementCount": 1,
             "actionType": "build",
             "actionId": "space-iridium_mine",
@@ -699,21 +699,10 @@ Build portal-vault (2) when Built portal-vault (0)
             "complete": false
         },
         {
-            "seq": 2,
-            "priority": 2,
-            "requirementType": "built",
-            "requirementId": "galaxy-dreadnought",
-            "requirementCount": 0,
-            "actionType": "build",
-            "actionId": "galaxy-dreadnought",
-            "actionCount": 1,
-            "complete": false
-        },
-        {
             "seq": 3,
             "priority": 3,
-            "requirementType": "built",
-            "requirementId": "portal-vault",
+            "requirementType": "Boolean",
+            "requirementId": true,
             "requirementCount": 0,
             "actionType": "build",
             "actionId": "portal-vault",
@@ -726,13 +715,13 @@ Build portal-vault (2) when Built portal-vault (0)
 
 ## Trigger chains
 
-To create a trigger chain use a trigger block:
+To create a trigger chain use the `then` keyword:
 
 ```
-when Unlocked tech-industrialization do
-    Research tech-industrialization
-    Research tech-diplomacy
-    Research tech-republic
+if ResearchUnlocked.tech-industrialization then
+    Research tech-industrialization then
+    Research tech-diplomacy then
+    Research tech-republic then
     Research tech-technocracy
 end
 ```
@@ -743,7 +732,7 @@ end
         {
             "seq": 0,
             "priority": 0,
-            "requirementType": "unlocked",
+            "requirementType": "ResearchUnlocked",
             "requirementId": "tech-industrialization",
             "requirementCount": 1,
             "actionType": "research",
@@ -781,46 +770,6 @@ end
             "requirementCount": 0,
             "actionType": "research",
             "actionId": "tech-technocracy",
-            "actionCount": 1,
-            "complete": false
-        }
-    ]
-}
-```
-
-## Conditional triggers
-
-Triggers and trigger blocks can be added inside an `if` block to enable a the triggers only when condition is true:
-
-```
-if ResetType.mad then
-    Research tech-mad when Unlocked tech-mad
-end
-```
-
-```json
-{
-    "overrides": {
-        "masterScriptToggle": [
-            {
-                "type1": "Eval",
-                "arg1": "TriggerManager.priorityList[0].complete = !(_('ResetType', 'mad'))",
-                "cmp": "AND",
-                "type2": "Boolean",
-                "arg2": false,
-                "ret": true
-            }
-        ]
-    },
-    "triggers": [
-        {
-            "seq": 0,
-            "priority": 0,
-            "requirementType": "unlocked",
-            "requirementId": "tech-mad",
-            "requirementCount": 1,
-            "actionType": "research",
-            "actionId": "tech-mad",
             "actionCount": 1,
             "complete": false
         }
@@ -987,7 +936,9 @@ def PRIORITY_RESEARCH = [
 ]
 
 for tech in $PRIORITY_RESEARCH do
-    Research $tech when Unlocked $tech
+    if ResearchUnlocked[$tech]
+        Research $tech
+    end
 end
 
 ```
@@ -998,7 +949,7 @@ end
         {
             "seq": 0,
             "priority": 0,
-            "requirementType": "unlocked",
+            "requirementType": "ResearchUnlocked",
             "requirementId": "tech-arpa",
             "requirementCount": 1,
             "actionType": "research",
@@ -1009,7 +960,7 @@ end
         {
             "seq": 1,
             "priority": 1,
-            "requirementType": "unlocked",
+            "requirementType": "ResearchUnlocked",
             "requirementId": "tech-rover",
             "requirementCount": 1,
             "actionType": "research",
@@ -1020,7 +971,7 @@ end
         {
             "seq": 2,
             "priority": 2,
-            "requirementType": "unlocked",
+            "requirementType": "ResearchUnlocked",
             "requirementId": "tech-probes",
             "requirementCount": 1,
             "actionType": "research",
@@ -1041,7 +992,9 @@ You can import statements from other files with the `use` keyword:
 # contents of the 'common' file
 
 def prioritizeResearch(tech) begin
-    Research $tech when Unlocked $tech
+    if ResearchUnlocked[$tech] then
+        Research $tech
+    end
 end
 ```
 

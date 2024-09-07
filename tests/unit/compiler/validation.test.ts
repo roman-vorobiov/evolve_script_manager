@@ -423,5 +423,41 @@ describe("Compiler", () => {
             expect(errors[0].message).toEqual("Expected number, got boolean");
             expect(errors[0].offendingEntity).toBe(originalNode.condition.args[0]);
         });
+
+        it("should throw on invalid trigger action types", () => {
+            const originalNode = {
+                type: "Trigger",
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Built" },
+                        id: { type: "Identifier", value: "city-bank" }
+                    }
+                ]
+            };
+
+            const { errors } = validateTypes(originalNode as Parser.Trigger);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Unknown trigger action 'Built'");
+            expect(errors[0].offendingEntity).toBe(originalNode.actions[0].type);
+        });
+
+        it("should throw on invalid trigger action ids", () => {
+            const originalNode = {
+                type: "Trigger",
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "tech-club" }
+                    }
+                ]
+            };
+
+            const { errors } = validateTypes(originalNode as Parser.Trigger);
+            expect(errors.length).toEqual(1);
+
+            expect(errors[0].message).toEqual("Unknown building 'tech-club'");
+            expect(errors[0].offendingEntity).toBe(originalNode.actions[0].id);
+        });
     });
 });

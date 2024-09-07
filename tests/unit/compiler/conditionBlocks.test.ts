@@ -47,10 +47,6 @@ describe("Compiler", () => {
                 body: [
                     {
                         type: "Trigger",
-                        requirement: {
-                            type: { type: "Identifier", value: "Built" },
-                            id: { type: "Identifier", value: "city-windmill" }
-                        },
                         actions: [
                             {
                                 type: { type: "Identifier", value: "Build" },

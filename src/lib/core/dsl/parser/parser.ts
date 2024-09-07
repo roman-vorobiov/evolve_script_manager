@@ -155,41 +155,9 @@ class ExpressionGetter extends DSLVisitor<any> {
     }
 }
 
-class TriggerGetter extends DSLVisitor<Parser.TriggerArgument> {
-    private currentFile: string;
-    private sourceMap: SourceMap;
-    private expressionGetter: ExpressionGetter;
-
-    constructor(sourceMap: SourceMap, currentFile: string) {
-        super();
-        this.currentFile = currentFile;
-        this.sourceMap = sourceMap;
-        this.expressionGetter = new ExpressionGetter(sourceMap, currentFile);
-    }
-
-    visitTriggerActionOrCondition = (ctx: Context.TriggerActionOrConditionContext): Parser.TriggerArgument => {
-        const type = ctx.identifier(0)!;
-        const id = ctx.identifier(1)!;
-        const count = ctx.numberLiteral() ?? ctx.identifier(2);
-
-        let node: Parser.TriggerArgument = {
-            type: this.expressionGetter.visit(type),
-            id: this.expressionGetter.visit(id)
-        };
-
-        if (count !== null) {
-            node.count = this.expressionGetter.visit(count);
-        }
-
-        this.sourceMap.addLocation(node, ctx, this.currentFile);
-        return node;
-    }
-}
-
 class Visitor extends DSLVisitor<void> {
     private sourceMap: SourceMap;
     private expressionGetter: ExpressionGetter;
-    private triggerGetter: TriggerGetter;
 
     private nodes: Parser.Statement[];
     private errors: ParseError[];
@@ -215,7 +183,6 @@ class Visitor extends DSLVisitor<void> {
 
         this.sourceMap = sourceMap;
         this.expressionGetter = new ExpressionGetter(sourceMap, this.currentFile);
-        this.triggerGetter = new TriggerGetter(sourceMap, this.currentFile);
     }
 
     private addNode<T extends Parser.Statement>(ctx: SourceEntity, node: T) {
@@ -357,16 +324,23 @@ class Visitor extends DSLVisitor<void> {
     visitTrigger = (ctx: Context.TriggerContext) => {
         this.addNode<Parser.Trigger>(ctx, {
             type: "Trigger",
-            requirement: this.triggerGetter.visit(ctx.triggerRequirement())!,
-            actions: [this.triggerGetter.visit(ctx.triggerAction())!]
-        });
-    }
+            actions: ctx.triggerAction().map(actionCtx => {
+                const type = actionCtx.identifier(0)!;
+                const id = actionCtx.identifier(1)!;
+                const count = actionCtx.numberLiteral() ?? actionCtx.identifier(2);
 
-    visitTriggerChain = (ctx: Context.TriggerChainContext) => {
-        this.addNode<Parser.Trigger>(ctx, {
-            type: "Trigger",
-            requirement: this.triggerGetter.visit(ctx.triggerRequirement())!,
-            actions: ctx.triggerAction().map(c => this.triggerGetter.visit(c)!)
+                const node: Parser.TriggerAction = {
+                    type: this.expressionGetter.visit(type),
+                    id: this.expressionGetter.visit(id)
+                };
+
+                if (count !== null) {
+                    node.count = this.expressionGetter.visit(count);
+                }
+
+                this.sourceMap.addLocation(node, actionCtx, this.currentFile);
+                return node;
+            })
         });
     }
 

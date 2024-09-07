@@ -499,18 +499,18 @@ def priorityBuildings = [
 ]
 
 for building in $priorityBuildings do
-    Build $building (1) when Built $building (0)
+    Build $building (1)
 end
 
-Build interstellar-jump_ship (100) when Built interstellar-jump_ship (0)
-Build galaxy-freighter (2)         when Built galaxy-freighter (0)
-Build portal-vault (2)             when Built portal-vault (0)
+Build interstellar-jump_ship (100)
+Build galaxy-freighter (2)
+Build portal-vault (2)
 
 # Rush technocracy
-when Unlocked tech-industrialization do
-    Research tech-industrialization
-    Research tech-diplomacy
-    Research tech-republic
+if ResearchUnlocked.tech-industrialization then
+    Research tech-industrialization then
+    Research tech-diplomacy then
+    Research tech-republic then
     Research tech-technocracy
 end
 
@@ -551,7 +551,7 @@ def priorityResearch = [
 ]
 
 for tech in $priorityResearch do
-    Research $tech when Unlocked $tech
+    Research $tech
 end
 
 researchIgnore << [

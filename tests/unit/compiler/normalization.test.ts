@@ -235,13 +235,13 @@ describe("Compiler", () => {
             const originalNode1 = {
                 type: "Trigger",
                 requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
+                    type: { type: "Identifier", value: "Hello" },
+                    id: { type: "Identifier", value: "foo" },
                     count: { type: "Number", value: 123 }
                 },
                 action: {
-                    type: { type: "Identifier", value: "Build" },
-                    id: { type: "Identifier", value: "city-bank" },
+                    type: { type: "Identifier", value: "Bye" },
+                    id: { type: "Identifier", value: "bar" },
                     count: { type: "Number", value: 456 }
                 }
             };
@@ -249,13 +249,13 @@ describe("Compiler", () => {
             const originalNode2 = {
                 type: "Trigger",
                 requirement: {
-                    type: { type: "Identifier", value: "Researched" },
-                    id: { type: "Identifier", value: "tech-club" },
+                    type: { type: "Identifier", value: "Foo" },
+                    id: { type: "Identifier", value: "hello" },
                     count: { type: "Number", value: 456 }
                 },
                 action: {
-                    type: { type: "Identifier", value: "Arpa" },
-                    id: { type: "Identifier", value: "arpalhc" },
+                    type: { type: "Identifier", value: "Bar" },
+                    id: { type: "Identifier", value: "bye" },
                     count: { type: "Number", value: 789 }
                 }
             };
@@ -269,11 +269,11 @@ describe("Compiler", () => {
                     value: {
                         seq: 0,
                         priority: 0,
-                        requirementType: "built",
-                        requirementId: "city-windmill",
+                        requirementType: "Hello",
+                        requirementId: "foo",
                         requirementCount: 123,
-                        actionType: "build",
-                        actionId: "city-bank",
+                        actionType: "bye",
+                        actionId: "bar",
                         actionCount: 456,
                         complete: false
                     }
@@ -288,11 +288,11 @@ describe("Compiler", () => {
                     value: {
                         seq: 1,
                         priority: 1,
-                        requirementType: "researched",
-                        requirementId: "tech-club",
+                        requirementType: "Foo",
+                        requirementId: "hello",
                         requirementCount: 456,
-                        actionType: "arpa",
-                        actionId: "arpalhc",
+                        actionType: "bar",
+                        actionId: "bye",
                         actionCount: 789,
                         complete: false
                     }

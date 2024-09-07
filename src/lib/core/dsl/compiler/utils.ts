@@ -105,7 +105,9 @@ abstract class BaseVisitor {
     constructor(protected sourceMap: SourceMap) {}
 
     protected deriveLocation<T1 extends object, T2 extends object>(original: T1, node: T2): T2 {
-        this.sourceMap.deriveLocation(original, node);
+        if ((node as any) !== original) {
+            this.sourceMap.deriveLocation(original, node);
+        }
         return node;
     }
 

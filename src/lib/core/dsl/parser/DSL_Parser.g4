@@ -96,26 +96,13 @@ settingShiftBlock
 
 triggerStatement
     : trigger
-    | triggerChain
     ;
 
 trigger
-    : triggerAction 'when' triggerRequirement
-    ;
-
-triggerChain
-    : 'when' triggerRequirement 'do' EOL (triggerAction? EOL)* 'end'
+    : triggerAction ('then' EOL? triggerAction)*
     ;
 
 triggerAction
-    : triggerActionOrCondition
-    ;
-
-triggerRequirement
-    : triggerActionOrCondition
-    ;
-
-triggerActionOrCondition
     : identifier identifier ('(' (numberLiteral | identifier) ')')?
     ;
 

@@ -49,13 +49,12 @@ export type ConditionBlock = Modify<Previous.ConditionBlock, {
     body: Statement[]
 }>
 
-export type TriggerArgument = Modify<Previous.TriggerArgument, {
+export type TriggerAction = Modify<Previous.TriggerAction, {
     count: NumberLiteral
 }>
 
 export type Trigger = Modify<Previous.Trigger, {
-    requirement: TriggerArgument,
-    actions: TriggerArgument[]
+    actions: TriggerAction[]
 }>
 
 export type Statement = SettingAssignment | SettingShift | SettingShiftBlock | ConditionBlock | Trigger;

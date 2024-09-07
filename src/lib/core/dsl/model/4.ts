@@ -39,7 +39,6 @@ export type ConditionBlock = Modify<Previous.ConditionBlock, {
     body: Statement[]
 }>
 
-export type TriggerArgument = Previous.TriggerArgument;
 export type Trigger = Previous.Trigger;
 
 export type Statement = SettingAssignment | SettingShift | SettingShiftBlock | ConditionBlock | Trigger;

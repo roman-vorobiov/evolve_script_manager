@@ -3,15 +3,29 @@ import { parseSource as parse, valuesOf, sourceMapsOf } from "./fixture";
 
 describe("Parser", () => {
     describe("Triggers", () => {
-        it("should parse inline triggers", () => {
-            const { nodes, errors, maps } = parse("aaa bbb when ccc ddd");
+        it("should parse triggers with no count", () => {
+            const { nodes, errors, maps } = parse(`aaa bbb`);
 
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            const expectedNode = maps("aaa bbb when ccc ddd", {
+            const expectedNode = maps("aaa bbb", {
                 type: "Trigger",
-                requirement: maps("ccc ddd", { type: maps.identifier("ccc"), id: maps.identifier("ddd") }),
+                actions: [maps("aaa bbb", { type: maps.identifier("aaa"), id: maps.identifier("bbb") })]
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
+        });
+
+        it("should parse triggers with a count", () => {
+            const { nodes, errors, maps } = parse(`aaa bbb`);
+
+            expect(errors).toStrictEqual([]);
+            expect(nodes.length).toBe(1);
+
+            const expectedNode = maps("aaa bbb", {
+                type: "Trigger",
                 actions: [maps("aaa bbb", { type: maps.identifier("aaa"), id: maps.identifier("bbb") })]
             });
 
@@ -20,18 +34,13 @@ describe("Parser", () => {
         });
 
         it("should parse inline triggers with count", () => {
-            const { nodes, errors, maps } = parse("aaa bbb (123) when ccc ddd (456)");
+            const { nodes, errors, maps } = parse("aaa bbb (123)");
 
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            const expectedNode = maps("aaa bbb (123) when ccc ddd (456)", {
+            const expectedNode = maps("aaa bbb (123)", {
                 type: "Trigger",
-                requirement: maps("ccc ddd (456)", {
-                    type: maps.identifier("ccc"),
-                    id: maps.identifier("ddd"),
-                    count: maps("456", { type: "Number", value: 456 })
-                }),
                 actions: [
                     maps("aaa bbb (123)", {
                         type: maps.identifier("aaa"),
@@ -45,23 +54,30 @@ describe("Parser", () => {
             expect(sourceMapsOf(nodes[0])).toEqual(sourceMapsOf(expectedNode));
         });
 
-        it("should parse block triggers", () => {
+        it("should parse trigger chains", () => {
             const { nodes, errors, maps } = parse(`
-                \x01when aaa bbb do
-                    ccc ddd
-                    eee fff
-                end\x02
+                aaa bbb then ccc ddd (123) then eee fff
             `);
 
             expect(errors).toStrictEqual([]);
             expect(nodes.length).toBe(1);
 
-            const expectedNode = maps([1, 2], {
+            const expectedNode = maps("aaa bbb then ccc ddd (123) then eee fff", {
                 type: "Trigger",
-                requirement: maps("aaa bbb", { type: maps.identifier("aaa"), id: maps.identifier("bbb") }),
                 actions: [
-                    maps("ccc ddd", { type: maps.identifier("ccc"), id: maps.identifier("ddd") }),
-                    maps("eee fff", { type: maps.identifier("eee"), id: maps.identifier("fff") })
+                    maps("aaa bbb", {
+                        type: maps.identifier("aaa"),
+                        id: maps.identifier("bbb")
+                    }),
+                    maps("ccc ddd (123)", {
+                        type: maps.identifier("ccc"),
+                        id: maps.identifier("ddd"),
+                        count: maps("123", { type: "Number", value: 123 })
+                    }),
+                    maps("eee fff", {
+                        type: maps.identifier("eee"),
+                        id: maps.identifier("fff")
+                    })
                 ]
             });
 

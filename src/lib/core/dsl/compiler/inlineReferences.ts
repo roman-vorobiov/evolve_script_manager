@@ -230,13 +230,12 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
     }
 
     *onTrigger(statement: Before.Trigger): IterableIterator<After.Trigger> {
-        const requirement = this.processTriggerArgument(statement.requirement);
-        const actions = statement.actions.map(a => this.processTriggerArgument(a));
+        const actions = statement.actions.map(a => this.processTriggerAction(a));
 
-        yield this.derived(statement, { requirement, actions }) as After.Trigger;
+        yield this.derived(statement, { actions }) as After.Trigger;
     }
 
-    private processTriggerArgument(arg: Before.TriggerArgument): After.TriggerArgument {
+    private processTriggerAction(arg: Before.TriggerAction): After.TriggerAction {
         const id = this.resolveReferences(arg.id);
         const count = arg.count && this.resolveReferences(arg.count);
 
@@ -245,7 +244,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
             validateType(count, arg.count, "Number");
         }
 
-        return this.derived(arg, { id, count }) as After.TriggerArgument;
+        return this.derived(arg, { id, count }) as After.TriggerAction;
     }
 
     private validateExpressionParameters(statement: Before.ExpressionDefinition) {

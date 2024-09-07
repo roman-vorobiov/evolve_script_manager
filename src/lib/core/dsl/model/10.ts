@@ -16,15 +16,14 @@ export type SettingPush = Previous.SettingPush;
 
 export type TriggerArgument = {
     type: Identifier,
-    id: Identifier,
+    id: Identifier | BooleanLiteral,
     count: NumberLiteral
 }
 
 export type Trigger = {
     type: "Trigger",
     requirement: TriggerArgument,
-    action: TriggerArgument,
-    condition: EvalLiteral | undefined
+    action: TriggerArgument
 }
 
 export type Statement = SettingAssignment | SettingPush | Trigger;

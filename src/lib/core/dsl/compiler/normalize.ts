@@ -99,7 +99,7 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
             value: {
                 seq: triggerIdx,
                 priority: triggerIdx,
-                requirementType: statement.requirement.type.value.toLowerCase(),
+                requirementType: statement.requirement.type.value,
                 requirementId: statement.requirement.id.value,
                 requirementCount: statement.requirement.count.value,
                 actionType: statement.action.type.value.toLowerCase(),

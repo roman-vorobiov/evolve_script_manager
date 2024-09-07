@@ -11,7 +11,6 @@ import { collectIgnoredTechs } from "./ignoredResearch";
 import { buildEvolutionQueue } from "./evolutionQueue";
 import { flattenExpressions } from "./conditions";
 import { createTriggerChains } from "./triggers";
-import { createTriggerConditions } from "./triggerConditions";
 import { normalizeStatements } from "./normalize";
 
 import type * as Domain from "$lib/core/domain/model";
@@ -53,7 +52,6 @@ function process(statements: Initial.Statement[], sourceMap: SourceMap, errors: 
         .then(buildEvolutionQueue)
         .then(flattenExpressions)
         .then(createTriggerChains)
-        .then(createTriggerConditions)
         .then(normalizeStatements)
         .flush();
 }

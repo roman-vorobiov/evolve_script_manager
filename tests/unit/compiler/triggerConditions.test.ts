@@ -1,104 +1,301 @@
 import { describe, it, expect } from "vitest";
-import { processStatements, valuesOf, originsOf } from "./fixture";
-import { createTriggerConditions as createTriggerConditionsImpl } from "$lib/core/dsl/compiler/triggerConditions";
+import { processStatement, valuesOf, originsOf } from "./fixture";
+import { createTriggerChains as createTriggerChainsImpl } from "$lib/core/dsl/compiler/triggers";
 
-import type * as Parser from "$lib/core/dsl/model/10";
+import type * as Parser from "$lib/core/dsl/model/9";
 
-const createTriggerConditions = (nodes: Parser.Statement[]) => processStatements(nodes, createTriggerConditionsImpl);
+const createTriggerChains = (node: Parser.Statement) => processStatement(node, createTriggerChainsImpl);
 
 describe("Compiler", () => {
     describe("Trigger conditions", () => {
-        it("should generate a dummy override", () => {
+        it("should provide default requirement", () => {
             const originalNode = {
                 type: "Trigger",
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
                 requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
+                    type: { type: "Identifier", value: "Boolean" },
+                    id: { type: "Boolean", value: true },
                     count: { type: "Number", value: 1 }
                 },
-                action: {
-                    type: { type: "Identifier", value: "Build" },
-                    id: { type: "Identifier", value: "city-bank" },
-                    count: { type: "Number", value: 1 }
-                },
-                condition: { type: "Eval", value: "hello" }
-            };
+                action: originalNode.actions[0],
+                actions: undefined
+            });
 
-            const { nodes } = createTriggerConditions([originalNode as Parser.Trigger]);
-            expect(nodes.length).toEqual(2);
-
-            expect(nodes[0]).toBe(originalNode);
-
-            const expectedNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "masterScriptToggle" },
-                value: { type: "Boolean", value: true },
-                condition: {
-                    type: "Expression",
-                    operator: "and",
-                    args: [
-                        { type: "Eval", value: "TriggerManager.priorityList[0].complete = !(hello)" },
-                        { type: "Boolean", value: false }
-                    ]
-                }
-            };
-
-            expect(valuesOf(nodes[1])).toEqual(valuesOf(expectedNode));
-            expect(originsOf(nodes[1])).toEqual(originsOf(expectedNode));
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
 
-        it("should ignore triggers w/o conditions", () => {
-            const originalNode1 = {
+        it("should use condition as requirement (subscript)", () => {
+            const originalNode = {
                 type: "Trigger",
-                requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
-                    count: { type: "Number", value: 1 }
+                condition: {
+                    type: "Subscript",
+                    base: { type: "Identifier", value: "Foo" },
+                    key: { type: "Identifier", value: "Bar" }
                 },
-                action: {
-                    type: { type: "Identifier", value: "Build" },
-                    id: { type: "Identifier", value: "city-bank" },
-                    count: { type: "Number", value: 1 }
-                }
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
             };
 
-            const originalNode2 = {
-                type: "Trigger",
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
                 requirement: {
-                    type: { type: "Identifier", value: "Built" },
-                    id: { type: "Identifier", value: "city-windmill" },
+                    type: { type: "Identifier", value: "Foo" },
+                    id: { type: "Identifier", value: "Bar" },
                     count: { type: "Number", value: 1 }
                 },
-                action: {
-                    type: { type: "Identifier", value: "Build" },
-                    id: { type: "Identifier", value: "city-bank" },
-                    count: { type: "Number", value: 1 }
-                },
-                condition: { type: "Eval", value: "hello" }
+                action: originalNode.actions[0],
+                actions: undefined
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should use condition as requirement (eval)", () => {
+            const originalNode = {
+                type: "Trigger",
+                condition: { type: "Eval", value: "hello" },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
             };
 
-            const { nodes } = createTriggerConditions([originalNode1, originalNode2] as Parser.Trigger[]);
-            expect(nodes.length).toEqual(3);
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
 
-            expect(nodes[0]).toBe(originalNode1);
-            expect(nodes[1]).toBe(originalNode2);
+            const expectedNode = from(originalNode, {
+                requirement: {
+                    type: { type: "Identifier", value: "Eval" },
+                    id: { type: "Identifier", value: "hello" },
+                    count: { type: "Number", value: 1 }
+                },
+                action: originalNode.actions[0],
+                actions: undefined
+            });
 
-            const expectedNode = {
-                type: "SettingAssignment",
-                setting: { type: "Identifier", value: "masterScriptToggle" },
-                value: { type: "Boolean", value: true },
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should use condition as requirement (constant)", () => {
+            const originalNode = {
+                type: "Trigger",
+                condition: { type: "String", value: "hello" },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
+                requirement: {
+                    type: { type: "Identifier", value: "Eval" },
+                    id: { type: "Identifier", value: "'hello'" },
+                    count: { type: "Number", value: 1 }
+                },
+                action: originalNode.actions[0],
+                actions: undefined
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should use condition as requirement (unary expression)", () => {
+            const originalNode = {
+                type: "Trigger",
                 condition: {
                     type: "Expression",
-                    operator: "and",
+                    operator: "not",
                     args: [
-                        { type: "Eval", value: "TriggerManager.priorityList[1].complete = !(hello)" },
-                        { type: "Boolean", value: false }
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "Foo" },
+                            key: { type: "Identifier", value: "Bar" }
+                        }
                     ]
-                }
+                },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
             };
 
-            expect(valuesOf(nodes[2])).toEqual(valuesOf(expectedNode));
-            expect(originsOf(nodes[2])).toEqual(originsOf(expectedNode));
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
+                requirement: {
+                    type: { type: "Identifier", value: "Foo" },
+                    id: { type: "Identifier", value: "Bar" },
+                    count: { type: "Number", value: 0 }
+                },
+                action: originalNode.actions[0],
+                actions: undefined
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should use condition as requirement (binary expression)", () => {
+            const originalNode = {
+                type: "Trigger",
+                condition: {
+                    type: "Expression",
+                    operator: "==",
+                    args: [
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "Foo" },
+                            key: { type: "Identifier", value: "Bar" }
+                        },
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "Bar" },
+                            key: { type: "Identifier", value: "Foo" }
+                        }
+                    ]
+                },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
+                requirement: {
+                    type: { type: "Identifier", value: "Eval" },
+                    id: { type: "Identifier", value: "_('Foo', 'Bar') == _('Bar', 'Foo')" },
+                    count: { type: "Number", value: 1 }
+                },
+                action: originalNode.actions[0],
+                actions: undefined
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should use condition as requirement (number comparison (L))", () => {
+            const originalNode = {
+                type: "Trigger",
+                condition: {
+                    type: "Expression",
+                    operator: "==",
+                    args: [
+                        { type: "Number", value: 123 },
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "Bar" },
+                            key: { type: "Identifier", value: "Foo" }
+                        }
+                    ]
+                },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
+                requirement: {
+                    type: { type: "Identifier", value: "Bar" },
+                    id: { type: "Identifier", value: "Foo" },
+                    count: { type: "Number", value: 123 }
+                },
+                action: originalNode.actions[0],
+                actions: undefined
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
+        });
+
+        it("should use condition as requirement (number comparison (R))", () => {
+            const originalNode = {
+                type: "Trigger",
+                condition: {
+                    type: "Expression",
+                    operator: "==",
+                    args: [
+                        {
+                            type: "Subscript",
+                            base: { type: "Identifier", value: "Foo" },
+                            key: { type: "Identifier", value: "Bar" }
+                        },
+                        { type: "Number", value: 123 }
+                    ]
+                },
+                actions: [
+                    {
+                        type: { type: "Identifier", value: "Build" },
+                        id: { type: "Identifier", value: "city-bank" },
+                        count: { type: "Number", value: 456 }
+                    }
+                ]
+            };
+
+            const { nodes, from } = createTriggerChains(originalNode as Parser.Trigger);
+            expect(nodes.length).toEqual(1);
+
+            const expectedNode = from(originalNode, {
+                requirement: {
+                    type: { type: "Identifier", value: "Foo" },
+                    id: { type: "Identifier", value: "Bar" },
+                    count: { type: "Number", value: 123 }
+                },
+                action: originalNode.actions[0],
+                actions: undefined
+            });
+
+            expect(valuesOf(nodes[0])).toEqual(valuesOf(expectedNode));
+            expect(originsOf(nodes[0])).toEqual(originsOf(expectedNode));
         });
     });
 });
