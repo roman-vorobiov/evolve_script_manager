@@ -49,8 +49,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         this.queue.push(makeQueueEntry(statement.body as Before.SettingAssignment[]));
     }
 
-    visitAll(statements: Before.Statement[]): After.Statement[] {
-        const result = super.visitAll(statements);
+    processStatements(statements: Before.Statement[]): After.Statement[] {
+        const result = this.visitAll(statements);
 
         if (this.queue.length !== 0) {
             result.push({
@@ -67,5 +67,5 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
 export function buildEvolutionQueue(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
     const impl = new Impl(sourceMap, errors);
 
-    return impl.visitAll(statements);
+    return impl.processStatements(statements);
 }

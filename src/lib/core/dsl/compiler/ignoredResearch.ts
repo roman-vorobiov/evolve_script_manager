@@ -43,8 +43,8 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
         }
     }
 
-    visitAll(statements: Parser.Statement[]): Parser.Statement[] {
-        return [...super.visitAll(statements), ...this.generateStatements()];
+    processStatements(statements: Parser.Statement[]): Parser.Statement[] {
+        return [...this.visitAll(statements), ...this.generateStatements()];
     }
 
     private *generateStatements(): IterableIterator<Parser.SettingAssignment | Parser.SettingPush> {
@@ -106,5 +106,5 @@ class Impl extends GeneratingStatementVisitor<Parser.Statement> {
 export function collectIgnoredTechs(statements: Parser.Statement[], sourceMap: SourceMap, errors: CompileError[]): Parser.Statement[] {
     const impl = new Impl(sourceMap, errors);
 
-    return impl.visitAll(statements);
+    return impl.processStatements(statements);
 }

@@ -9,19 +9,36 @@ const collectIgnoredTechs = (nodes: Parser.Statement[]) => processStatements(nod
 describe("Compiler", () => {
     describe("Ignored research", () => {
         it("should ignore other settings", () => {
-            const originalNode: Parser.SettingShift = {
+            const originalNode1: Parser.SettingShift = {
                 type: "SettingShift",
-                setting: { type: "Identifier", value: "logFilter" },
+                setting: { type: "Identifier", value: "researchIgnore" },
                 operator: "<<",
                 values: [
-                    { type: "String", value: "foo" }
+                    { type: "Identifier", value: "tech-theocracy" }
                 ]
             };
 
-            const { nodes } = collectIgnoredTechs([originalNode]);
-            expect(nodes.length).toEqual(1);
+            const originalNode2: Parser.SettingShiftBlock = {
+                type: "SettingShiftBlock",
+                setting: { type: "Identifier", value: "evolutionQueue" },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "userEvolutionTarget" },
+                        value: { type: "String", value: "foo" }
+                    },
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "prestigeType" },
+                        value: { type: "String", value: "bar" }
+                    }
+                ]
+            };
 
-            expect(nodes[0]).toBe(originalNode);
+            const { nodes } = collectIgnoredTechs([originalNode1, originalNode2]);
+            expect(nodes.length).toEqual(2);
+
+            expect(nodes[0]).toBe(originalNode2);
         });
 
         it("should collect all unconditional pushes", () => {

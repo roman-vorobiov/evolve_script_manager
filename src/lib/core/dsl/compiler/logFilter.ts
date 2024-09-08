@@ -34,8 +34,8 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         }
     }
 
-    visitAll(statements: Before.Statement[]): After.Statement[] {
-        const result = super.visitAll(statements);
+    processStatements(statements: Before.Statement[]): After.Statement[] {
+        const result = this.visitAll(statements);
 
         if (this.ignoredIds.length !== 0) {
             const logFilter = this.ignoredIds.join(", ");
@@ -54,5 +54,5 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
 export function collectLogFilterStrings(statements: Before.Statement[], sourceMap: SourceMap, errors: CompileError[]): After.Statement[] {
     const impl = new Impl(sourceMap, errors);
 
-    return impl.visitAll(statements);
+    return impl.processStatements(statements);
 }

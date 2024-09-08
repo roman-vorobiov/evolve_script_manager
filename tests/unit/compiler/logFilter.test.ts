@@ -8,6 +8,39 @@ const collectLogFilterStrings = (nodes: Parser.Statement[]) => processStatements
 
 describe("Compiler", () => {
     describe("Log filter", () => {
+        it("should ignore other settings", () => {
+            const originalNode1: Parser.SettingShift = {
+                type: "SettingShift",
+                setting: { type: "Identifier", value: "logFilter" },
+                operator: "<<",
+                values: [
+                    { type: "String", value: "foo" }
+                ]
+            };
+
+            const originalNode2: Parser.SettingShiftBlock = {
+                type: "SettingShiftBlock",
+                setting: { type: "Identifier", value: "evolutionQueue" },
+                body: [
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "userEvolutionTarget" },
+                        value: { type: "String", value: "foo" }
+                    },
+                    {
+                        type: "SettingAssignment",
+                        setting: { type: "Identifier", value: "prestigeType" },
+                        value: { type: "String", value: "bar" }
+                    }
+                ]
+            };
+
+            const { nodes } = collectLogFilterStrings([originalNode1, originalNode2]);
+            expect(nodes.length).toEqual(2);
+
+            expect(nodes[0]).toBe(originalNode2);
+        });
+
         it("should push strings", () => {
             const node1: Parser.SettingShift = {
                 type: "SettingShift",
