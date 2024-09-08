@@ -1,5 +1,8 @@
 researchIgnore << tech-purify
 
-Build space-moon_base    when Built space-moon_mission
-Build space-iridium_mine when Built space-moon_base
-Build space-helium_mine  when Built space-moon_base
+Build space-moon_base
+
+if BuildingCount.space-moon_base >= 1 then
+    Build space-iridium_mine
+    Build space-helium_mine
+end
