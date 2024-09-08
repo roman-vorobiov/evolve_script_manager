@@ -20,6 +20,11 @@ const jobs = { ...normalJobs, ...crafters };
 const races = { ...listToMap(Object.values(normalRaces)), ...listToMap(Object.keys(pseudoRaces)) };
 const queueTypes = listToMap(Object.keys(enums.queueTypes));
 
+const industryTypes = {
+    smelters: "Smelter Slots",
+    factories: "Factory Slots"
+}
+
 function speciesAlias(value: string): string {
     return pseudoRaces[value as keyof typeof pseudoRaces] ?? value;
 }
@@ -74,6 +79,8 @@ export const expressions: Record<string, ExpressionType> = {
     ResourceSatisfyRatio: { type: "number",  valueDescription: "resource", allowedValues: resources },
     ResourceDemanded:     { type: "boolean", valueDescription: "resource", allowedValues: resources },
 
+    Industry:             { type: "number", valueDescription: "industry", allowedValues: industryTypes },
+
     RaceId:               { type: "string",  valueDescription: "race", allowedValues: races, alias: speciesAlias },
     RacePillared:         { type: "boolean", valueDescription: "race", allowedValues: races, alias: speciesAlias },
 
@@ -86,7 +93,7 @@ export const expressions: Record<string, ExpressionType> = {
 
     Challenge:            { type: "boolean", valueDescription: "challenge", allowedValues: challenges },
 
-    Universe:             { type: "boolean", valueDescription: "universe", allowedValues: { "bigbang": "Big Bang", ...enums.universes } },
+    Universe:             { type: "boolean", valueDescription: "universe", allowedValues: { bigbang: "Big Bang", ...enums.universes } },
 
     PlanetBiome:          { type: "boolean", valueDescription: "biome", allowedValues: enums.planetaryBiomes },
 
@@ -94,7 +101,7 @@ export const expressions: Record<string, ExpressionType> = {
 
     Government:           { type: "boolean", valueDescription: "government", allowedValues: enums.governments },
 
-    Governor:             { type: "boolean", valueDescription: "governor", allowedValues: { "none": "None", ...enums.governors } },
+    Governor:             { type: "boolean", valueDescription: "governor", allowedValues: { none: "None", ...enums.governors } },
 
     Queue:                { type: "number",  valueDescription: "queue", allowedValues: queueTypes, alias: queueAlias },
 
