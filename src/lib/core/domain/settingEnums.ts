@@ -287,7 +287,7 @@ export default <Record<string, Record<string, string>>> {
 
     shifterGenus: genusOptions,
 
-    imitateRace: genusOptions,
+    imitateRace: races,
 
     buildingShrineType: {
         any: "Any",

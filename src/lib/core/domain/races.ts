@@ -48,8 +48,18 @@ export const races = {
     nano: "Nano",
     ghast: "Ghast",
     shoggoth: "Shoggoth",
+    dwarf: "Dwarf",
+    raccoon: "Racconar",
+    lichen: "Lichen",
+    wyvern: "Wyvern",
+    beholder: "Beholder",
+    djinn: "Djinn",
+    narwhal: "Narwhalus",
+    bombardier: "Bombardier",
+    nephilim: "Nephilim",
     junker: "Valdi",
     sludge: "Sludge",
+    ultra_sludge: "Ultra Sludge",
     custom: "Custom"
 };
 
