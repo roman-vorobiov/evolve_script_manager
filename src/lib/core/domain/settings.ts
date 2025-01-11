@@ -42,7 +42,7 @@ function fillAllowedSuffixes(definitions: Record<string, EntryDefinition>): Reco
         }
     }
 
-    // Try "job_p" before "job_"
+    // Try "job_p_" before "job_"
     const entries = Object.values(result).sort((l, r) => r.prefix.length - l.prefix.length);
 
     for (const setting of settings) {
@@ -179,8 +179,8 @@ export const prefixes = fillAllowedSuffixes({
         suffixes: settingSuffixes.jobs,
         prefixes: {
             AutoJob:         "job_",
-            AutoJobPriority: "job_p",
-            AutoJobSmart:    "job_s",
+            AutoJobPriority: "job_p_",
+            AutoJobSmart:    "job_s_",
             AutoJobPass1:    "job_b1_",
             AutoJobPass2:    "job_b2_",
             AutoJobPass3:    "job_b3_",
