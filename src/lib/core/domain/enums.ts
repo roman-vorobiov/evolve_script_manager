@@ -86,14 +86,15 @@ export const resetTypes = {
     bioseed: "Bioseed",
     cataclysm: "Cataclysm",
     whitehole: "Whitehole",
-    vacuum: "Vacuum",
+    vacuum: "Vacuum Collapse",
     apocalypse: "AI Apocalypse",
     ascension: "Ascension",
-    demonic: "DI",
+    demonic: "Demonic Infusion",
+    apotheosis: "Apotheosis",
     terraform: "Terraform",
     matrix: "Matrix",
     retire: "Retirement",
-    eden: "Eden",
+    eden: "Garden of Eden",
 };
 
 export const queueTypes = {
