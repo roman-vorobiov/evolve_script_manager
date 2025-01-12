@@ -7,7 +7,10 @@ import {
     universes,
     governments,
     governors,
-    resetTypes as resetTypeOptions
+    resetTypes as resetTypeOptions,
+    ritualPowers,
+    minorWishes,
+    majorWishes
 } from "./enums";
 
 function fromArray(entries: string[]) {
@@ -231,14 +234,14 @@ export default <Record<string, Record<string, string>>> {
 
     userResearchTheology_1: {
         auto: "ScriptManaged",
-        ["tech-anthropology"]: techs["tech-anthropology"][0],
-        ["tech-fanaticism"]: techs["tech-fanaticism"][0]
+        ["tech-anthropology"]: techs["tech-anthropology"],
+        ["tech-fanaticism"]: techs["tech-fanaticism"]
     },
 
     userResearchTheology_2: {
         auto: "ScriptManaged",
-        ["tech-study"]: techs["tech-study"][0],
-        ["tech-deify"]: techs["tech-deify"][0]
+        ["tech-study"]: techs["tech-study"],
+        ["tech-deify"]: techs["tech-deify"]
     },
 
     productionFoundryWeighting: {
@@ -279,6 +282,12 @@ export default <Record<string, Record<string, string>>> {
         strat4: "Secret Vaccination"
     },
 
+    replicatorWeightingMode: {
+        mass: "Atomic Mass",
+        quantity: "Resource Quantity",
+        legacy: "Legacy"
+    },
+
     ejectMode: spendOptions,
 
     supplyMode: spendOptions,
@@ -301,17 +310,22 @@ export default <Record<string, Record<string, string>>> {
     psychicPower: {
         none: "Ignore",
         auto: "Script Managed",
-        boost: "Boost Resource Production",
-        murder: "Murder a Citizen",
-        assault: "Boost Attack Power",
-        profit: "Boost Profits",
-        stun: "Psychic Stun",
-        mind_break: "Mind Break"
+        ...ritualPowers
     },
 
     psychicBoostRes: {
         auto: "Script Managed",
         ...ejectableResources
+    },
+
+    wishMinor: {
+        none: "None",
+        ...minorWishes
+    },
+
+    wishMajor: {
+        none: "None",
+        ...majorWishes
     },
 
     geneticsSequence: fromArrayCapitalized([

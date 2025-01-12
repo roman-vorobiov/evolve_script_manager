@@ -22,7 +22,8 @@ const baseGenera = {
 export const playableGenera = {
     organism: "Protoplasm",
     ...baseGenera,
-    synthetic: "Synthetic"
+    synthetic: "Synthetic",
+    hybrid: "Hybrid"
 };
 
 export const mimicGenera = {

@@ -2,7 +2,7 @@ import defaultSettings from "$lib/assets/default.json";
 import { craftableResources as craftables } from "./resources";
 import * as settingSuffixes from "./settingSuffixes";
 
-const nonSettings = ["scriptName", "overrides", "triggers"];
+const nonSettings = ["scriptName", "overrides", "triggers", "migrationVersion"];
 
 export const settings = Object.keys(defaultSettings).filter(id => !nonSettings.includes(id));
 
@@ -167,6 +167,13 @@ export const prefixes = fillAllowedSuffixes({
         suffixes: settingSuffixes.rituals,
         prefixes: {
             AutoRitualWeight: "spell_w_",
+        }
+    },
+    "power": {
+        suffixes: settingSuffixes.ocularPowers,
+        prefixes: {
+            OcularPower: "ocularPower_",
+            OcularPowerPriority: "ocularPower_p_"
         }
     },
     "fuel type": {

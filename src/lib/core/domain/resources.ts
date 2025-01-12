@@ -1,9 +1,9 @@
-export const evolutionResources = {
+const evolutionResources = {
     RNA: "RNA",
     DNA: "DNA",
 }
 
-export const baseResources = {
+const baseResources = {
     Money: "Money",
     Population: "Population",
     Slave: "Slave",
@@ -11,12 +11,13 @@ export const baseResources = {
     Energy: "Energy",
     Sus: "Suspicion",
     Knowledge: "Knowledge",
+    Omniscience: "Omniscience",
     Zen: "Zen",
     Crates: "Crates",
     Containers: "Containers",
 }
 
-export const tradableResources = {
+const tradableResources = {
     Food: "Food",
     Lumber: "Lumber",
     Chrysotile: "Chrysotile",
@@ -38,7 +39,7 @@ export const tradableResources = {
     Helium_3: "Helium-3",
 }
 
-export const galaxyTradableResources = {
+const galaxyTradableResources = {
     Deuterium: "Deuterium",
     Neutronium: "Neutronium",
     Adamantite: "Adamantite",
@@ -50,19 +51,23 @@ export const galaxyTradableResources = {
     Vitreloy: "Vitreloy",
 }
 
-export const advancedResources = {
+const advancedResources = {
     ...galaxyTradableResources,
     Water: "Water",
     Infernite: "Infernite",
     Orichalcum: "Orichalcum",
+    Asphodel_Powder: "Asphodel Powder",
+    Elysanite: "Elysanite",
     Unobtainium: "Unobtainium",
     Materials: "Materials",
+}
 
+const otherResources = {
     Horseshoe: "Horseshoe",
     Nanite: "Nanite",
     Genes: "Genes",
     Soul_Gem: "Soul Gem",
-}
+};
 
 export const craftableResources = {
     Plywood: "Plywood",
@@ -78,34 +83,32 @@ export const craftableResources = {
 
 export const ejectableResources = {
     ...tradableResources,
-    ...galaxyTradableResources,
-    Water: "Water",
-    Infernite: "Infernite",
-    Orichalcum: "Orichalcum",
-    Unobtainium: "Unobtainium",
-    Materials: "Materials",
-    ...craftableResources
+    ...advancedResources,
+    ...craftableResources,
 }
 
-export const specialResources = {
+const specialResources = {
     Corrupt_Gem: "Corrupt Gem",
     Codex: "Codex",
     Cipher: "Encrypted Data",
     Demonic_Essence: "Demonic Essence",
+    Blessed_Essence: "Blessed Essence",
 }
 
-export const prestigeResources = {
+const prestigeResources = {
     Blood_Stone: "Blood Stone",
     Artifact: "Artifact",
     Plasmid: "Plasmid",
     AntiPlasmid: "Anti-Plasmid",
+    Supercoiled: "Supercoiled",
     Phage: "Phage",
     Dark: "Dark",
     Harmony: "Harmony",
     AICore: "AI Core",
 }
 
-export const pseudoResources = {
+const pseudoResources = {
+    Troops: "Troops",
     Supply: "Supplies",
     Power: "Power",
     Morale: "Morale",
@@ -131,6 +134,7 @@ export const pseudoResources = {
     Alien_Support: "Alien Support",
     Lake_Support: "Lake Support",
     Spire_Support: "Spire Support",
+    Asphodel_Support: "Asphodel Support"
 }
 
 export const fuelTypes = {
@@ -145,8 +149,9 @@ export const resources = {
     ...baseResources,
     ...tradableResources,
     ...advancedResources,
+    ...otherResources,
     ...craftableResources,
     ...specialResources,
     ...prestigeResources,
-    ...pseudoResources
+    ...pseudoResources,
 }

@@ -2,7 +2,7 @@ export { default as buildings } from "./buildings";
 export { default as projects } from "./projects";
 export { resources, fuelTypes } from "./resources";
 export { jobs } from "./jobs";
-export { planetaryBiomes, planetaryTraits, planetaryBonuses } from "./enums";
+export { planetaryBiomes, planetaryTraits, planetaryBonuses, ocularPowers } from "./enums";
 export { minorTraits, majorTraits } from "./traits";
 
 export const challenges = {
@@ -17,8 +17,7 @@ export const challenges = {
     inflation: "Inflation",
     sludge: "Failed Experiment",
     orbit_decay: "Orbital Decay",
-    gravity_well: "Gravity Well",
-    witch_hunter: "Witch Hunter",
+    gravity_well: "Gravity Well/Witch Hunter",
     junker: "Genetic Dead End",
     cataclysm: "Cataclysm",
     banana: "Banana Republic",

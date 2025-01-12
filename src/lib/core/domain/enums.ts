@@ -37,6 +37,7 @@ export const planetaryTraits = {
     unstable: "Unstable",
     permafrost: "Permafrost",
     retrograde: "Retrograde",
+    kamikaze: "Kamikaze"
 };
 
 export const planetaryBonuses = {
@@ -125,4 +126,44 @@ export const soldierTypes = {
     deadSoldiers: "Dead Soldiers",
     crew: "Ship Crew",
     mercenaryCost: "Mercenary Cost",
+};
+
+export const ritualPowers = {
+    boost: "Boost Resource Production",
+    murder: "Murder a Citizen",
+    assault: "Boost Attack Power",
+    profit: "Boost Profits",
+    stun: "Psychic Stun",
+    mind_break: "Mind Break",
+}
+
+export const ocularPowers = {
+    disintegration: "Disintegration",
+    petrification: "Petrification",
+    wound: "Wound",
+    telekinesis: "Telekinesis",
+    fear: "Fear",
+    charm: "Charm",
+};
+
+export const minorWishes = {
+    Know: "Knowledge",
+    Money: "Money",
+    Res: "Resources",
+    Love: "Love",
+    Excite: "Excitement",
+    Fame: "Fame",
+    Strength: "Strength",
+    Influence: "Influence",
+}
+
+export const majorWishes = {
+    BigMoney: "Fat Stacks of Cash",
+    BigRes: "Lots of Resources",
+    Plasmid: "Plasmids",
+    Power: "Power",
+    Adoration: "Adoration",
+    Thrill: "Thrills",
+    Peace: "Peace",
+    Greatness: "Greatness",
 };

@@ -100,10 +100,10 @@ class Impl extends StatementVisitor<Before.Statement, After.Statement> {
                 seq: triggerIdx,
                 priority: triggerIdx,
                 requirementType: statement.requirement.type.value,
-                requirementId: statement.requirement.id.value,
+                requirementId: statement.requirement.id.value as string,
                 requirementCount: statement.requirement.count.value,
                 actionType: statement.action.type.value.toLowerCase(),
-                actionId: statement.action.id.value,
+                actionId: statement.action.id.value as string,
                 actionCount: statement.action.count.value,
                 complete: false
             }

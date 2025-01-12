@@ -30,13 +30,16 @@ export const smartJobs = {
 export const jobs = {
     unemployed: "Unemployed",
     colonist: "Colonist",
+    forager: "Forager",
     ...smartJobs,
     ...servantJobs,
 
     titan_colonist: "Titan Colonist",
     pit_miner: "Pit Miner",
     archaeologist: "Archaeologist",
-    priest: "Priest"
+    priest: "Priest",
+    ghost_trapper: "Ghost Trapper",
+    elysium_miner: "Elysium Miner",
 }
 
 export const crafters = {

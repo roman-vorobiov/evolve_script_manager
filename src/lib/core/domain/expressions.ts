@@ -4,7 +4,7 @@ import { playableGenera, mimicGenera } from "./genera";
 import { traits } from "./traits";
 import { settings as settingIDs } from "./settings";
 import buildings from "./buildings";
-import researchNames from "./tech";
+import researches from "./tech";
 import projects from "./projects";
 import { resources } from "./resources";
 import { jobs as normalJobs, servantJobs, crafters } from "./jobs";
@@ -15,7 +15,6 @@ function listToMap(values: string[]): Record<string, string> {
 }
 
 const settings = listToMap(settingIDs);
-const researches = Object.fromEntries(Object.entries(researchNames).map(([key, values]) => [key, values[0]]));
 const jobs = { ...normalJobs, ...crafters };
 const races = { ...listToMap(Object.values(normalRaces)), ...listToMap(Object.keys(pseudoRaces)) };
 const queueTypes = listToMap(Object.keys(enums.queueTypes));

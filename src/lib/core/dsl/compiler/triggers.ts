@@ -23,7 +23,7 @@ class Impl extends GeneratingStatementVisitor<Before.Statement, After.Statement>
         yield this.deriveLocation(statement, <After.Trigger> {
             type: "Trigger",
             requirement: this.normalizeCondition(statement.condition),
-            action: this.normalizeAction(iterator.next().value),
+            action: this.normalizeAction(iterator.next().value!),
             condition: statement.condition
         });
 

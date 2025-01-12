@@ -1,8 +1,6 @@
 import buildings from "./buildings";
-import techNames from "./tech";
+import techs from "./tech";
 import projects from "./projects";
-
-const techs = Object.fromEntries(Object.entries(techNames).map(([id, names]) => [id, names[0]]));
 
 export const triggerActions = {
     Build:    { type: "building", allowedValues: buildings },

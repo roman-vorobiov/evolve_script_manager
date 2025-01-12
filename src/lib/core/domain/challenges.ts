@@ -12,6 +12,7 @@ export const challenges = {
     emfield: "EM Field",
     inflation: "Inflation",
     sludge: "Failed Experiment",
+    ultra_sludge: "Ultimate Failed Experiment",
     orbit_decay: "Orbital Decay",
     gravity_well: "Gravity Well",
     witch_hunter: "Witch Hunter",
