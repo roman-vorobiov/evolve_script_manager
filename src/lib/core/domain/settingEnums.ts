@@ -111,6 +111,12 @@ const genusOptions = {
     ...mimicGenera
 };
 
+const productionWeightingOptions = {
+    none: "None",
+    demanded: "Prioritize demanded",
+    buildings: "Buildings weightings"
+};
+
 export default <Record<string, Record<string, string>>> {
     userUniverseTargetName: {
         none: "None",
@@ -244,11 +250,9 @@ export default <Record<string, Record<string, string>>> {
         ["tech-deify"]: techs["tech-deify"]
     },
 
-    productionFoundryWeighting: {
-        none: "None",
-        demanded: "Prioritize demanded",
-        buildings: "Buildings weightings"
-    },
+    productionFoundryWeighting: productionWeightingOptions,
+
+    productionFactoryWeighting: productionWeightingOptions,
 
     productionCraftsmen: {
         always: "Always",

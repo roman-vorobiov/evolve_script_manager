@@ -53,7 +53,7 @@ export const rituals = {
     crafting: "Crafting"
 };
 
-export const andromedaSystem = {
+export const andromedaSystems = {
     gxy_stargate: "Stargate",
     gxy_gateway: "Gateway System",
     gxy_gorddon: "Gorddon System",
@@ -62,7 +62,7 @@ export const andromedaSystem = {
     gxy_chthonian: "Chthonian System"
 };
 
-export const truePathRegion = {
+export const truePathRegions = {
     spc_moon: "Moon",
     spc_red: "Red",
     spc_gas: "Gas",
@@ -73,4 +73,10 @@ export const truePathRegion = {
     spc_triton: "Triton",
     spc_kuiper: "Kuiper Belt",
     spc_eris: "Eris"
+};
+
+export const extractorResources = {
+    common: "Aluminium",
+    uncommon: "Neutronium",
+    rare: "Elerium"
 };

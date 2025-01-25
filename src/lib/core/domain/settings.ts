@@ -153,6 +153,12 @@ export const prefixes = fillAllowedSuffixes({
             AutoNanite:              "res_nanite",
         }
     },
+    "extractor resource": {
+        suffixes: settingSuffixes.extractorResources,
+        prefixes: {
+            ExtractorWeight: "productionExtWeight_",
+        }
+    },
     "storage": {
         suffixes: without(settingSuffixes.resources, ["Food"]),
         prefixes: {
@@ -229,13 +235,13 @@ export const prefixes = fillAllowedSuffixes({
         }
     },
     "system": {
-        suffixes: settingSuffixes.andromedaSystem,
+        suffixes: settingSuffixes.andromedaSystems,
         prefixes: {
             FleetPriority: "fleet_pr_",
         }
     },
     "true path region": {
-        suffixes: settingSuffixes.truePathRegion,
+        suffixes: settingSuffixes.truePathRegions,
         prefixes: {
             FleetOuterWeight: "fleet_outer_pr_",
             FleetOuterDefend: "fleet_outer_def_",
