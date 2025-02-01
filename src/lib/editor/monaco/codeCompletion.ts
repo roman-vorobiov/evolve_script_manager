@@ -73,6 +73,10 @@ function isAssignee(tokenStack: string[]): boolean {
     return tokenStack[0] === "=" || tokenStack[1] === "=";
 }
 
+function insideString(tokenStack: string[]) {
+    return tokenStack[0] === '"';
+}
+
 function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Position, state: State): string[] | Record<string, string> {
     const tokenStack = tokenizeBackwards(model, position);
 
@@ -105,7 +109,8 @@ function getCandidates(model: Monaco.editor.ITextModel, position: Monaco.Positio
         return [...Object.keys(expressions), ...Object.keys(otherExpressions)];
     }
     else if (insideImport(tokenStack)) {
-        return Object.fromEntries(state.configs.map(cfg => [cfg.name, cfg.name]));
+        const replacement = (name: string) => insideString(tokenStack) ? name : `"${name}"`;
+        return Object.fromEntries(state.configs.map(cfg => [replacement(cfg.name), cfg.name]));
     }
     else if (tokenStack.length > 1 && tokenStack[1] in triggerActions) {
         return triggerActions[tokenStack[1] as keyof typeof triggerActions].allowedValues;
