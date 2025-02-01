@@ -7,16 +7,24 @@ type ConfigCallback = (cfg: Config) => void;
 type OptionalConfigCallback = (cfg: Config | null) => void;
 
 export class State {
-    private onConfigAddedCallbacks: Record<number, ConfigCallback> = {};
-    private onConfigRemovedCallbacks: Record<number, ConfigCallback> = {};
-    private onActiveConfigChangedCallbacks: Record<number, OptionalConfigCallback> = {};
+    private onConfigAddedCallbacks: Record<number, ConfigCallback>;
+    private onConfigRemovedCallbacks: Record<number, ConfigCallback>;
+    private onActiveConfigChangedCallbacks: Record<number, OptionalConfigCallback>;
 
     constructor(
         public configs: Config[] = [],
         public activeConfig: string | null = null,
         public previewOpen: boolean = false,
         public browserOpen: boolean = false
-    ) {}
+    ) {
+        Object.defineProperty(this, "onConfigAddedCallbacks", { enumerable: false, writable: true });
+        Object.defineProperty(this, "onConfigRemovedCallbacks", { enumerable: false, writable: true });
+        Object.defineProperty(this, "onActiveConfigChangedCallbacks", { enumerable: false, writable: true });
+
+        this.onConfigAddedCallbacks = {};
+        this.onConfigRemovedCallbacks = {};
+        this.onActiveConfigChangedCallbacks = {};
+    }
 
     findConfig(configName: string): Config | undefined {
         return this.configs.find(cfg => cfg.name === configName);
