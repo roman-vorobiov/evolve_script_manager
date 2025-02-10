@@ -4,7 +4,7 @@ export type Config = {
 }
 
 type ConfigCallback = (cfg: Config) => void;
-type OptionalConfigCallback = (cfg: Config | null) => void;
+type OptionalConfigCallback = (newCfg: Config | null, oldCfg: Config | null) => void;
 
 export class State {
     private onConfigAddedCallbacks: Record<number, ConfigCallback>;
@@ -77,8 +77,9 @@ export class State {
     }
 
     setActive(config: Config) {
+        const oldConfig = this.activeConfig === null ? null : this.findConfig(this.activeConfig) ?? null;
         this.activeConfig = config.name;
-        this.invokeCallbacks(this.onActiveConfigChangedCallbacks, config);
+        this.invokeCallbacks(this.onActiveConfigChangedCallbacks, config, oldConfig);
     }
 
     onConfigAdded(callback: ConfigCallback) {
@@ -115,9 +116,9 @@ export class State {
         delete callbacks[id];
     }
 
-    private invokeCallbacks<T>(callbacks: Record<number, (cfg: T) => void>, config: T) {
+    private invokeCallbacks<T>(callbacks: Record<number, (...args: T[]) => void>, ...args: T[]) {
         for (const callback of Object.values(callbacks)) {
-            callback(config);
+            callback(...args);
         }
     }
 };

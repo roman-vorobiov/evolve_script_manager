@@ -10,6 +10,14 @@
     export let state: State;
     export let errors: ProblemInfo[] = [];
 
+    type CacheData = {
+        scrollPosition: { top: number, left: number },
+        cursorPosition: Monaco.Position | null,
+        selections: Monaco.Selection[],
+        primarySelection: Monaco.Selection | null
+    }
+    const cache: Record<string, CacheData> = {};
+
     let addedCallbackID: number;
     let removedCallbackID: number;
     let activeChangedCallbackID: number;
@@ -22,8 +30,42 @@
         return monaco.editor.getModel(monaco.Uri.parse(`inmemory://model/${configName}`));
     }
 
-    function changeActiveModel(config: Config | null) {
+    function cachePositions(key: string) {
+        cache[key] = {
+            scrollPosition: { top: editor.getScrollTop(), left: editor.getScrollLeft() },
+            cursorPosition: editor.getPosition()?.clone() ?? null,
+            selections: editor.getSelections() ?? [],
+            primarySelection: editor.getSelection()
+        };
+    }
+
+    function restoreCache(key: string) {
+        const { scrollPosition, cursorPosition, selections, primarySelection } = cache[key];
+
+        if (cursorPosition) {
+            editor.setPosition({ lineNumber: cursorPosition.lineNumber, column: cursorPosition.column });
+        }
+
+        if (selections.length !== 0) {
+            editor.setSelections(selections);
+        }
+        else if (primarySelection) {
+            editor.setSelection(primarySelection);
+        }
+
+        editor.setScrollPosition({ scrollTop: scrollPosition.top, scrollLeft: scrollPosition.left });
+    }
+
+    function changeActiveModel(config: Config | null, oldConfig: Config | null) {
+        if (oldConfig !== null) {
+            cachePositions(oldConfig.name);
+        }
+
         editor?.setModel(config && getModel(config.name));
+
+        if (config !== null && config.name in cache) {
+            restoreCache(config.name);
+        }
     }
 
     function addModel(config: Config) {
@@ -43,6 +85,7 @@
     }
 
     function removeModel(config: Config) {
+        delete cache[config.name];
         getModel(config.name)?.dispose();
     }
 

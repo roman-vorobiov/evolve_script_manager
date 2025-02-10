@@ -18,11 +18,13 @@
 
     $: configName = config.name.length > 40 ? `${config.name.slice(0, 37)}...` : config.name;
 
-    function makeActive() {
+    function makeActive(event: Event) {
         if (!editable) {
             state.setActive(config);
             state = state;
         }
+
+        event.preventDefault();
     }
 
     function startEditing() {
@@ -67,7 +69,7 @@
             <button
                 class="p-1 w-full hover:bg-secondary select-none flex align-center"
                 class:bg-accent={active}
-                on:click={makeActive}
+                on:mousedown={makeActive}
                 on:keydown={handleKeyDown}
                 on:focusin={() => addKeyHandler(editTrigger)}
                 on:focusout={() => removeKeyHandler(editTrigger)}
