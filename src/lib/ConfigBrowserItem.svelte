@@ -18,7 +18,11 @@
 
     $: configName = config.name.length > 40 ? `${config.name.slice(0, 37)}...` : config.name;
 
-    function makeActive(event: Event) {
+    function makeActive(event: MouseEvent) {
+        if (event.button !== 0) {
+            return;
+        }
+
         if (!editable) {
             state.setActive(config);
             state = state;
