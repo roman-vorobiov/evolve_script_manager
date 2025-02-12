@@ -4,7 +4,6 @@
 // @version      0.1.0
 // @author       Roman Vorobiov
 // @namespace    http://tampermonkey.net/
-// @downloadURL  https://github.com/roman-vorobiov/evolve_script_manager/blob/master/static/evolve_script_manager.user.js
 // @match        https://roman-vorobiov.github.io/evolve_script_manager/
 // @match        https://pmotschmann.github.io/Evolve/
 // @grant        GM_setValue

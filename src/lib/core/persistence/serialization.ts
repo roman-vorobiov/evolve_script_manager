@@ -6,11 +6,11 @@ const currentVersion = 2;
 
 type Versioned = { version: Number, state: any };
 
-function serialize(state: State): Versioned {
+export function serialize(state: State): Versioned {
     return { version: currentVersion, state };
 }
 
-function deserialize({ version, state }: Versioned): State | undefined {
+export function deserialize({ version, state }: Versioned): State | undefined {
     if (state === undefined) {
         return;
     }

@@ -44,7 +44,7 @@ function getCommonListType(settings: Parser.List, getter: (_: Parser.Expression)
         throw new CompileError("Only values of the same type are allowed to be in the same list", settings);
     }
 
-    return types.values().next().value;
+    return types.values().next().value!;
 }
 
 function expressionValueType(expression: Parser.Expression, arg?: Parser.Subscript["key"]): string {

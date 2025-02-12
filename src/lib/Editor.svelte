@@ -57,13 +57,13 @@
     }
 
     function changeActiveModel(config: Config | null, oldConfig: Config | null) {
-        if (oldConfig !== null) {
+        if (oldConfig) {
             cachePositions(oldConfig.name);
         }
 
         editor?.setModel(config && getModel(config.name));
 
-        if (config !== null && config.name in cache) {
+        if (config && config.name in cache) {
             restoreCache(config.name);
         }
     }

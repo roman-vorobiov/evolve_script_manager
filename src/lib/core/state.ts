@@ -77,7 +77,7 @@ export class State {
     }
 
     setActive(config: Config) {
-        const oldConfig = this.activeConfig === null ? null : this.findConfig(this.activeConfig) ?? null;
+        const oldConfig = this.activeConfig === null ? null : (this.findConfig(this.activeConfig) ?? null);
         this.activeConfig = config.name;
         this.invokeCallbacks(this.onActiveConfigChangedCallbacks, config, oldConfig);
     }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { download, copyToClipboard, applyToEvolve } from "./ConfigExporter";
     import SidebarButton from "./SidebarButton.svelte";
+    import CloudStoreDialog from "./CloudStoreDialog.svelte";
     import {
         Files,
         Eye,
@@ -8,7 +9,9 @@
         FilePlus2 as FilePlus,
         FileDown,
         ClipboardCopy,
-        CircleHelp
+        CircleHelp,
+        CloudUpload,
+        CloudDownload
     } from "lucide-svelte";
 
     import type { State } from "$lib/core/state";
@@ -17,6 +20,8 @@
     export let state: State;
     export let compiledConfig: Config;
     export let newConfigPending = false;
+
+    let cloudStore: CloudStoreDialog;
 
     function handleDownload() {
         if (state.activeConfig !== null) {
@@ -51,7 +56,19 @@
         disabled={state.activeConfig === null}
     />
 
-    <div class="grow"/>
+    <div class="grow flex flex-col justify-center">
+        <SidebarButton
+            description="Sync with cloud"
+            icon={CloudUpload}
+            on:click={cloudStore.upload}
+        />
+
+        <SidebarButton
+            description="Sync with cloud"
+            icon={CloudDownload}
+            on:click={cloudStore.download}
+        />
+    </div>
 
     <SidebarButton
         description="New config"
@@ -87,3 +104,5 @@
         href="https://github.com/roman-vorobiov/evolve_script_manager"
     />
 </div>
+
+<CloudStoreDialog bind:this={cloudStore} bind:state={state}/>

@@ -11,7 +11,7 @@
 </script>
 
 <Tooltip.Root group="sidebar" openDelay={300}>
-    <Tooltip.Trigger {disabled}>
+    <Tooltip.Trigger class="h-min" {disabled}>
         <Button {...props} variant="ghost" class="p-0 size-14" on:click>
             <svelte:component this={icon} color="#18181B" size="40" strokeWidth="1.5"/>
         </Button>
