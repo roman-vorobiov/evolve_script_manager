@@ -4,7 +4,7 @@
     import { compressToBase64, decompressFromBase64 } from "lz-string";
     import { toast } from "svelte-sonner";
 
-    import { serialize, deserialize } from "./core/persistence";
+    import { serialize, deserialize, saveState } from "./core/persistence";
     import type { State } from "$lib/core/state";
 
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -83,6 +83,8 @@
 
             const newState = deserialize(JSON.parse(decoded));
             if (newState) {
+                saveState(state, true);
+
                 const configs = state.configs.slice();
                 for (const config of configs) {
                     state.removeConfig(config.name);

@@ -27,8 +27,13 @@ export function deserialize({ version, state }: Versioned): State | undefined {
 /**
  * @brief Save the state to local storage
  */
-export function saveState(state: State) {
-    Storage.set("state", JSON.stringify(serialize(state)));
+export function saveState(state: State, backup: boolean = false) {
+    if (backup) {
+        Storage.set("state.backup", JSON.stringify(serialize(state)));
+    }
+    else {
+        Storage.set("state", JSON.stringify(serialize(state)));
+    }
 }
 
 /**
