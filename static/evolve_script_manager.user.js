@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Evolve Script Manager
 // @description  Communication bridge between the game and the manager tabs
-// @version      0.1.0
-// @author       Roman Vorobiov
+// @version      0.1.1
+// @author       Sneed
 // @namespace    http://tampermonkey.net/
 // @match        https://roman-vorobiov.github.io/evolve_script_manager/
 // @match        https://pmotschmann.github.io/Evolve/
@@ -12,7 +12,7 @@
 
 // ==/UserScript==
 
-(function() {
+(async function() {
     "use strict";
 
     function onMessage(callback) {
@@ -25,42 +25,29 @@
         GM_setValue("evolve_script_manager.events", { timestamp: Date.now(), ...message });
     }
 
-    function waitForElement(selector) {
-        return new Promise(resolve => {
-            if (document.querySelector(selector)) {
-                return resolve(document.querySelector(selector));
-            }
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
-            const observer = new MutationObserver(mutations => {
-                if (document.querySelector(selector)) {
-                    observer.disconnect();
-                    resolve(document.querySelector(selector));
-                }
-            });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        });
+    async function synchronize() {
+        while (!("importAutomationSettings" in unsafeWindow)) {
+            await sleep(100);
+        }
     }
 
     if (window.location.href.startsWith("https://pmotschmann.github.io/Evolve")) {
         const originalConfirm = unsafeWindow.confirm;
 
-        onMessage(message => {
-            waitForElement("#script_settingsImport").then(button => {
-                const textArea = document.querySelector("#importExport");
-                textArea.value = message.config;
+        await synchronize();
 
-                unsafeWindow.confirm = () => true;
-                try {
-                    button.click();
-                }
-                finally {
-                    unsafeWindow.confirm = originalConfirm;
-                }
-            });
+        onMessage(message => {
+            unsafeWindow.confirm = () => true;
+            try {
+                unsafeWindow.importAutomationSettings(message.config);
+            }
+            finally {
+                unsafeWindow.confirm = originalConfirm;
+            }
         });
     }
     else {
